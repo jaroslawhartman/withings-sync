@@ -1,0 +1,50 @@
+=====================
+withings-garmin
+=====================
+このツールは,Withingsで記録した体重データをGarmin Connectと同期するためのツールです.
+
+以下のようにsync.pyを起動してください.
+$ python sync.py --wu user@example.com --wp password --ws USR --gu garmin_user --gp garmin_pass
+
+-f (--fromdate) と -t (--todate) オプションを利用することにより,同期する期間を設定することができます.
+例えば,以下のようにした場合 2011年1月20日 から 2011年2月2日までのデータだけを同期します.
+
+$ python sync.py -f 2011-01-20 -t 2011-02-02
+
+日付を指定しなかった場合 -f,-t ともにスクリプト実行時の日付がセットされます.(当日のデータだけ同期)
+
+自動で同期する場合はcron等をご利用ください.
+
+
+usage
+-----
+Usage: $python sync.py [options]
+
+Options:
+  -h, --help            show help message and exit
+  --withings-username=<user>, --wu=<user>
+                        username to login Withings Web Service.
+  --withings-password=<pass>, --wp=<pass>
+                        password to login Withings Web Service.
+  --withings-shortname=<name>, --ws=<name>
+                        your shortname used in Withings.
+  --garmin-username=<user>, --gu=<user>
+                        username to login Garmin Connect.
+  --garmin-password=<pass>, --gp=<pass>
+                        password to login Garmin Connect.
+  -f <date>, --fromdate=<date>
+  -t <date>, --todate=<date>
+  -v, --verbose         Run verbosely
+
+
+tips
+----
+sync.py の定数を設定すると対応するオプションを省略できます.
+
+WITHINGS_USERNMAE = ''
+WITHINGS_PASSWORD = ''
+WITHINGS_SHORTNAME = ''
+
+GARMIN_USERNAME = ''
+GARMIN_PASSWORD = ''
+
