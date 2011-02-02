@@ -44,7 +44,6 @@ class Withings(object):
 
 class WithingsAccount(Withings):
     def __init__(self, email, password):
-        super(WithingsAccount, self).__init__()
         self.email = email
         self.password = password
 
@@ -63,10 +62,7 @@ class WithingsAccount(Withings):
         """return users list(list of WithingsUser object)"""
         res = self.getuserslist()
         # convert to user object
-        users = []
-        for userdata in res['users']:
-            users.append(WithingsUser.create(userdata))
-        return users
+        return [WithingsUser.create(u) for u in res['users']]
 
     def get_user_by_shortname(self, shortname):
         for user in self.get_users():
@@ -139,7 +135,6 @@ class WithingsMeasureGroup(object):
         self.measures = []
         for measure in measuregrp['measures']:
             self.measures.append(WithingsMeasure(measure))
-        self._iter_index = 0
 
     def __iter__(self):
         for measure in self.measures:
