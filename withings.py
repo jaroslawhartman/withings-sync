@@ -132,9 +132,7 @@ class WithingsMeasureGroup(object):
         self.attrib = measuregrp.get('attrib')
         self.date = measuregrp.get('date')
         self.category = measuregrp.get('category')
-        self.measures = []
-        for measure in measuregrp['measures']:
-            self.measures.append(WithingsMeasure(measure))
+        self.measures = [WithingsMeasure(m) for m in measuregrp['measures']]
 
     def __iter__(self):
         for measure in self.measures:
