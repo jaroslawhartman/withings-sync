@@ -16,6 +16,11 @@ $ python sync.py -f 2011-01-20 -t 2011-02-02
 自動で同期する場合はcron等をご利用ください.
 
 
+requires
+--------
+Python 2.5+
+$ sudo easy_install simplejson (for Python2.5 only)
+
 usage
 -----
 Usage: $python sync.py [options]

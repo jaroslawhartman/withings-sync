@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import urllib
-import json
 from hashlib import md5
 from datetime import datetime
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 
 class WithingsException(Exception):
