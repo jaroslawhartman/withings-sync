@@ -15,6 +15,7 @@ class LoginFailed(Exception):
 
 class GarminConnect(object):
     LOGIN_URL = 'https://connect.garmin.com/signin'
+    UPLOAD_URL = 'http://connect.garmin.com/proxy/upload-service-1.1/json/upload/.fit'
     WEIGHT_INPUT_URL = 'http://connect.garmin.com/proxy/user-service-1.0/json/weight'
 
     def __init__(self):
@@ -45,7 +46,33 @@ class GarminConnect(object):
             return True
         raise LoginFailed('invalid username or password')
 
+    def upload_file(self, f):
+        # accept file object or string
+        if isinstance(f, file):
+            f.seek(0)
+            fbody = f.read()
+        else:
+            fbody = f
+
+        boundary = '----withingsgarmin'
+        req = urllib2.Request(self.UPLOAD_URL)
+        req.add_header('Content-Type', 'multipart/form-data; boundary=%s' % boundary)
+
+        # file
+        lines = []
+        lines.append('--%s' % boundary)
+        lines.append('Content-Disposition: form-data; name="data"; filename="weight.fit"')
+        lines.append('Content-Type: application/octet-stream')
+        lines.append('')
+        lines.append(fbody)
+
+        lines.append('--%s--' % boundary)
+        lines.append('')
+        r = self.opener.open(req, '\r\n'.join(lines))
+        return r.code == 200
+
     def post_weight(self, date, value):
+        """deprecated"""
         if isinstance(date, (datetime.datetime, datetime.date)):
             date = date.strftime('%Y-%m-%d')
         params = {'date': date, 'value': value, 'returnProvidedValues': 'true'}

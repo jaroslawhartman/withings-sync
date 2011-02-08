@@ -26,7 +26,7 @@ usage
 Usage: $python sync.py [options]
 
 Options:
-  -h, --help            show help message and exit
+  -h, --help            show this help message and exit
   --withings-username=<user>, --wu=<user>
                         username to login Withings Web Service.
   --withings-password=<pass>, --wp=<pass>
@@ -39,13 +39,17 @@ Options:
                         password to login Garmin Connect.
   -f <date>, --fromdate=<date>
   -t <date>, --todate=<date>
+  --no-upload           Won't upload to Garmin Connect and output binary-
+                        string to stdout.
   -v, --verbose         Run verbosely
 
 
 tips
 ----
-sync.py の定数を設定すると対応するオプションを省略できます.
+- 以下のようにすると, Garmin Connectへのアップロードを行わず, .fitファイルを作ることだけができます.
+$ python sync.py --no-upload > weight.fit
 
+- sync.py の定数を設定すると対応するオプションを省略できます.
 WITHINGS_USERNMAE = ''
 WITHINGS_PASSWORD = ''
 WITHINGS_SHORTNAME = ''

@@ -152,6 +152,13 @@ class WithingsMeasureGroup(object):
                 return measure.get_value()
         return None
 
+    def get_fat_ratio(self):
+        """convinient function to get fat ratio"""
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_FAT_RATIO:
+                return measure.get_value()
+        return None
+
 
 class WithingsMeasure(object):
     TYPE_WEIGHT = 1

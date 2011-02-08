@@ -3,6 +3,7 @@
 
 from withings import WithingsAccount
 from garmin import GarminConnect
+from fit import FitEncoder_Weight
 
 from optparse import OptionParser
 from optparse import Option
@@ -10,6 +11,7 @@ from optparse import OptionValueError
 from datetime import date
 from datetime import datetime
 import time
+import sys
 
 
 WITHINGS_USERNMAE = ''
@@ -51,6 +53,7 @@ def main():
                  default=GARMIN_PASSWORD, metavar='<pass>', help='password to login Garmin Connect.')
     p.add_option('-f', '--fromdate', type='date', default=date.today(), metavar='<date>')
     p.add_option('-t', '--todate', type='date', default=date.today(), metavar='<date>')
+    p.add_option('--no-upload', action='store_true', help="Won't upload to Garmin Connect and output binary-string to stdout.")
     p.add_option('-v', '--verbose', action='store_true', help='Run verbosely')
     opts, args = p.parse_args()
 
@@ -59,12 +62,16 @@ def main():
 
 def sync(withings_username, withings_password, withings_shortname,
          garmin_username, garmin_password,
-         fromdate, todate, verbose):
+         fromdate, todate, no_upload, verbose):
 
     def verbose_print(s):
         if verbose:
-            print s
+            if no_upload:
+                sys.stderr.write(s)
+            else:
+                sys.stdout.write(s)
 
+    # Withings API
     withings = WithingsAccount(withings_username, withings_password)
     user = withings.get_user_by_shortname(withings_shortname)
     if not user:
@@ -77,15 +84,32 @@ def sync(withings_username, withings_password, withings_shortname,
     enddate = int(time.mktime(todate.timetuple())) + 86399
     groups = user.get_measure_groups(startdate=startdate, enddate=enddate)
 
+    # create fit file
+    verbose_print('generating fit file...\n')
+    fit = FitEncoder_Weight()
+    fit.write_file_info()
+    fit.write_file_creator()
+
+    for group in groups:
+        dt = group.get_datetime()
+        weight = group.get_weight()
+        fat_ratio = group.get_fat_ratio()
+        fit.write_device_info(timestamp=dt)
+        fit.write_weight_scale(timestamp=dt, weight=weight, percent_fat=fat_ratio)
+        verbose_print('appending weight scale record... %s %skg %s%%\n' % (dt, weight, fat_ratio))
+    fit.finish()
+
+    if no_upload:
+        sys.stdout.write(fit.getvalue())
+        return
+
     # garmin connect
     garmin = GarminConnect()
     garmin.login(garmin_username, garmin_password)
-
-    for group in groups:
-        date = group.get_datetime().date()
-        weight = group.get_weight()
-        garmin.post_weight(date, weight)
-        verbose_print('sync done: %s %skg' % (date, weight))
+    verbose_print('attempting to upload fit file...\n')
+    r = garmin.upload_file(fit.getvalue())
+    if r:
+        verbose_print('weight.fit has been successfully uploaded!\n')
 
 
 if __name__ == '__main__':
