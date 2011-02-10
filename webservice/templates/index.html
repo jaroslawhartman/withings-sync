@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>Withings2Fit</title>
+<link rel="stylesheet" type="text/css" href="/static/css/default.css" />
+<link rel="stylesheet" type="text/css" href="/static/css/jquery-ui/jquery-ui-1.8.9.custom.css" />
+</head>
+<body>
+<h1>Withings2Fit</h1>
+<p>convert your weight scale data to "weight.fit" file.</p>
+{% if error %}
+<div id='error'>{{ error }}</div>
+{% endif %}
+<form action="/" method="post">
+<div>Withings-Account(email):<input type="text" name="username" /></div>
+<div>Withings-Password:<input type="password" name="password" /></div>
+<div>Withings-Shortname:<input type="text" name="shortname" maxlength="3" /></div>
+<div>
+<div>Start Date:</div><input type="text" name="startdate" />
+<div>End Date:</div><input type="text" name="enddate" />
+<div><input type="submit" value="Generate Now!" /></div>
+</form>
+<div id="footer">Author: <a href='http://twitter.com/ikasamah'>@ikasamah</a></div>
+</body>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/jquery-ui.min.js"></script>
+<script type="text/javascript">
+<!--
+$(function(){
+    $('input[name$="date"]').datepicker({dateFormat: 'yy-mm-dd'});
+});
+-->
+</script>
+</html>
