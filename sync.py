@@ -53,7 +53,7 @@ def main():
                  default=GARMIN_PASSWORD, metavar='<pass>', help='password to login Garmin Connect.')
     p.add_option('-f', '--fromdate', type='date', default=date.today(), metavar='<date>')
     p.add_option('-t', '--todate', type='date', default=date.today(), metavar='<date>')
-    p.add_option('--no-upload', action='store_true', help="Won't upload to Garmin Connect and output binary-string to stdout.")
+    p.add_option('--no-upload', action='store_true', help="Won't upload to Garmin Connect and output binary-strings to stdout.")
     p.add_option('-v', '--verbose', action='store_true', help='Run verbosely')
     opts, args = p.parse_args()
 
@@ -78,7 +78,7 @@ def sync(withings_username, withings_password, withings_shortname,
         print 'could not find user: %s' % withings_shortname
         return
     if not user.ispublic:
-        print 'user %s does not go public withings data' % withings_shortname
+        print 'user %s has not opened withings data' % withings_shortname
         return
     startdate = int(time.mktime(fromdate.timetuple()))
     enddate = int(time.mktime(todate.timetuple())) + 86399
