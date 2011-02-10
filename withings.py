@@ -15,7 +15,21 @@ class WithingsException(Exception):
 
 
 class WithingsAPIError(WithingsException):
-    pass
+    DESCRIPTIONS = {
+        100: 'The hash is missing, invalid, or does not match the provided email',
+        247: 'The userid is absent, or incorrect',
+        250: 'The userid and publickey do not match, or the user does not share its data',
+        264: 'The email address provided is either unknown or invalid',
+        286: 'No such subscription was found',  # ?
+        293: 'The callback URL is either absent or incorrect',
+        294: 'No such subscription could be deleted',
+        304: 'The comment is either absent or incorrect',
+        2555: 'An unknown error occured',
+    }
+
+    def __init__(self, status=2555):
+        self.status = status
+        self.message = self.DESCRIPTIONS.get(status, 'unknown status')
 
 
 class Withings(object):
@@ -34,7 +48,7 @@ class Withings(object):
             raise WithingsException('API does not return valid json response.')
         status = res.get('status')
         if (status != 0):
-            raise WithingsAPIError('Failed API request: error code = %s' % status)
+            raise WithingsAPIError(status)
         return res.get('body')
 
     def build_url(self, service, action, params=None):
