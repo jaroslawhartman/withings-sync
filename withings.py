@@ -55,6 +55,7 @@ class Withings(object):
         url = '%s%s?action=%s' % (Withings.BASE_URL, service, action)
         if params:
             if isinstance(params, dict):
+                params = dict((k, v) for k, v in params.items() if v is not None)
                 params = urllib.urlencode(params)
             url = '%s&%s' % (url, params)
         return url
@@ -155,6 +156,9 @@ class WithingsMeasureGroup(object):
     def __iter__(self):
         for measure in self.measures:
             yield measure
+
+    def __len__(self):
+        return len(self.measures)
 
     def get_datetime(self):
         return datetime.fromtimestamp(self.date)
