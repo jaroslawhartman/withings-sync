@@ -3,20 +3,25 @@
 <title>Withings2Fit</title>
 <link rel="stylesheet" type="text/css" href="/static/css/default.css" />
 <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui/jquery-ui-1.8.9.custom.css" />
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Corben:bold">
 </head>
 <body>
 <h1>Withings2Fit</h1>
-<p>convert your weight scale data to "weight.fit" file.</p>
+<p>Convert your weight scale data into "weight.fit" file.</p>
+<form action="/" method="post">
 {% if error %}
 <div id='error'>{{ error }}</div>
 {% endif %}
-<form action="/" method="post">
-<div>Withings-Account(email):<input type="text" name="username" /></div>
-<div>Withings-Password:<input type="password" name="password" /></div>
-<div>Withings-Shortname:<input type="text" name="shortname" maxlength="3" /></div>
-<div>
-<div>Start Date:</div><input type="text" name="startdate" />
-<div>End Date:</div><input type="text" name="enddate" />
+<p>Withings-Account(email):</p>
+<div><input type="text" name="username" value="{{ form.username }}"/></div>
+<p>Withings-Password:</p>
+<div><input type="password" name="password" value="{{ form.password }}" /></div>
+<p>Withings-Shortname:</p>
+<div><input type="text" name="shortname" maxlength="3" style="width:3em;" value="{{ form.shortname }}" /></div>
+<p><label><input type="checkbox" name="range"{% if form.range %} checked="checked"{% endif %} />Specify Date Range</label></p>
+<div id="dateinputs" style="display:none;">
+<div><input type="text" name="startdate" value="{{ form.startdate }}" />-<input type="text" name="enddate" value="{{ form.enddate }}" /></div>
+</div>
 <div><input type="submit" value="Generate Now!" /></div>
 </form>
 <div id="footer">Author: <a href='http://twitter.com/ikasamah'>@ikasamah</a></div>
@@ -26,7 +31,8 @@
 <script type="text/javascript">
 <!--
 $(function(){
-    $('input[name$="date"]').datepicker({dateFormat: 'yy-mm-dd'});
+    $('input[name$="date"]').attr('autocomplete', 'off').datepicker({dateFormat: 'yy-mm-dd', autoSize:true});
+    $('input:checkbox').change(function(){$('#dateinputs').toggle($(this).is(':checked'));}).change();
 });
 -->
 </script>

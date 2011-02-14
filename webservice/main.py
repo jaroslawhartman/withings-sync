@@ -32,13 +32,13 @@ def index():
             error = e
         except Exception, e:
             error = 'An unknown error occured'
-    return render_template('index.html', error=error)
+    return render_template('index.html', error=error, form=request.form)
 
 
 def generate(request):
     username = request.form.get('username')
     password = request.form.get('password')
-    shortname = request.form.get('shortname')
+    shortname = request.form.get('shortname').upper()
 
     try:
         withings = WithingsAccount(username, password)
@@ -69,6 +69,7 @@ def generate(request):
         fit.write_device_info(timestamp=dt)
         fit.write_weight_scale(timestamp=dt, weight=weight, percent_fat=fat_ratio)
     fit.finish()
+    fit.buf.seek(0)
     return fit.buf
 
 def strtotimestamp(s):

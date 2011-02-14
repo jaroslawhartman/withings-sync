@@ -1,0 +1,67 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Verdana;
+    text-align: center;
+    background-color: #DDD;
+}
+
+h1 {
+    margin: 0.5em 0;
+    font-family: 'Corben';
+    color: #00A0C6;
+}
+
+#error {
+    color: #C22;
+    font-weight: bold;
+}
+
+form {
+    margin: 1em auto;
+    padding: 1.5em 0;
+    width: 540px;
+    border: 8px solid #00A0C6;
+    background-color: #74ADD1;
+    -moz-border-radius: 16px;
+    -webkit-border-radius: 16px;
+}
+
+form p {
+    font-size: 1.2em;
+    color: #222;
+    margin: 0.5em 0 0.1em;
+}
+
+form div {
+    margin: 0 auto;
+}
+
+input {
+    font-family: Arial;
+}
+
+input[type="text"], input[type="password"] {
+    padding: 0.1em 0.2em;
+    text-align: center;
+    font-size: 1.8em;
+    border: 1px solid #00A0C6;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+}
+
+#dateinputs input {
+    padding: 0.1em 0;
+}
+
+input[type="submit"] {
+    margin-top: 1.4em;
+    padding: 0.3em;
+    font-family: Verdana;
+    font-size: 1.2em;
+    color: #222;
+}
+
