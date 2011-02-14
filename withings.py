@@ -105,11 +105,12 @@ class WithingsUser(Withings):
 
     def __getattr__(self, name):
         if name in self.__dict__['_valid_attrs']:
-            if name not in self.__dict__:
-                self.getbyuserid()
-        if name in self.__dict__:
-            return self.__dict__[name]
-        raise AttributeError
+            self.getbyuserid()
+            try:
+                return self.__dict__[name]
+            except KeyError:
+                pass
+        raise AttributeError(name)
 
     def __str__(self):
         return '%s: %s' % (self.id, self.fullname())
