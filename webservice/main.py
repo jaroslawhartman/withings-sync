@@ -54,6 +54,8 @@ def generate(request):
 
     startdate = strtotimestamp(request.form.get('startdate'))
     enddate = strtotimestamp(request.form.get('enddate'))
+    if enddate:
+        enddate += 86399  # 11:59:59
     groups = user.get_measure_groups(startdate=startdate, enddate=enddate)
     if len(groups) == 0:
         raise GenerateError('no weight scale data is available')
