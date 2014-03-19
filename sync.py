@@ -91,11 +91,20 @@ def sync(withings_username, withings_password, withings_shortname,
     fit.write_file_creator()
 
     for group in groups:
+        # get extra physical measurements
+
+        from measurements import Measurements 
+        measurements = Measurements()
+    
         dt = group.get_datetime()
         weight = group.get_weight()
         fat_ratio = group.get_fat_ratio()
         fit.write_device_info(timestamp=dt)
-        fit.write_weight_scale(timestamp=dt, weight=weight, percent_fat=fat_ratio)
+        fit.write_weight_scale(timestamp=dt, 
+            weight=weight, 
+            percent_fat=fat_ratio, 
+            percent_hydration=measurements.getPercentHydration()
+            )
         verbose_print('appending weight scale record... %s %skg %s%%\n' % (dt, weight, fat_ratio))
     fit.finish()
 
@@ -105,9 +114,9 @@ def sync(withings_username, withings_password, withings_shortname,
 
     # garmin connect
     garmin = GarminConnect()
-    garmin.login(garmin_username, garmin_password)
+    cookie = garmin.login(garmin_username, garmin_password)
     verbose_print('attempting to upload fit file...\n')
-    r = garmin.upload_file(fit.getvalue())
+    r = garmin.upload_file(fit.getvalue(), cookie)
     if r:
         verbose_print('weight.fit has been successfully uploaded!\n')
 

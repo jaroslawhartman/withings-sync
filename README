@@ -2,11 +2,13 @@
 withings-garmin-v2
 =====================
 
-Based on withings-garmin by Masayuki Hamasaki.
+Based on withings-garmin by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
 
-Trying to fix new way of Garmin Connect authorisation (SSO).
+SSO authorization derived from https://github.com/cpfair/tapiriik
 
-!! WORK IN PROGRESS !!
+Additionally, requires 'Requests: HTTP for Humans' (http://docs.python-requests.org/en/latest/)
+
+$ sudo easy_install requests
 
 ------------------------
 
