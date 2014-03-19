@@ -6,6 +6,10 @@ Based on withings-garmin by Masayuki Hamasaki.
 
 Trying to fix new way of Garmin Connect authorisation (SSO).
 
+!! WORK IN PROGRESS !!
+
+------------------------
+
 このツールは,Withingsで記録した体重データをGarmin Connectと同期するためのツールです.
 
 以下のようにsync.pyを起動してください.
