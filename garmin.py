@@ -19,7 +19,7 @@ class LoginFailed(Exception):
 
 class GarminConnect(object):
     LOGIN_URL = 'https://connect.garmin.com/signin'
-    UPLOAD_URL = 'http://connect.garmin.com/proxy/upload-service-1.1/json/upload/.fit'
+    UPLOAD_URL = 'https://connect.garmin.com/proxy/upload-service-1.1/json/upload/.fit'
     
     _sessionCache = SessionCache(lifetime=timedelta(minutes=30), freshen_on_get=True)
             
@@ -37,7 +37,7 @@ class GarminConnect(object):
     
     def _get_cookies(self, record=None, email=None, password=None):
 
-        gcPreResp = requests.get("http://connect.garmin.com/", allow_redirects=False)
+        gcPreResp = requests.get("https://connect.garmin.com/", allow_redirects=False)
         # New site gets this redirect, old one does not
         if gcPreResp.status_code == 200:
             gcPreResp = requests.get("https://connect.garmin.com/signin", allow_redirects=False)
@@ -73,7 +73,7 @@ class GarminConnect(object):
                 # "displayNameRequired": "false"
             }
             params = {
-                "service": "http://connect.garmin.com/post-auth/login",
+                "service": "https://connect.garmin.com/post-auth/login",
                 # "redirectAfterAccountLoginUrl": "http://connect.garmin.com/post-auth/login",
                 # "redirectAfterAccountCreationUrl": "http://connect.garmin.com/post-auth/login",
                 # "webhost": "olaxpw-connect00.garmin.com",
@@ -110,7 +110,7 @@ class GarminConnect(object):
 
             # ...AND WE'RE NOT DONE YET!
 
-            gcRedeemResp1 = requests.get("http://connect.garmin.com/post-auth/login", params={"ticket": ticket}, allow_redirects=False, cookies=gcPreResp.cookies)
+            gcRedeemResp1 = requests.get("https://connect.garmin.com/post-auth/login", params={"ticket": ticket}, allow_redirects=False, cookies=gcPreResp.cookies)
             if gcRedeemResp1.status_code != 302:
                 raise APIException("GC redeem 1 error %s %s" % (gcRedeemResp1.status_code, gcRedeemResp1.text))
 
@@ -130,7 +130,7 @@ class GarminConnect(object):
     def login(self, username, password):
 
         cookies = self._get_cookies(email=username, password=password)
-        GCusername = requests.get("http://connect.garmin.com/user/username", cookies=cookies).json()["username"]
+        GCusername = requests.get("https://connect.garmin.com/user/username", cookies=cookies).json()["username"]
         sys.stderr.write('Garmin Connect User Name: ' + GCusername + '\n')    
      
         if not len(GCusername):
