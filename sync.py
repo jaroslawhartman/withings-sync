@@ -21,7 +21,6 @@ WITHINGS_SHORTNAME = ''
 GARMIN_USERNAME = ''
 GARMIN_PASSWORD = ''
 
-
 class DateOption(Option):
     def check_date(option, opt, value):
         valid_formats = ['%Y-%m-%d', '%Y%m%d', '%Y/%m/%d']
@@ -112,11 +111,13 @@ def sync(withings_username, withings_password, withings_shortname,
         sys.stdout.write(fit.getvalue())
         return
 
+	verbose_print("Fit file: " + fit.getvalue())
+
     # garmin connect
     garmin = GarminConnect()
-    cookie = garmin.login(garmin_username, garmin_password)
+    session = garmin.login(garmin_username, garmin_password)
     verbose_print('attempting to upload fit file...\n')
-    r = garmin.upload_file(fit.getvalue(), cookie)
+    r = garmin.upload_file(fit.getvalue(), session)
     if r:
         verbose_print('weight.fit has been successfully uploaded!\n')
 
