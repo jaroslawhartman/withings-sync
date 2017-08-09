@@ -76,9 +76,9 @@ def sync(withings_username, withings_password, withings_shortname,
     if not user:
         print 'could not find user: %s' % withings_shortname
         return
-    if not user.ispublic:
-        print 'user %s has not opened withings data' % withings_shortname
-        return
+#    if not user.ispublic:
+#        print 'user %s has not opened withings data' % withings_shortname
+#        return
     startdate = int(time.mktime(fromdate.timetuple()))
     enddate = int(time.mktime(todate.timetuple())) + 86399
     groups = user.get_measure_groups(startdate=startdate, enddate=enddate)
