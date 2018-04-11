@@ -76,9 +76,9 @@ def sync(withings_username, withings_password, withings_shortname,
     if not user:
         print 'could not find user: %s' % withings_shortname
         return
-#    if not user.ispublic:
-#        print 'user %s has not opened withings data' % withings_shortname
-#        return
+    if not user.ispublic:
+        print 'user %s has not opened withings data' % withings_shortname
+        return
     startdate = int(time.mktime(fromdate.timetuple()))
     enddate = int(time.mktime(todate.timetuple())) + 86399
     groups = user.get_measure_groups(startdate=startdate, enddate=enddate)
@@ -92,16 +92,16 @@ def sync(withings_username, withings_password, withings_shortname,
     for group in groups:
         # get extra physical measurements
 
-        from measurements import Measurements 
+        from measurements import Measurements
         measurements = Measurements()
-    
+
         dt = group.get_datetime()
         weight = group.get_weight()
         fat_ratio = group.get_fat_ratio()
         fit.write_device_info(timestamp=dt)
-        fit.write_weight_scale(timestamp=dt, 
-            weight=weight, 
-            percent_fat=fat_ratio, 
+        fit.write_weight_scale(timestamp=dt,
+            weight=weight,
+            percent_fat=fat_ratio,
             percent_hydration=measurements.getPercentHydration()
             )
         verbose_print('appending weight scale record... %s %skg %s%%\n' % (dt, weight, fat_ratio))
@@ -124,4 +124,3 @@ def sync(withings_username, withings_password, withings_shortname,
 
 if __name__ == '__main__':
     main()
-
