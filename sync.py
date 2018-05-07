@@ -106,7 +106,7 @@ def sync(withings_username, withings_password, withings_shortname,
         fit.write_weight_scale(timestamp=dt,
             weight=weight,
             percent_fat=fat_ratio,
-            percent_hydration=(hydration*100.0/weight) if (hydration or weight) else None,
+            percent_hydration=(hydration*100.0/weight) if (hydration and weight) else None,
             bone_mass=bone_mass,
             muscle_mass=muscle_mass
             )
