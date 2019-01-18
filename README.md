@@ -1,6 +1,9 @@
 # withings-garmin-v2
 
+**NOTE: Due to latest changes in Withings API, the tool does not work anymore. See Issue #10.**
+
 **NOTE: Withings is a legacy name of Nokia Health Body / Body Cardio Scales. Feel free to use this script with Nokia products as well **
+
 
 ## References
 
