@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from cStringIO import StringIO
+from io import BytesIO
 from struct import pack
 from struct import unpack
 from datetime import datetime
@@ -85,7 +85,7 @@ class FitEncoder_Weight(FitEncoder):
     LMSG_TYPE_WEIGHT_SCALE = 3
 
     def __init__(self):
-        self.buf = StringIO()
+        self.buf = BytesIO()
         self.write_header()  # create header first
         self.device_info_defined = False
         self.weight_scale_defined = False
@@ -106,7 +106,7 @@ class FitEncoder_Weight(FitEncoder):
                      protocol_version=16,
                      profile_version=108,
                      data_size=0,
-                     data_type='.FIT'):
+                     data_type=b'.FIT'):
         self.buf.seek(0)
         s = pack('BBHI4s', header_size, protocol_version, profile_version, data_size, data_type)
         self.buf.write(s)
@@ -123,7 +123,7 @@ class FitEncoder_Weight(FitEncoder):
             elif scale is not None:
                 value *= scale
             values.append(FitBaseType.pack(basetype, value))
-        return (''.join(field_defs), ''.join(values))
+        return (b''.join(field_defs), b''.join(values))
 
     def write_file_info(self, serial_number=None, time_created=None, manufacturer=None, product=None, number=None):
         if time_created is None:
@@ -143,7 +143,7 @@ class FitEncoder_Weight(FitEncoder):
         msg_number = self.GMSG_NUMS['file_id']
         fixed_content = pack('BBHB', 0, 0, msg_number, len(content))  # reserved, architecture(0: little endian)
 
-        self.buf.write(''.join([
+        self.buf.write(b''.join([
             # definition
             self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_FILE_INFO),
             fixed_content,
@@ -163,7 +163,7 @@ class FitEncoder_Weight(FitEncoder):
 
         msg_number = self.GMSG_NUMS['file_creator']
         fixed_content = pack('BBHB', 0, 0, msg_number, len(content))  # reserved, architecture(0: little endian)
-        self.buf.write(''.join([
+        self.buf.write(b''.join([
             # definition
             self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_FILE_CREATOR),
             fixed_content,

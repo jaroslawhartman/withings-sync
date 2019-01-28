@@ -2,8 +2,8 @@
 
 from sessioncache import SessionCache
 from datetime import datetime, timedelta
-import urllib2
-import urllib
+import urllib.request, urllib.error, urllib.parse
+import urllib.request, urllib.parse, urllib.error
 import datetime
 import requests
 import re
@@ -26,12 +26,12 @@ class GarminConnect(object):
 
     def create_opener(self, cookie):
         this = self
-        class _HTTPRedirectHandler(urllib2.HTTPRedirectHandler):
+        class _HTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
             def http_error_302(self, req, fp, code, msg, headers):
                 if req.get_full_url() == this.LOGIN_URL:
                     raise LoginSucceeded
-                return urllib2.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
-        return urllib2.build_opener(_HTTPRedirectHandler, urllib2.HTTPCookieProcessor(cookie))
+                return urllib.request.HTTPRedirectHandler.http_error_302(self, req, fp, code, msg, headers)
+        return urllib.request.build_opener(_HTTPRedirectHandler, urllib.request.HTTPCookieProcessor(cookie))
 
     ##############################################
     # From https://github.com/cpfair/tapiriik
@@ -51,8 +51,8 @@ class GarminConnect(object):
         }
         params = {
             "service": "https://connect.garmin.com/modern",
-            "redirectAfterAccountLoginUrl": "http://connect.garmin.com/modern",
-            "redirectAfterAccountCreationUrl": "http://connect.garmin.com/modern",
+            # "redirectAfterAccountLoginUrl": "http://connect.garmin.com/modern",
+            # "redirectAfterAccountCreationUrl": "http://connect.garmin.com/modern",
             # "webhost": "olaxpw-connect00.garmin.com",
             "clientId": "GarminConnect",
             "gauthHost": "https://sso.garmin.com/sso",
@@ -71,12 +71,17 @@ class GarminConnect(object):
             # "locale": "en"
         }
 
+        headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
+                "Referer": "https://jhartman.pl"
+            }
+
         # I may never understand what motivates people to mangle a perfectly good protocol like HTTP in the ways they do...
-        preResp = session.get("https://sso.garmin.com/sso/login", params=params)
+        preResp = session.get("https://sso.garmin.com/sso/login", params=params, headers=headers)
         if preResp.status_code != 200:
             raise APIException("SSO prestart error %s %s" % (preResp.status_code, preResp.text))
 
-        ssoResp = session.post("https://sso.garmin.com/sso/login", params=params, data=data, allow_redirects=False)
+        ssoResp = session.post("https://sso.garmin.com/sso/login", params=params, data=data, allow_redirects=False, headers=headers)
         if ssoResp.status_code != 200 or "temporarily unavailable" in ssoResp.text:
             raise APIException("SSO error %s %s" % (ssoResp.status_code, ssoResp.text))
 
@@ -92,7 +97,7 @@ class GarminConnect(object):
 
         # ...AND WE'RE NOT DONE YET!
 
-        gcRedeemResp = session.get("https://connect.garmin.com/modern", allow_redirects=False)
+        gcRedeemResp = session.get("https://connect.garmin.com/modern", allow_redirects=False, headers=headers)
         if gcRedeemResp.status_code != 302:
             raise APIException("GC redeem-start error %s %s" % (gcRedeemResp.status_code, gcRedeemResp.text))
 
@@ -123,13 +128,15 @@ class GarminConnect(object):
 
         # self.print_cookies(session.cookies)
 
+        session.headers.update(headers)
+
         return session
 
     def print_cookies(self, cookies):
-            print "Cookies"
+            print("Cookies")
 
-            for key, value in cookies.items():
-                print "Key: " + key + ", " + value
+            for key, value in list(cookies.items()):
+                print("Key: " + key + ", " + value)
 
     def login(self, username, password):
 
@@ -137,14 +144,18 @@ class GarminConnect(object):
 
         try:
             dashboard = session.get("http://connect.garmin.com/modern")
+
             userdata_json_str = re.search(r"VIEWER_SOCIAL_PROFILE\s*=\s*JSON\.parse\((.+)\);$", dashboard.text, re.MULTILINE).group(1)
             userdata = json.loads(json.loads(userdata_json_str))
             username = userdata["displayName"]
 
+            print(username)
+
             sys.stderr.write('Garmin Connect User Name: ' + username + '\n')
 
         except Exception as e:
-            sys.stderr.write('Unable to retrieve username!\n')
+            print(e)
+            sys.stderr.write('Unable to retrieve username! Most likely: incorrect login or password!\n')
 
         return (session)
 
@@ -158,11 +169,10 @@ class GarminConnect(object):
 
         try:
             resp = res.json()["detailedImportResult"]
-        except ValueError:
+        except (ValueError, KeyError):
             if(res.status_code == 204):   # HTTP result 204 - "no content"
                 sys.stderr.write('No data to upload, try to use --fromdate and --todate\n')
             else:
-                print "Bad response during GC upload: " + str(res.status_code)
-                raise APIException("Bad response during GC upload: %s %s" % (res.status_code, res.text))
+                print("Bad response during GC upload: " + str(res.status_code))
 
         return (res.status_code == 200 or res.status_code == 201 or res.status_code == 204)
