@@ -1,8 +1,6 @@
-
 runme.sh
-
 *.pyc
-
 runme2.sh
-
 weight.fit
+.DS_Store
+config/withings_user.json
