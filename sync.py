@@ -98,8 +98,8 @@ def sync(garmin_username, garmin_password, fromdate, todate,
 		sys.stdout.buffer.write(fit.getvalue())
 		return
 
-	out_file = open('test.fit', 'wb')
-	out_file.write(fit.getvalue())
+	#out_file = open('test.fit', 'wb')
+	#out_file.write(fit.getvalue())
 
 	# verbose_print("Fit file: " + fit.getvalue())
 
