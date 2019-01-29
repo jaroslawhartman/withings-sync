@@ -109,7 +109,7 @@ def sync(garmin_username, garmin_password, fromdate, todate,
 	verbose_print('attempting to upload fit file...\n')
 	r = garmin.upload_file(fit.getvalue(), session)
 	if r:
-		verbose_print('weight.fit has been successfully uploaded!\n')
+		print("Fit file uploaded to Garmin Connect")
 
 
 if __name__ == '__main__':
