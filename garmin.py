@@ -155,7 +155,7 @@ class GarminConnect(object):
 
         except Exception as e:
             print(e)
-            sys.stderr.write('Unable to retrieve username! Most likely: incorrect login or password!\n')
+            sys.stderr.write('Unable to retrieve Garmin username! Most likely: incorrect Garmin login or password!\n')
 
         return (session)
 
