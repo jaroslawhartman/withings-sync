@@ -59,6 +59,11 @@ def sync(garmin_username, garmin_password, fromdate, todate,
 			else:
 				sys.stdout.write(s)
 
+	if len(garmin_username) == 0 or len(garmin_password) == 0:
+		print("Garmin username or password not set!")
+		return
+		
+	
 	# Withings API
 	withings = WithingsAccount()
 
