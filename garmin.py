@@ -73,11 +73,12 @@ class GarminConnect(object):
 
         headers = {
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
-                "Referer": "https://jhartman.pl"
+                "Referer": "https://jhartman.pl",
+                'origin': 'https://sso.garmin.com'
             }
 
         # I may never understand what motivates people to mangle a perfectly good protocol like HTTP in the ways they do...
-        preResp = session.get("https://sso.garmin.com/sso/login", params=params, headers=headers)
+        preResp = session.get("https://sso.garmin.com/sso/signin", params=params, headers=headers)
         if preResp.status_code != 200:
             raise APIException("SSO prestart error %s %s" % (preResp.status_code, preResp.text))
 
