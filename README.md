@@ -1,5 +1,7 @@
 # withings-garmin-v2
 
+**NOTE: For Docker usage hits see at end of this document** https://hub.docker.com/r/jaroslawhartman/withings-garmin
+
 **NOTE: Withings is a legacy name of Nokia Health Body / Body Cardio Scales. Feel free to use this script with Nokia products as well**
 
 **NOTE: Included support for Withings OAuth2! See 'Obtaining Withings authorization'**
@@ -74,6 +76,71 @@ This is one-time activity and it will not be needed to repeat.
 
 
 ## Tips
+
+### Docker
+
+```
+$ docker pull jaroslawhartman/withings-garmin
+```
+
+First start to ensure the script can start successfully:
+
+```
+jhartman@docker:~/withings-garmin-v2/Docker$ docker run -it --rm --name withings jaroslawhartman/withings-garmin
+Usage: sync.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  --garmin-username=<user>, --gu=<user>
+                        username to login Garmin Connect.
+  --garmin-password=<pass>, --gp=<pass>
+                        password to login Garmin Connect.
+  -f <date>, --fromdate=<date>
+  -t <date>, --todate=<date>
+  --no-upload           Won't upload to Garmin Connect and output binary-
+                        strings to stdout.
+  -v, --verbose         Run verbosely
+```
+
+Obtaining Withings authoorisation:
+
+```
+$ docker run -it --name withings jaroslawhartman/withings-garmin --garmin-username=<username> --garmin-password=<password>
+
+Can't read config file config/withings_user.json
+***************************************
+*         W A R N I N G               *
+***************************************
+
+User interaction needed to get Authentification Code from Withings!
+
+Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+(This is one-time activity)
+
+https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
+
+Token : <token>
+Withings: Get Access Token
+Withings: Refresh Access Token
+Withings: Get Measurements
+   Measurements received
+JaHa.WAW.PL
+Garmin Connect User Name: JaHa.WAW.PL
+Fit file uploaded to Garmin Connect
+```
+
+And for subsequent runs:
+
+```
+$ docker start -i withings
+Withings: Refresh Access Token
+Withings: Get Measurements
+   Measurements received
+JaHa.WAW.PL
+Garmin Connect User Name: JaHa.WAW.PL
+Fit file uploaded to Garmin Connect
+```
+
 
 ### You can hardcode your usernames and passwords in the script (`sync.py`):
 
