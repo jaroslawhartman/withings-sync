@@ -17,8 +17,11 @@ FROM python:3.6-alpine
 RUN mkdir -p /withings-garmin-v2
 COPY --from=git /withings-garmin-v2 /withings-garmin-v2
 
+RUN apk add --update --no-cache libxml2-dev libxslt-dev gcc musl-dev
+
 RUN pip install --upgrade pip && \
-    pip install requests
+    pip install requests && \
+    pip install lxml
 
 WORKDIR /withings-garmin-v2
 
