@@ -48,7 +48,7 @@ def main():
 	p.add_option('--trainerroad-username', '--tu', 
 				 default=TRAINERROAD_USERNAME, type='string', metavar='<user>', help='username to login TrainerRoad.')	
 	p.add_option('--trainerroad-password', '--tp', 
-				 default=TRAINERROAD_PASSWORD type='string', metavar='<user>', help='username to login TrainerRoad.')					 
+				 default=TRAINERROAD_PASSWORD, type='string', metavar='<user>', help='username to login TrainerRoad.')					 
 	p.add_option('-f', '--fromdate', type='date', default=date.today(), metavar='<date>')
 	p.add_option('-t', '--todate', type='date', default=date.today(), metavar='<date>')
 	p.add_option('--no-upload', action='store_true', help="Won't upload to Garmin Connect and output binary-strings to stdout.")
