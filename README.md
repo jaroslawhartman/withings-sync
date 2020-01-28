@@ -16,6 +16,14 @@ A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect
 
 * Python 3
 * 'Requests: HTTP for Humans' (http://docs.python-requests.org/en/latest/)
+* lxml
+
+Using pip:
+
+```
+yum install libxml2-dev libxslt-dev gcc
+pip install --upgrade pip &&     pip install requests &&     pip install lxml
+```
 
 ```
 $ sudo easy_install requests
