@@ -1,17 +1,16 @@
-# withings-garmin-v2
+# withings-garmin-v2 (and TrainerRoad)
+
+A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.
 
 **NOTE: For Docker usage hits see at end of this document** https://hub.docker.com/r/jaroslawhartman/withings-garmin
 
-**NOTE: Withings is a legacy name of Nokia Health Body / Body Cardio Scales. Feel free to use this script with Nokia products as well**
-
 **NOTE: Included support for Withings OAuth2! See 'Obtaining Withings authorization'**
-
 
 ## References
 
 * Based on withings-garmin by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
-
 * SSO authorization derived from https://github.com/cpfair/tapiriik
+* TrainerRoad API from https://github.com/stuwilkins/python-trainerroad 
 
 ## Pre-requisites
 
@@ -32,7 +31,7 @@ $ sudo easy_install simplejson
 ## Usage
 
 ```
-Usage: $python sync.py [options]
+Usage: sync.py [options]
 
 Options:
   -h, --help            show this help message and exit
@@ -40,10 +39,14 @@ Options:
                         username to login Garmin Connect.
   --garmin-password=<pass>, --gp=<pass>
                         password to login Garmin Connect.
+  --trainerroad-username=<user>, --tu=<user>
+                        username to login TrainerRoad.
+  --trainerroad-password=<user>, --tp=<user>
+                        username to login TrainerRoad.
   -f <date>, --fromdate=<date>
   -t <date>, --todate=<date>
   --no-upload           Won't upload to Garmin Connect and output binary-
-                        string to stdout.
+                        strings to stdout.
   -v, --verbose         Run verbosely
 
 ```
@@ -95,6 +98,10 @@ Options:
                         username to login Garmin Connect.
   --garmin-password=<pass>, --gp=<pass>
                         password to login Garmin Connect.
+  --trainerroad-username=<user>, --tu=<user>
+                        username to login TrainerRoad.
+  --trainerroad-password=<user>, --tp=<user>
+                        username to login TrainerRoad.
   -f <date>, --fromdate=<date>
   -t <date>, --todate=<date>
   --no-upload           Won't upload to Garmin Connect and output binary-
@@ -144,9 +151,14 @@ Fit file uploaded to Garmin Connect
 
 ### You can hardcode your usernames and passwords in the script (`sync.py`):
 
+...but why would you? Better to provide them as commandline parameters.
+
 ```
 GARMIN_USERNAME = ''
 GARMIN_PASSWORD = ''
+
+TRAINERROAD_USERNAME = ''
+TRAINERROAD_PASSWORD = ''
 ```
 
 ### For advanced users - registering own Withings application
