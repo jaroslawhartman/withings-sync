@@ -111,7 +111,7 @@ def sync(garmin_username, garmin_password, trainerroad_username, trainerroad_pas
 
 	# garmin connect
 	
-	if trainerroad_username:
+	if trainerroad_username and last_weight > 0:
 		print('Trainerroad username set -- attempting to sync')
 		print(" Last weight {}".format(last_weight))
 		print(" Measured {}".format(last_dt))
