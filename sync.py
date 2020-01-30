@@ -126,7 +126,7 @@ def sync(garmin_username, garmin_password, trainerroad_username, trainerroad_pas
 		
 		
 	else:
-		print('No Trainerroad username - skipping sync')	
+		print('No Trainerroad username or a new measurement - skipping sync')	
 		
 		
 	if no_upload:
