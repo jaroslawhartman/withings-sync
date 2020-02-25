@@ -17,9 +17,9 @@ class TrainerRoad:
                           'Units', 'IsVirtualPowerEnabled')
     _numerical_verify = (_ftp, _weight)
     _string_verify = _select_data_names + ('Marketing',)
-    _login_url = 'https://www.trainerroad.com/login'
-    _logout_url = 'https://www.trainerroad.com/logout'
-    _rider_url = 'https://www.trainerroad.com/profile/rider-information'
+    _login_url = 'https://www.trainerroad.com/app/login'
+    _logout_url = 'https://www.trainerroad.com/app/logout'
+    _rider_url = 'https://www.trainerroad.com/app/profile/rider-information'
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
     _rvt = '__RequestVerificationToken'
