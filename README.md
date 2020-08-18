@@ -11,10 +11,14 @@ A tool for synchronisation of Withings (ex. Nokia Health Body) to:
 
 ## References
 
-* Based on withings-garmin by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
-* Based on withings-garmin-v2 by Jarek Hartman, improved Python 3 compatability and code-style
 * SSO authorization derived from https://github.com/cpfair/tapiriik
 * TrainerRoad API from https://github.com/stuwilkins/python-trainerroad 
+
+## Credits / Authors
+
+* Python 3 rewrite, improved packaging and maintenance by Steffen Vogel.
+* Based on withings-garmin by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
+* Based on withings-garmin-v2 by Jarek Hartman, improved Python 3 compatability and code-style
 
 ## Installation
 
