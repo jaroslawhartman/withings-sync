@@ -107,7 +107,7 @@ class WithingsOAuth2(Withings):
 
         accessToken = req.json()
 
-        if(accessToken.get('errors')):
+        if accessToken.get('errors'):
             log.error('Received error(s):')
             for message in accessToken.get('errors'):
                 error = message.get('message')
@@ -116,7 +116,7 @@ class WithingsOAuth2(Withings):
                     log.error('Removing invalid authentification_code')
                     self.user_config['authentification_code'] = ''
 
-            log.error()
+            log.error('')
             log.error('If it\'s regarding an invalid code, '
                       'try to start the script again to obtain a new link.')
 
@@ -138,7 +138,7 @@ class WithingsOAuth2(Withings):
 
         accessToken = req.json()
 
-        if(accessToken.get('errors')):
+        if accessToken.get('errors'):
             log.error('Received error(s):')
             for message in accessToken.get('errors'):
                 error = message.get('message')
@@ -147,7 +147,7 @@ class WithingsOAuth2(Withings):
                     log.error('Removing invalid authentification_code')
                     self.user_config['authentification_code'] = ''
 
-            log.error()
+            log.error('')
             log.error('If it\'s regarding an invalid code, try to start the'
                       ' script again to obtain a new link.')
 
@@ -180,6 +180,39 @@ class WithingsAccount(Withings):
 
             return [WithingsMeasureGroup(g) for
                     g in measurements.get('body').get('measuregrps')]
+
+    def getHeight(self):
+        self.height = None
+        self.height_timestamp = None
+        self.height_group=None
+
+        log.debug('Get Height')
+
+        params = {
+            'access_token' : self.withings.user_config['access_token'],
+            'meastype' : WithingsMeasure.TYPE_HEIGHT,
+            'category' : 1,
+        }
+
+        req = requests.post(Withings.GETMEAS_URL, params )
+
+        measurements = req.json()
+
+        if measurements.get('status') == 0:
+            log.debug('Height received')
+
+            # there could be multiple height records. use the latest one
+            for record in measurements.get('body').get('measuregrps'):
+                self.height_group = WithingsMeasureGroup(record)
+                if self.height != None:
+                    if self.height_timestamp != None:
+                        if self.height_group.get_datetime() > self.height_timestamp:
+                            self.height = self.height_group.get_height()
+                else:
+                    self.height = self.height_group.get_height()
+                    self.height_timestamp = self.height_group.get_datetime()
+
+        return self.height
 
 
 class WithingsMeasureGroup(object):
@@ -235,6 +268,13 @@ class WithingsMeasureGroup(object):
             if measure.type == WithingsMeasure.TYPE_BONE_MASS:
                 return measure.get_value()
         return None
+    
+    def get_height(self):
+        '''convienent function to get height'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_HEIGHT:
+                return measure.get_value()
+        return None
 
 
 class WithingsMeasure(object):
@@ -256,19 +296,19 @@ class WithingsMeasure(object):
     def __str__(self):
         type_s = 'unknown'
         unit_s = ''
-        if (self.type == self.TYPE_WEIGHT):
+        if self.type == self.TYPE_WEIGHT:
             type_s = 'Weight'
             unit_s = 'kg'
-        elif (self.type == self.TYPE_HEIGHT):
+        elif self.type == self.TYPE_HEIGHT:
             type_s = 'Height'
             unit_s = 'meter'
-        elif (self.type == self.TYPE_FAT_FREE_MASS):
+        elif self.type == self.TYPE_FAT_FREE_MASS:
             type_s = 'Fat Free Mass'
             unit_s = 'kg'
-        elif (self.type == self.TYPE_FAT_RATIO):
+        elif self.type == self.TYPE_FAT_RATIO:
             type_s = 'Fat Ratio'
             unit_s = '%'
-        elif (self.type == self.TYPE_FAT_MASS_WEIGHT):
+        elif self.type == self.TYPE_FAT_MASS_WEIGHT:
             type_s = 'Fat Mass Weight'
             unit_s = 'kg'
         return '%s: %s %s' % (type_s, self.get_value(), unit_s)

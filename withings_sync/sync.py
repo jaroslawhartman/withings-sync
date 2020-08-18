@@ -79,7 +79,14 @@ def sync(garmin_username, garmin_password,
     startdate = int(time.mktime(fromdate.timetuple()))
     enddate = int(time.mktime(todate.timetuple())) + 86399
 
+    height = withings.getHeight()
+
     groups = withings.getMeasurements(startdate=startdate, enddate=enddate)
+    
+    # Only upload if there are measurement returned
+    if groups is None or len(groups) == 0:
+        logging.error('No measurements to upload for date or period specified')
+        return -1
 
     # Create FIT file
     logging.debug('Generating fit file...')
@@ -99,22 +106,38 @@ def sync(garmin_username, garmin_password,
         hydration = group.get_hydration()
         bone_mass = group.get_bone_mass()
 
+        if weight is None:
+            logging.error('Skipping invalid weight measurement')
+            continue
+
+        if height and weight:
+            bmi = round(weight / pow(height, 2), 1)
+        else:
+            bmi = None
+        
+        if hydration and weight:
+            percent_hydration = hydration * 100.0 / weight
+        else:
+            percent_hydration = None
+    
         fit.write_device_info(timestamp=dt)
         fit.write_weight_scale(timestamp=dt,
                                weight=weight,
                                percent_fat=fat_ratio,
-                               percent_hydration=(hydration*100.0/weight)
-                               if (hydration and weight) else None,
+                               percent_hydration=percent_hydration,
                                bone_mass=bone_mass,
-                               muscle_mass=muscle_mass)
+                               muscle_mass=muscle_mass,
+                               bmi=bmi)
 
         logging.debug('Record: %s weight=%s kg, '
                       'fat_ratio=%s %%, '
                       'muscle_mass=%s Kg, '
                       'hydration=%s %%, '
-                      'bone_mass=%s Kg',
+                      'bone_mass=%s Kg, '
+                      'bmi=%s',
                       dt, weight, fat_ratio,
-                      muscle_mass, hydration, bone_mass)
+                      muscle_mass, hydration,
+                      bone_mass, bmi)
 
         if last_dt is None or dt > last_dt:
             last_dt = dt

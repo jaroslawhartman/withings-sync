@@ -202,7 +202,8 @@ class FitEncoder_Weight(FitEncoder):
 
     def write_weight_scale(self, timestamp, weight, percent_fat=None, percent_hydration=None,
                            visceral_fat_mass=None, bone_mass=None, muscle_mass=None, basal_met=None,
-                           active_met=None, physique_rating=None, metabolic_age=None, visceral_fat_rating=None):
+                           active_met=None, physique_rating=None, metabolic_age=None,
+                           visceral_fat_rating=None, bmi=None):
         content = [
             (253, FitBaseType.uint32, self.timestamp(timestamp), 1),
             (0, FitBaseType.uint16, weight, 100),
@@ -216,6 +217,7 @@ class FitEncoder_Weight(FitEncoder):
             (8, FitBaseType.uint8, physique_rating, 1),
             (10, FitBaseType.uint8, metabolic_age, 1),
             (11, FitBaseType.uint8, visceral_fat_rating, 1),
+            (13, FitBaseType.uint16, bmi, 10),
         ]
         fields, values = self._build_content_block(content)
 
@@ -240,7 +242,7 @@ class FitEncoder_Weight(FitEncoder):
         self.buf.seek(0)
 
         crc = 0
-        while(True):
+        while True:
             b = self.buf.read(1)
             if not b:
                 break
