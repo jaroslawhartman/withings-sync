@@ -40,7 +40,7 @@ class TrainerRoad:
         r = self._session.post(self._login_url, data=data,
                                allow_redirects=False)
 
-        if (r.status_code != 200) and (r.status_code != 302):
+        if r.status_code not in [200, 302]:
             # There was an error
             raise RuntimeError("Error loging in to TrainerRoad (Code {})"
                                .format(r.status_code))
@@ -49,7 +49,7 @@ class TrainerRoad:
 
     def disconnect(self):
         r = self._session.get(self._logout_url, allow_redirects=False)
-        if (r.status_code != 200) and (r.status_code != 302):
+        if r.status_code not in [200, 302]:
             raise RuntimeError("Error loging out of TrainerRoad (Code {})"
                                .format(r.status_code))
 
