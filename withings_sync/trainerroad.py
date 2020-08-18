@@ -1,11 +1,12 @@
 import requests
 import json
-import lxml.html
-from lxml import etree
-from io import StringIO, BytesIO
 import logging
 
+from lxml import etree
+from io import StringIO
+
 logger = logging.getLogger(__name__)
+
 
 class TrainerRoad:
     _ftp = 'Ftp'
@@ -28,7 +29,6 @@ class TrainerRoad:
         self._username = username
         self._password = password
         self._session = None
-
 
     def connect(self):
         self._session = requests.Session()
@@ -199,7 +199,6 @@ class TrainerRoad:
         logger.info('Recieved info on {} workouts'.format(len(data)))
 
         return data
-
 
     def get_workout(self, guid):
         res = self._session.get(self._workout_url

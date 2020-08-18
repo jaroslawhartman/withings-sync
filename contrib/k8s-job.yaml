@@ -1,0 +1,72 @@
+---
+apiVersion: "v1
+kind: Namespace
+metadata:
+  name: withings
+---
+# Secret for Garmin and TrainerRoad credentials
+# PLEASE CHANGE!
+apiVersion: v1
+kind: Secret
+metadata:
+  name: credentials
+  namespace: withings
+type: Opaque
+data:
+  # Base64 encoded!!!
+  GARMIN_PASSWORD: ""
+  GARMIN_USERNAME: ""
+  TRAINERROAD_PASSWORD: ""
+  TRAINERROAD_USERNAME: ""
+---
+# PVC for storing Withings OAuth tokens
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  finalizers:
+  - kubernetes.io/pvc-protection
+  name: withings-oauth-cache
+  namespace: withings
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Mi
+  volumeMode: Filesystem
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: withings-garmin-sync
+  namespace: withings
+spec:
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - -v
+            env:
+            - name: HOME
+              value: /root
+            envFrom:
+            - secretRef:
+                name: credentials
+            image: stv0g/withings-sync
+            imagePullPolicy: Always
+            name: withings-garmin-sync
+            volumeMounts:
+            - mountPath: /root/
+              name: oauth-cache
+          restartPolicy: Never
+          volumes:
+          - name: oauth-cache
+            persistentVolumeClaim:
+              claimName: withings-oauth-cache
+  schedule: '*/15 * * * *'
+  successfulJobsHistoryLimit: 3
+

@@ -1,62 +1,49 @@
-# withings-garmin-v2 (and TrainerRoad)
+# withings-sync
 
-A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.
+A tool for synchronisation of Withings (ex. Nokia Health Body) to:
 
-**NOTE: For Docker usage hits see at end of this document** https://hub.docker.com/r/jaroslawhartman/withings-garmin
+- Garmin Connect
+- Trainer Road
+
+**NOTE: For Docker usage hits see at end of this document:** https://hub.docker.com/r/stv0g/withings-sync
 
 **NOTE: Included support for Withings OAuth2! See 'Obtaining Withings authorization'**
 
 ## References
 
 * Based on withings-garmin by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
+* Based on withings-garmin-v2 by Jarek Hartman, improved Python 3 compatability and code-style
 * SSO authorization derived from https://github.com/cpfair/tapiriik
 * TrainerRoad API from https://github.com/stuwilkins/python-trainerroad 
 
-## Pre-requisites
+## Installation
 
-* Python 3
-* 'Requests: HTTP for Humans' (http://docs.python-requests.org/en/latest/)
-* lxml
-
-Using pip:
-
-```
-yum install libxml2-dev libxslt-dev gcc
-pip install --upgrade pip &&     pip install requests &&     pip install lxml
-```
-
-```
-$ sudo easy_install requests
-
-```
-
-* simplejson
-
-```
-$ sudo easy_install simplejson
+```bash
+$ pip install withings-sync
 ```
 
 ## Usage
 
 ```
-Usage: sync.py [options]
+usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD]
+                     [--fromdate DATE] [--todate DATE] [--no-upload] [--verbose]
 
-Options:
+A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.
+
+optional arguments:
   -h, --help            show this help message and exit
-  --garmin-username=<user>, --gu=<user>
+  --garmin-username GARMIN_USERNAME, --gu GARMIN_USERNAME
                         username to login Garmin Connect.
-  --garmin-password=<pass>, --gp=<pass>
+  --garmin-password GARMIN_PASSWORD, --gp GARMIN_PASSWORD
                         password to login Garmin Connect.
-  --trainerroad-username=<user>, --tu=<user>
+  --trainerroad-username TRAINERROAD_USERNAME, --tu TRAINERROAD_USERNAME
                         username to login TrainerRoad.
-  --trainerroad-password=<user>, --tp=<user>
+  --trainerroad-password TRAINERROAD_PASSWORD, --tp TRAINERROAD_PASSWORD
                         username to login TrainerRoad.
-  -f <date>, --fromdate=<date>
-  -t <date>, --todate=<date>
-  --no-upload           Won't upload to Garmin Connect and output binary-
-                        strings to stdout.
-  -v, --verbose         Run verbosely
-
+  --fromdate DATE, -f DATE
+  --todate DATE, -t DATE
+  --no-upload           Won't upload to Garmin Connect and output binary-strings to stdout.
+  --verbose, -v         Run verbosely
 ```
 
 ### Obtaining Withings Authorization Code
@@ -64,13 +51,9 @@ Options:
   
 When running for a very first time, you need to obtain Withings authorization:
 
-```
-$ ./sync.py -f 2019-01-25 -v
+```bash
+$ withings-sync -f 2019-01-25 -v
 Can't read config file config/withings_user.json
-***************************************
-*         W A R N I N G               *
-***************************************
-
 User interaction needed to get Authentification Code from Withings!
 
 Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
@@ -91,42 +74,18 @@ This is one-time activity and it will not be needed to repeat.
 ### Docker
 
 ```
-$ docker pull jaroslawhartman/withings-garmin
+$ docker pull stv0g/withings-sync
 ```
 
 First start to ensure the script can start successfully:
 
-```
-jhartman@docker:~/withings-garmin-v2/Docker$ docker run -it --rm --name withings jaroslawhartman/withings-garmin
-Usage: sync.py [options]
 
-Options:
-  -h, --help            show this help message and exit
-  --garmin-username=<user>, --gu=<user>
-                        username to login Garmin Connect.
-  --garmin-password=<pass>, --gp=<pass>
-                        password to login Garmin Connect.
-  --trainerroad-username=<user>, --tu=<user>
-                        username to login TrainerRoad.
-  --trainerroad-password=<user>, --tp=<user>
-                        username to login TrainerRoad.
-  -f <date>, --fromdate=<date>
-  -t <date>, --todate=<date>
-  --no-upload           Won't upload to Garmin Connect and output binary-
-                        strings to stdout.
-  -v, --verbose         Run verbosely
-```
-
-Obtaining Withings authoorisation:
+Obtaining Withings authorisation:
 
 ```
-$ docker run -it --name withings jaroslawhartman/withings-garmin --garmin-username=<username> --garmin-password=<password>
+$ docker run -v $HOME:/root --interactive --tty --name withings jaroslawhartman/withings-garmin --garmin-username=<username> --garmin-password=<password>
 
 Can't read config file config/withings_user.json
-***************************************
-*         W A R N I N G               *
-***************************************
-
 User interaction needed to get Authentification Code from Withings!
 
 Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
@@ -156,17 +115,12 @@ Garmin Connect User Name: JaHa.WAW.PL
 Fit file uploaded to Garmin Connect
 ```
 
+### Run a periodic Kubernetes job
 
-### You can hardcode your usernames and passwords in the script (`sync.py`):
+Edit the credentials in `contrib/k8s-job.yaml` and run:
 
-...but why would you? Better to provide them as commandline parameters.
-
-```
-GARMIN_USERNAME = ''
-GARMIN_PASSWORD = ''
-
-TRAINERROAD_USERNAME = ''
-TRAINERROAD_PASSWORD = ''
+```bash
+$ kubectl apply -f contrib/k8s-job.yaml
 ```
 
 ### For advanced users - registering own Withings application
@@ -194,3 +148,5 @@ Configure them in `config/withings_app.json`, for example:
     "consumer_secret": "a75d65******1df1514c16719ef7bd69fa7*****2e2b0ed48f1765"
 }
 ```
+
+For the callback URL you will need to setup a webserver hosting `contrib/withings.html`.
