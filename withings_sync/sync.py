@@ -20,7 +20,7 @@ def get_args():
     )
 
     def date_parser(s):
-        datetime.datetime.strptime(s, '%Y-%m-%d')
+        return datetime.strptime(s, '%Y-%m-%d')
 
     parser.add_argument('--garmin-username', '--gu',
                         default=os.environ.get('GARMIN_USERNAME'),
