@@ -16,9 +16,8 @@ A tool for synchronisation of Withings (ex. Nokia Health Body) to:
 
 ## Credits / Authors
 
-* Python 3 rewrite, improved packaging and maintenance by Steffen Vogel.
-* Based on withings-garmin by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
-* Based on withings-garmin-v2 by Jarek Hartman, improved Python 3 compatability and code-style
+* Based on [withings-garmin](https://github.com/ikasamah/withings-garmin) by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
+* Based on [withings-garmin-v2](https://github.com/jaroslawhartman/withings-garmin-v2) by Jarek Hartman, improved Python 3 compatability, code-style and setuptools packaging, Kubernetes and Docker support.
 
 ## Installation
 
