@@ -49,6 +49,15 @@ optional arguments:
   --verbose, -v         Run verbosely
 ```
 
+### Providing crendtials via environment variables
+
+You can use the following environment variables for providing the Garmin and/or Trainerroad credentials:
+
+- `GARMIN_USERNAME`
+- `GARMIN_PASSWORD` 
+- `TRAINERROAD_USERNAME`
+- `TRAINERROAD_PASSWORD`
+
 ### Obtaining Withings Authorization Code
 
 When running for a very first time, you need to obtain Withings authorization:
