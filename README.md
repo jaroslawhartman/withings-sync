@@ -51,10 +51,6 @@ optional arguments:
 
 ### Obtaining Withings Authorization Code
 
-**Known problem while authorising `{"errors":[{"message":"redirect_uri_mismatch: The redirect URI provided is missing or does not match partner callback url"}]}`**
-
-**Follow a workaround described in [Issue #4](https://github.com/jaroslawhartman/withings-sync/issues/4)**  
-  
 When running for a very first time, you need to obtain Withings authorization:
 
 ```bash
