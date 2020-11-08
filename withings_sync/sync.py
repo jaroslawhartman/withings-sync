@@ -12,6 +12,48 @@ from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoder_Weight
 
 
+try:
+	secret = open("/run/secrets/garmin_username")
+	GARMIN_USERNAME = secret.read()
+	secret.close()
+except Exception:
+	GARMIN_USERNAME = ''
+
+try:
+	secret = open("/run/secrets/garmin_password")
+	GARMIN_PASSWORD = secret.read()
+	secret.close()
+except Exception:
+	GARMIN_PASSWORD = ''
+
+if "GC_USERNAME" in os.environ:
+	GARMIN_USERNAME = os.getenv("GARMIN_USERNAME")
+
+if "GC_PASSWORD" in os.environ:
+	GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
+
+
+try:
+	secret = open("/run/secrets/trainerroad_username")
+	TRAINERROAD_USERNAME = secret.read()
+	secret.close()
+except Exception:
+	TRAINERROAD_USERNAME = ''
+
+try:
+	secret = open("/run/secrets/trainerroad_password")
+	TRAINERROAD_PASSWORD = secret.read()
+	secret.close()
+except Exception:
+	TRAINERROAD_PASSWORD = ''
+
+if "TR_USERNAME" in os.environ:
+	TRAINERROAD_USERNAME = os.getenv("TRAINERROAD_USERNAME")
+
+if "TR_PASSWORD" in os.environ:
+	TRAINERROAD_PASSWORD = os.getenv("TRAINERROAD_PASSWORD")
+
+
 def get_args():
     parser = argparse.ArgumentParser(
         description=('A tool for synchronisation of Withings '
@@ -23,26 +65,26 @@ def get_args():
         return datetime.strptime(s, '%Y-%m-%d')
 
     parser.add_argument('--garmin-username', '--gu',
-                        default=os.environ.get('GARMIN_USERNAME'),
+                        default=GARMIN_USERNAME,
                         type=str,
                         metavar='GARMIN_USERNAME',
-                        help='username to login Garmin Connect.')
+                        help='username to login to Garmin Connect.')
     parser.add_argument('--garmin-password', '--gp',
-                        default=os.environ.get('GARMIN_PASSWORD'),
+                        default=GARMIN_PASSWORD,
                         type=str,
                         metavar='GARMIN_PASSWORD',
-                        help='password to login Garmin Connect.')
+                        help='password to login to Garmin Connect.')
 
-    parser.add_argument('--trainerroad-username', '--tu',
-                        default=os.environ.get('TRAINERROAD_USERNAME'),
+    parser.add_argument('--trainerroad-username', '--tu', 
+                        default=TRAINERROAD_USERNAME,
                         type=str,
                         metavar='TRAINERROAD_USERNAME',
-                        help='username to login TrainerRoad.')
-    parser.add_argument('--trainerroad-password', '--tp',
-                        default=os.environ.get('TRAINERROAD_PASSWORD'),
+                        help='username to login to TrainerRoad.')
+    parser.add_argument('--trainerroad-password', '--tp', 
+                        default=TRAINERROAD_PASSWORD,
                         type=str,
                         metavar='TRAINERROAD_PASSWORD',
-                        help='username to login TrainerRoad.')
+                        help='password to login to TrainerRoad.')
 
     parser.add_argument('--fromdate', '-f',
                         type=date_parser,

@@ -49,7 +49,7 @@ optional arguments:
   --verbose, -v         Run verbosely
 ```
 
-### Providing crendtials via environment variables
+### Providing credentials via environment variables
 
 You can use the following environment variables for providing the Garmin and/or Trainerroad credentials:
 
@@ -57,6 +57,25 @@ You can use the following environment variables for providing the Garmin and/or 
 - `GARMIN_PASSWORD` 
 - `TRAINERROAD_USERNAME`
 - `TRAINERROAD_PASSWORD`
+
+### Providing credentials via secrets files
+
+You can also populate the following 'secrets' files to provide the Garmin and/or Trainerroad credentials:
+
+- `/run/secrets/garmin_username`
+- `/run/secrets/garmin_password`
+- `/run/secrets/trainerroad_username`
+- `/run/secrets/trainerroad_password`
+
+Secrets are useful in an orchestrated container context — see the [Docker Swarm](https://docs.docker.com/engine/swarm/secrets/) or [Rancher](https://rancher.com/docs/rancher/v1.6/en/cattle/secrets/) docs for more information on how to securely inject secrets into a container.
+
+### Order of priority for credentials
+
+In the case of credentials being available via multiple means (e.g. [environment variables](#providing-credentials-via-environment-variables) and [secrets files](#providing-credentials-via-secrets-files)), the order of resolution for determining which credentials to use is as follows, with later methods overriding credentials supplied by an earlier method:
+
+1. Read secrets file(s)
+2. Read environment variable(s)
+3. Use command invocation arugment(s)
 
 ### Obtaining Withings Authorization Code
 
