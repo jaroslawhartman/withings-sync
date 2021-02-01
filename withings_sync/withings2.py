@@ -14,11 +14,17 @@ class WithingsException(Exception):
 
 
 class Withings():
+    HOME = os.environ.get('HOME', '.')
     AUTHORIZE_URL = 'https://account.withings.com/oauth2_user/authorize2'
     TOKEN_URL = 'https://account.withings.com/oauth2/token'
     GETMEAS_URL = 'https://wbsapi.withings.net/measure?action=getmeas'
-    APP_CONFIG = pkg_resources.resource_filename(__name__, 'config/withings_app.json')
-    USER_CONFIG = os.environ.get('HOME', '.') + '/.withings_user.json'
+
+    APP_CONFIG = os.environ.get('WITHINGS_APP',
+                                pkg_resources.resource_filename(
+                                    __name__,
+                                    'config/withings_app.json'))
+    USER_CONFIG = os.environ.get('WITHINGS_USER',
+                                 HOME + '/.withings_user.json')
 
 
 class WithingsConfig(Withings):
