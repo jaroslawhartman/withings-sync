@@ -28,7 +28,7 @@ $ pip install withings-sync
 ## Usage
 
 ```
-usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD]
+usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password 'GARMIN_PASSWORD'] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password 'TRAINERROAD_PASSWORD']
                      [--fromdate DATE] [--todate DATE] [--no-upload] [--verbose]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.
@@ -37,11 +37,11 @@ optional arguments:
   -h, --help            show this help message and exit
   --garmin-username GARMIN_USERNAME, --gu GARMIN_USERNAME
                         username to login Garmin Connect.
-  --garmin-password GARMIN_PASSWORD, --gp GARMIN_PASSWORD
+  --garmin-password 'GARMIN_PASSWORD', --gp 'GARMIN_PASSWORD'
                         password to login Garmin Connect.
   --trainerroad-username TRAINERROAD_USERNAME, --tu TRAINERROAD_USERNAME
                         username to login TrainerRoad.
-  --trainerroad-password TRAINERROAD_PASSWORD, --tp TRAINERROAD_PASSWORD
+  --trainerroad-password 'TRAINERROAD_PASSWORD', --tp 'TRAINERROAD_PASSWORD'
                         username to login TrainerRoad.
   --fromdate DATE, -f DATE
   --todate DATE, -t DATE
@@ -94,7 +94,7 @@ First start to ensure the script can start successfully:
 Obtaining Withings authorisation:
 
 ```
-$ docker run -v $HOME:/root --interactive --tty --name withings stv0g/withings-sync --garmin-username=<username> --garmin-password=<password>
+$ docker run -v $HOME:/root --interactive --tty --name withings stv0g/withings-sync --garmin-username=<username> --garmin-password='<password>'
 
 Can't read config file config/withings_user.json
 User interaction needed to get Authentification Code from Withings!
