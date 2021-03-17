@@ -80,7 +80,7 @@ spec:
       labels:
         app: withings-sync
     spec:
-      # container image is only build for amd64 at the moment
+      # container image is only built for amd64 at the moment
       nodeSelector:
         kubernetes.io/arch: amd64
 
