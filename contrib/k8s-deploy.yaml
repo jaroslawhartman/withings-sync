@@ -57,7 +57,8 @@ metadata:
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: longhorn
+  # uncomment, and define if needed
+  # storageClassName: class
   resources:
     requests:
       storage: 10Mi
