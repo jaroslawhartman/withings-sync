@@ -325,6 +325,39 @@ class WithingsMeasure(object):
         elif self.type == self.TYPE_FAT_MASS_WEIGHT:
             type_s = 'Fat Mass Weight'
             unit_s = 'kg'
+        elif self.type == self.TYPE_DIASTOLIC_BLOOD_PRESSURE:
+            type_s = 'Diastolic Blood Pressure'
+            unit_s = 'mmHg'
+        elif self.type == self.TYPE_SYSTOLIC_BLOOD_PRESSURE:
+            type_s = 'Systolic Blood Pressure'
+            unit_s = 'mmHg'
+        elif self.type == self.TYPE_HEART_PULSE:
+            type_s = 'Heart Pulse'
+            unit_s = 'bpm'
+        elif self.type == self.TYPE_TEMPERATURE:
+            type_s = 'Temperature'
+            unit_s = 'celsius'
+        elif self.type == self.TYPE_SP02:
+            type_s = 'SP02'
+            unit_s = '%'
+        elif self.type == self.TYPE_BODY_TEMPERATURE:
+            type_s = 'Body Temperature'
+            unit_s = 'celsius'
+        elif self.type == self.TYPE_SKIN_TEMPERATURE:
+            type_s = 'Skin Temperature'
+            unit_s = 'celsius'
+        elif self.type == self.TYPE_MUSCLE_MASS:
+            type_s = 'Muscle Mass'
+            unit_s = 'kg'
+        elif self.type == self.TYPE_HYDRATION:
+            type_s = 'Hydration'
+            unit_s = 'kg'
+        elif self.type == self.TYPE_BONE_MASS:
+            type_s = 'Bone Mass'
+            unit_s = 'kg'
+        elif self.type == self.TYPE_PULSE_WAVE_VELOCITY:
+            type_s = 'Pulse Wave Velocity'
+            unit_s = 'm/s'
         return '%s: %s %s' % (type_s, self.get_value(), unit_s)
 
     def get_value(self):
