@@ -107,7 +107,7 @@ def sync(garmin_username, garmin_password,
         bone_mass = group.get_bone_mass()
 
         if weight is None:
-            logging.error('Skipping invalid weight measurement')
+            logging.info('Withings metric contain no weight data.  Skipping...')
             continue
 
         if height and weight:
