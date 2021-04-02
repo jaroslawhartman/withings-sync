@@ -240,6 +240,10 @@ class WithingsMeasureGroup(object):
     def get_datetime(self):
         return datetime.fromtimestamp(self.date)
 
+    def get_raw_data(self):
+        '''convenient function to get raw data'''
+        return self.measures
+
     def get_weight(self):
         '''convenient function to get weight'''
         for measure in self.measures:

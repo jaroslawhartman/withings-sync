@@ -33,12 +33,12 @@ def get_args():
                         metavar='GARMIN_PASSWORD',
                         help='password to login Garmin Connect.')
 
-    parser.add_argument('--trainerroad-username', '--tu', 
+    parser.add_argument('--trainerroad-username', '--tu',
                         default=os.environ.get('TRAINERROAD_USERNAME'),
                         type=str,
                         metavar='TRAINERROAD_USERNAME',
                         help='username to login TrainerRoad.')
-    parser.add_argument('--trainerroad-password', '--tp', 
+    parser.add_argument('--trainerroad-password', '--tp',
                         default=os.environ.get('TRAINERROAD_PASSWORD'),
                         type=str,
                         metavar='TRAINERROAD_PASSWORD',
@@ -82,7 +82,7 @@ def sync(garmin_username, garmin_password,
     height = withings.getHeight()
 
     groups = withings.getMeasurements(startdate=startdate, enddate=enddate)
-    
+
     # Only upload if there are measurement returned
     if groups is None or len(groups) == 0:
         logging.error('No measurements to upload for date or period specified')
@@ -105,21 +105,25 @@ def sync(garmin_username, garmin_password,
         muscle_mass = group.get_muscle_mass()
         hydration = group.get_hydration()
         bone_mass = group.get_bone_mass()
+        raw_data = group.get_raw_data()
 
         if weight is None:
-            logging.info('Withings metric contain no weight data.  Skipping...')
+            logging.info('This Withings metric contains no weight data.  Not syncing...')
+            logging.debug('Detected data: ')
+            for dataentry in raw_data:
+                logging.debug(dataentry)
             continue
 
         if height and weight:
             bmi = round(weight / pow(height, 2), 1)
         else:
             bmi = None
-        
+
         if hydration and weight:
             percent_hydration = hydration * 100.0 / weight
         else:
             percent_hydration = None
-    
+
         fit.write_device_info(timestamp=dt)
         fit.write_weight_scale(timestamp=dt,
                                weight=weight,
@@ -131,9 +135,9 @@ def sync(garmin_username, garmin_password,
 
         logging.debug('Record: %s weight=%s kg, '
                       'fat_ratio=%s %%, '
-                      'muscle_mass=%s Kg, '
+                      'muscle_mass=%s kg, '
                       'hydration=%s %%, '
-                      'bone_mass=%s Kg, '
+                      'bone_mass=%s kg, '
                       'bmi=%s',
                       dt, weight, fat_ratio,
                       muscle_mass, hydration,
@@ -182,7 +186,7 @@ def sync(garmin_username, garmin_password,
         if r:
             logging.info('Fit file uploaded to Garmin Connect')
     else:
-        logging.info('No Garmin username - skipping sync')    
+        logging.info('No Garmin username - skipping sync')
 
 
 def main():
