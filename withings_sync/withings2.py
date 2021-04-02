@@ -289,9 +289,17 @@ class WithingsMeasure(object):
     TYPE_FAT_FREE_MASS = 5
     TYPE_FAT_RATIO = 6
     TYPE_FAT_MASS_WEIGHT = 8
+    TYPE_DIASTOLIC_BLOOD_PRESSURE = 9
+    TYPE_SYSTOLIC_BLOOD_PRESSURE = 10
+    TYPE_HEART_PULSE = 11
+    TYPE_TEMPERATURE = 12
+    TYPE_SP02 = 54
+    TYPE_BODY_TEMPERATURE = 71
+    TYPE_SKIN_TEMPERATURE = 73
     TYPE_MUSCLE_MASS = 76
     TYPE_HYDRATION = 77
     TYPE_BONE_MASS = 88
+    TYPE_PULSE_WAVE_VELOCITY = 91
 
     def __init__(self, measure):
         self._raw_data = measure
