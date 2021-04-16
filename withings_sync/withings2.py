@@ -190,7 +190,7 @@ class WithingsAccount(Withings):
     def getHeight(self):
         self.height = None
         self.height_timestamp = None
-        self.height_group=None
+        self.height_group = None
 
         log.debug('Get Height')
 
@@ -200,7 +200,7 @@ class WithingsAccount(Withings):
             'category' : 1,
         }
 
-        req = requests.post(Withings.GETMEAS_URL, params )
+        req = requests.post(Withings.GETMEAS_URL, params)
 
         measurements = req.json()
 
@@ -240,45 +240,119 @@ class WithingsMeasureGroup(object):
     def get_datetime(self):
         return datetime.fromtimestamp(self.date)
 
+    def get_raw_data(self):
+        '''convenient function to get raw data'''
+        return self.measures
+
     def get_weight(self):
-        '''convinient function to get weight'''
+        '''convenient function to get weight'''
         for measure in self.measures:
             if measure.type == WithingsMeasure.TYPE_WEIGHT:
                 return measure.get_value()
         return None
 
+    def get_height(self):
+        '''convenient function to get height'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_HEIGHT:
+                return measure.get_value()
+        return None
+
+    def get_fat_free_mass(self):
+        '''convenient function to get fat free mass'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_FAT_FREE_MASS:
+                return measure.get_value()
+        return None
+
     def get_fat_ratio(self):
-        '''convinient function to get fat ratio'''
+        '''convenient function to get fat ratio'''
         for measure in self.measures:
             if measure.type == WithingsMeasure.TYPE_FAT_RATIO:
                 return measure.get_value()
         return None
 
+    def get_fat_mass_weight(self):
+        '''convenient function to get fat mass weight'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_FAT_MASS_WEIGHT:
+                return measure.get_value()
+        return None
+
+    def get_diastolic_blood_pressure(self):
+        '''convenient function to get diastolic blood pressure'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_DIASTOLIC_BLOOD_PRESSURE:
+                return measure.get_value()
+        return None
+
+    def get_systolic_blood_pressure(self):
+        '''convenient function to get systolic blood pressure'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_SYSTOLIC_BLOOD_PRESSURE:
+                return measure.get_value()
+        return None
+
+    def get_heart_pulse(self):
+        '''convenient function to get heart pulse'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_HEART_PULSE:
+                return measure.get_value()
+        return None
+
+    def get_temperature(self):
+        '''convenient function to get temperature'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_TEMPERATURE:
+                return measure.get_value()
+        return None
+
+    def get_sp02(self):
+        '''convenient function to get sp02'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_SP02:
+                return measure.get_value()
+        return None
+
+    def get_body_temperature(self):
+        '''convenient function to get body temperature'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_BODY_TEMPERATURE:
+                return measure.get_value()
+        return None
+
+    def get_skin_temperature(self):
+        '''convenient function to get skin temperature'''
+        for measure in self.measures:
+            if measure.type == WithingsMeasure.TYPE_SKIN_TEMPERATURE:
+                return measure.get_value()
+        return None
+
     def get_muscle_mass(self):
-        '''convinient function to get muscle mass'''
+        '''convenient function to get muscle mass'''
         for measure in self.measures:
             if measure.type == WithingsMeasure.TYPE_MUSCLE_MASS:
                 return measure.get_value()
         return None
 
     def get_hydration(self):
-        '''convinient function to get hydration'''
+        '''convenient function to get hydration'''
         for measure in self.measures:
             if measure.type == WithingsMeasure.TYPE_HYDRATION:
                 return measure.get_value()
         return None
 
     def get_bone_mass(self):
-        '''convinient function to get bone mass'''
+        '''convenient function to get bone mass'''
         for measure in self.measures:
             if measure.type == WithingsMeasure.TYPE_BONE_MASS:
                 return measure.get_value()
         return None
-    
-    def get_height(self):
-        '''convienent function to get height'''
+
+    def get_pulse_wave_velocity(self):
+        '''convenient function to get pulse wave velocity'''
         for measure in self.measures:
-            if measure.type == WithingsMeasure.TYPE_HEIGHT:
+            if measure.type == WithingsMeasure.TYPE_PULSE_WAVE_VELOCITY:
                 return measure.get_value()
         return None
 
@@ -289,9 +363,17 @@ class WithingsMeasure(object):
     TYPE_FAT_FREE_MASS = 5
     TYPE_FAT_RATIO = 6
     TYPE_FAT_MASS_WEIGHT = 8
+    TYPE_DIASTOLIC_BLOOD_PRESSURE = 9
+    TYPE_SYSTOLIC_BLOOD_PRESSURE = 10
+    TYPE_HEART_PULSE = 11
+    TYPE_TEMPERATURE = 12
+    TYPE_SP02 = 54
+    TYPE_BODY_TEMPERATURE = 71
+    TYPE_SKIN_TEMPERATURE = 73
     TYPE_MUSCLE_MASS = 76
     TYPE_HYDRATION = 77
     TYPE_BONE_MASS = 88
+    TYPE_PULSE_WAVE_VELOCITY = 91
 
     def __init__(self, measure):
         self._raw_data = measure
@@ -317,6 +399,39 @@ class WithingsMeasure(object):
         elif self.type == self.TYPE_FAT_MASS_WEIGHT:
             type_s = 'Fat Mass Weight'
             unit_s = 'kg'
+        elif self.type == self.TYPE_DIASTOLIC_BLOOD_PRESSURE:
+            type_s = 'Diastolic Blood Pressure'
+            unit_s = 'mmHg'
+        elif self.type == self.TYPE_SYSTOLIC_BLOOD_PRESSURE:
+            type_s = 'Systolic Blood Pressure'
+            unit_s = 'mmHg'
+        elif self.type == self.TYPE_HEART_PULSE:
+            type_s = 'Heart Pulse'
+            unit_s = 'bpm'
+        elif self.type == self.TYPE_TEMPERATURE:
+            type_s = 'Temperature'
+            unit_s = 'celsius'
+        elif self.type == self.TYPE_SP02:
+            type_s = 'SP02'
+            unit_s = '%'
+        elif self.type == self.TYPE_BODY_TEMPERATURE:
+            type_s = 'Body Temperature'
+            unit_s = 'celsius'
+        elif self.type == self.TYPE_SKIN_TEMPERATURE:
+            type_s = 'Skin Temperature'
+            unit_s = 'celsius'
+        elif self.type == self.TYPE_MUSCLE_MASS:
+            type_s = 'Muscle Mass'
+            unit_s = 'kg'
+        elif self.type == self.TYPE_HYDRATION:
+            type_s = 'Hydration'
+            unit_s = 'kg'
+        elif self.type == self.TYPE_BONE_MASS:
+            type_s = 'Bone Mass'
+            unit_s = 'kg'
+        elif self.type == self.TYPE_PULSE_WAVE_VELOCITY:
+            type_s = 'Pulse Wave Velocity'
+            unit_s = 'm/s'
         return '%s: %s %s' % (type_s, self.get_value(), unit_s)
 
     def get_value(self):
