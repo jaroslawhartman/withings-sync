@@ -71,8 +71,7 @@ def sync(garmin_username, garmin_password,
 
 
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        stream=sys.stdout)
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
     # Withings API
     withings = WithingsAccount()
@@ -124,7 +123,7 @@ def sync(garmin_username, garmin_password,
             percent_hydration = hydration * 100.0 / weight
         else:
             percent_hydration = None
-
+ 
         fit.write_device_info(timestamp=dt)
         fit.write_weight_scale(timestamp=dt,
                                weight=weight,
@@ -134,13 +133,14 @@ def sync(garmin_username, garmin_password,
                                muscle_mass=muscle_mass,
                                bmi=bmi)
 
-        logging.debug('Record: %s weight=%s kg, '
+        logging.debug('Record: %s, height=%s m, '
+                      'weight=%s kg, '
                       'fat_ratio=%s %%, '
                       'muscle_mass=%s kg, '
                       'hydration=%s %%, '
                       'bone_mass=%s kg, '
                       'bmi=%s',
-                      dt, weight, fat_ratio,
+                      dt, height, weight, fat_ratio,
                       muscle_mass, hydration,
                       bone_mass, bmi)
 
