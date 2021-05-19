@@ -97,6 +97,10 @@ def sync_trainerroad(last_weight):
 
 def prepare_syncdata(height, groups):
     """Prepare measurement data to be sent"""
+
+    # pylint: disable=too-many-locals
+    # One extra is very reasonable in this case.
+
     # Create FIT file
     logging.debug("Generating fit file...")
 
