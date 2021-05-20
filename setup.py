@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name='withings-sync',
-    version='3.1.3',
+    version='3.2.0',
     author='Masayuki Hamasaki',
     description='A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.',
     license='MIT',
@@ -25,7 +25,7 @@ setup(
     ],
     install_requires=[
         'lxml',
-        'requests'
+        'requests',
         'cloudscraper'
     ],
     entry_points={
