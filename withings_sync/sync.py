@@ -4,6 +4,7 @@ import time
 import sys
 import os
 import logging
+import tempfile
 
 from datetime import date, datetime
 
@@ -68,6 +69,15 @@ def get_args():
     )
 
     parser.add_argument(
+        "--csv-weight",
+        "--cw",
+        default=os.environ.get("CSV_WEIGHT"),
+        type=str,
+        metavar="CSV_WEIGHT",
+        help="Location where to store weight.csv, defaults to os tmp location.",
+    )
+
+    parser.add_argument(
         "--no-upload",
         action="store_true",
         help=("Won't upload to Garmin Connect and " "output binary-strings to stdout."),
@@ -97,10 +107,6 @@ def sync_trainerroad(last_weight):
 
 def prepare_syncdata(height, groups):
     """Prepare measurement data to be sent"""
-
-    # pylint: disable=too-many-locals
-    # One extra is very reasonable in this case.
-
     # Create FIT file
     logging.debug("Generating fit file...")
 
@@ -108,22 +114,27 @@ def prepare_syncdata(height, groups):
     fit.write_file_info()
     fit.write_file_creator()
 
+    syncdata = []
+
     last_date_time = None
     last_weight = None
-    bmi = None
-    percent_hydration = None
 
     for group in groups:
         # Get extra physical measurements
-        date_time = group.get_datetime()
-        weight = group.get_weight()
-        fat_ratio = group.get_fat_ratio()
-        muscle_mass = group.get_muscle_mass()
-        hydration = group.get_hydration()
-        bone_mass = group.get_bone_mass()
+        groupdata = {
+            "date_time": group.get_datetime(),
+            "height": height,
+            "weight": group.get_weight(),
+            "fat_ratio": group.get_fat_ratio(),
+            "muscle_mass": group.get_muscle_mass(),
+            "hydration": group.get_hydration(),
+            "percent_hydration": None,
+            "bone_mass": group.get_bone_mass(),
+            "bmi": None,
+        }
         raw_data = group.get_raw_data()
 
-        if weight is None:
+        if groupdata["weight"] is None:
             logging.info(
                 "This Withings metric contains no weight data.  Not syncing..."
             )
@@ -132,19 +143,23 @@ def prepare_syncdata(height, groups):
                 logging.debug(dataentry)
             continue
         if height:
-            bmi = round(weight / pow(height, 2), 1)
-        if hydration:
-            percent_hydration = hydration * 100.0 / weight
+            groupdata["bmi"] = round(
+                groupdata["weight"] / pow(groupdata["height"], 2), 1
+            )
+        if groupdata["hydration"]:
+            groupdata["percent_hydration"] = (
+                groupdata["hydration"] * 100.0 / groupdata["weight"]
+            )
 
-        fit.write_device_info(timestamp=date_time)
+        fit.write_device_info(timestamp=groupdata["date_time"])
         fit.write_weight_scale(
-            timestamp=date_time,
-            weight=weight,
-            percent_fat=fat_ratio,
-            percent_hydration=percent_hydration,
-            bone_mass=bone_mass,
-            muscle_mass=muscle_mass,
-            bmi=bmi,
+            timestamp=groupdata["date_time"],
+            weight=groupdata["weight"],
+            percent_fat=groupdata["fat_ratio"],
+            percent_hydration=groupdata["percent_hydration"],
+            bone_mass=groupdata["bone_mass"],
+            muscle_mass=groupdata["muscle_mass"],
+            bmi=groupdata["bmi"],
         )
 
         logging.debug(
@@ -152,24 +167,26 @@ def prepare_syncdata(height, groups):
             "weight=%s kg, "
             "fat_ratio=%s %%, "
             "muscle_mass=%s kg, "
-            "hydration=%s %%, "
+            "percent_hydration=%s %%, "
             "bone_mass=%s kg, "
             "bmi=%s",
-            date_time,
-            height,
-            weight,
-            fat_ratio,
-            muscle_mass,
-            percent_hydration,
-            bone_mass,
-            bmi,
+            groupdata["date_time"],
+            groupdata["height"],
+            groupdata["weight"],
+            groupdata["fat_ratio"],
+            groupdata["muscle_mass"],
+            groupdata["percent_hydration"],
+            groupdata["bone_mass"],
+            groupdata["bmi"],
         )
-        if last_date_time is None or date_time > last_date_time:
-            last_date_time = date_time
-            last_weight = weight
+        if last_date_time is None or groupdata["date_time"] > last_date_time:
+            last_date_time = groupdata["date_time"]
+            last_weight = groupdata["weight"]
+
+        syncdata.append(groupdata)
 
     fit.finish()
-    return last_weight, last_date_time, fit
+    return last_weight, last_date_time, fit, syncdata
 
 
 def sync():
@@ -188,7 +205,7 @@ def sync():
         logging.error("No measurements to upload for date or period specified")
         return -1
 
-    last_weight, last_date_time, fitfile = prepare_syncdata(height, groups)
+    last_weight, last_date_time, fitfile, syncdata = prepare_syncdata(height, groups)
 
     if last_weight is None:
         logging.error("Invalid weight")
