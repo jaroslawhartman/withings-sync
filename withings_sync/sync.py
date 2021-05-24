@@ -308,7 +308,7 @@ def sync():
         logging.info("Measurements saved to local csv file.")
     else:
         logging.debug(
-            "No need to save to csv, Garmin nor Trainerroad sync was successfull."
+            "No need to save to csv, Garmin nor Trainerroad sync was successful."
         )
     return 0
 
