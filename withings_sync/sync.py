@@ -321,6 +321,7 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG if ARGS.verbose else logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        stream=sys.stdout,
     )
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
