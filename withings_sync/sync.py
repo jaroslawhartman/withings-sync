@@ -196,7 +196,7 @@ def log2csv(csv_fullpath, syncdata):
         with open(csv_fullpath, "r+", newline="", encoding="utf-8") as csvfile:
             csvfile.close()
     except FileNotFoundError:
-        print("File not found")
+        logging.debug("%s: file not found... creating...", csv_fullpath)
         with open(csv_fullpath, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["Body"])
@@ -205,7 +205,7 @@ def log2csv(csv_fullpath, syncdata):
             )
             csvfile.close()
     else:
-        print("file exists")
+        logging.debug("File %s found...  appending...", csv_fullpath)
     finally:
         with open(csv_fullpath, "a", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
@@ -271,8 +271,9 @@ def sync():
         logging.info("No Garmin username - skipping sync")
 
     # Log to local csv file
+    logging.debug("Attempting to save data to local file %s", csv_fullpath)
     log2csv(csv_fullpath, syncdata)
-
+    logging.info("Measurements saved to local csv file.")
     return 0
 
 
