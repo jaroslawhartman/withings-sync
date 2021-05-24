@@ -106,8 +106,8 @@ def sync_trainerroad(last_weight):
     return t_road.weight
 
 
-def prepare_syncdata(height, groups):
-    """Prepare measurement data to be sent"""
+def generate_fitfile(syncdata):
+    """Generate fitfile from measured data"""
     # Create FIT file
     logging.debug("Generating fit file...")
 
@@ -115,6 +115,23 @@ def prepare_syncdata(height, groups):
     fit.write_file_info()
     fit.write_file_creator()
 
+    for record in syncdata:
+        fit.write_device_info(timestamp=record["date_time"])
+        fit.write_weight_scale(
+            timestamp=record["date_time"],
+            weight=record["weight"],
+            percent_fat=record["fat_ratio"],
+            percent_hydration=record["percent_hydration"],
+            bone_mass=record["bone_mass"],
+            muscle_mass=record["muscle_mass"],
+            bmi=record["bmi"],
+        )
+    fit.finish()
+    return fit
+
+
+def prepare_syncdata(height, groups, csv_fullpath):
+    """Prepare measurement data to be sent"""
     syncdata = []
 
     last_date_time = None
@@ -152,17 +169,6 @@ def prepare_syncdata(height, groups):
                 groupdata["hydration"] * 100.0 / groupdata["weight"]
             )
 
-        fit.write_device_info(timestamp=groupdata["date_time"])
-        fit.write_weight_scale(
-            timestamp=groupdata["date_time"],
-            weight=groupdata["weight"],
-            percent_fat=groupdata["fat_ratio"],
-            percent_hydration=groupdata["percent_hydration"],
-            bone_mass=groupdata["bone_mass"],
-            muscle_mass=groupdata["muscle_mass"],
-            bmi=groupdata["bmi"],
-        )
-
         logging.debug(
             "Record: %s, height=%s m, "
             "weight=%s kg, "
@@ -184,10 +190,27 @@ def prepare_syncdata(height, groups):
             last_date_time = groupdata["date_time"]
             last_weight = groupdata["weight"]
 
+    try:
+        with open(csv_fullpath, "r", newline="", encoding="utf-8") as csvfile:
+            reader = csvfile.read()
+            if str(groupdata["date_time"]) not in reader:
+                logging.debug(
+                    "record for %s not found... adding...", groupdata["date_time"]
+                )
+                syncdata.append(groupdata)
+            else:
+                logging.debug(
+                    "record for %s FOUND... skipping...", groupdata["date_time"]
+                )
+            csvfile.close()
+    except FileNotFoundError:
+        logging.debug(
+            "%s: file not found... adding record for %s ...",
+            csv_fullpath,
+            groupdata["date_time"],
+        )
         syncdata.append(groupdata)
-
-    fit.finish()
-    return last_weight, last_date_time, fit, syncdata
+    return last_weight, last_date_time, syncdata
 
 
 def log2csv(csv_fullpath, syncdata):
@@ -227,6 +250,9 @@ def log2csv(csv_fullpath, syncdata):
 def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
 
+    trainerroad_sync_ok = False
+    garmin_sync_ok = False
+
     csv_fullpath = ARGS.csv_weight_dir + "/" + "withings-sync-log.csv"
 
     # Withings API
@@ -242,7 +268,10 @@ def sync():
         logging.error("No measurements to upload for date or period specified")
         return -1
 
-    last_weight, last_date_time, fitfile, syncdata = prepare_syncdata(height, groups)
+    last_weight, last_date_time, syncdata = prepare_syncdata(
+        height, groups, csv_fullpath
+    )
+    fitfile = generate_fitfile(syncdata)
 
     if last_weight is None:
         logging.error("Invalid weight")
@@ -258,6 +287,7 @@ def sync():
         logging.info(" Last weight %s", last_weight)
         logging.info(" Measured %s", last_date_time)
         if sync_trainerroad(last_weight):
+            trainerroad_sync_ok = True
             logging.info("TrainerRoad update done!")
     else:
         logging.info("No Trainerroad username or a new measurement " "- skipping sync")
@@ -266,14 +296,20 @@ def sync():
     if ARGS.garmin_username:
         logging.debug("attempting to upload fit file...")
         if sync_garmin(fitfile):
+            garmin_sync_ok = True
             logging.info("Fit file uploaded to Garmin Connect")
     else:
         logging.info("No Garmin username - skipping sync")
 
     # Log to local csv file
     logging.debug("Attempting to save data to local file %s", csv_fullpath)
-    log2csv(csv_fullpath, syncdata)
-    logging.info("Measurements saved to local csv file.")
+    if trainerroad_sync_ok or garmin_sync_ok:
+        log2csv(csv_fullpath, syncdata)
+        logging.info("Measurements saved to local csv file.")
+    else:
+        logging.debug(
+            "No need to save to csv, Garmin nor Trainerroad sync was successfull."
+        )
     return 0
 
 
