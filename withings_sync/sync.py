@@ -1,5 +1,6 @@
 """This module syncs measurement data from Withings to Garmin a/o TrainerRoad."""
 import argparse
+import csv
 import time
 import sys
 import os
@@ -69,11 +70,11 @@ def get_args():
     )
 
     parser.add_argument(
-        "--csv-weight",
-        "--cw",
-        default=os.environ.get("CSV_WEIGHT"),
+        "--csv-weight-dir",
+        "--cwd",
+        default=os.environ.get("CSV_WEIGHT_DIR"),
         type=str,
-        metavar="CSV_WEIGHT",
+        metavar="CSV_WEIGHT_DIR",
         help="Location where to store weight.csv, defaults to os tmp location.",
     )
 
@@ -189,8 +190,44 @@ def prepare_syncdata(height, groups):
     return last_weight, last_date_time, fit, syncdata
 
 
+def log2csv(csv_fullpath, syncdata):
+    """function to add retrieved data to a local csv file"""
+    try:
+        with open(csv_fullpath, "r+", newline="", encoding="utf-8") as csvfile:
+            csvfile.close()
+    except FileNotFoundError:
+        print("File not found")
+        with open(csv_fullpath, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Body"])
+            writer.writerow(
+                ["Date", "Weight", "BMI", "Fat", "Bone", "Hydration", "Muscle"]
+            )
+            csvfile.close()
+    else:
+        print("file exists")
+    finally:
+        with open(csv_fullpath, "a", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            for data in syncdata:
+                writer.writerow(
+                    [
+                        data["date_time"],
+                        data["weight"],
+                        data["bmi"],
+                        data["fat_ratio"],
+                        data["bone_mass"],
+                        data["percent_hydration"],
+                        data["muscle_mass"],
+                    ]
+                )
+            csvfile.close()
+
+
 def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
+
+    csv_fullpath = ARGS.csv_weight_dir + "/" + "withings-sync-log.csv"
 
     # Withings API
     withings = WithingsAccount()
@@ -233,6 +270,9 @@ def sync():
     else:
         logging.info("No Garmin username - skipping sync")
 
+    # Log to local csv file
+    log2csv(csv_fullpath, syncdata)
+
     return 0
 
 
@@ -246,4 +286,8 @@ def main():
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     logging.debug("Script invoked with the following arguments: %s", ARGS)
+
+    if not ARGS.csv_weight_dir:
+        ARGS.csv_weight_dir = tempfile.gettempdir()
+
     sync()
