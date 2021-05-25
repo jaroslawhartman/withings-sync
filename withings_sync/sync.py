@@ -190,26 +190,26 @@ def prepare_syncdata(height, groups, csv_fullpath):
             last_date_time = groupdata["date_time"]
             last_weight = groupdata["weight"]
 
-    try:
-        with open(csv_fullpath, "r", newline="", encoding="utf-8") as csvfile:
-            reader = csvfile.read()
-            if str(groupdata["date_time"]) not in reader:
-                logging.debug(
-                    "record for %s not found... adding...", groupdata["date_time"]
-                )
-                syncdata.append(groupdata)
-            else:
-                logging.debug(
-                    "record for %s FOUND... skipping...", groupdata["date_time"]
-                )
-            csvfile.close()
-    except FileNotFoundError:
-        logging.debug(
-            "%s: file not found... adding record for %s ...",
-            csv_fullpath,
-            groupdata["date_time"],
-        )
-        syncdata.append(groupdata)
+        try:
+            with open(csv_fullpath, "r", newline="", encoding="utf-8") as csvfile:
+                reader = csvfile.read()
+                if str(groupdata["date_time"]) not in reader:
+                    logging.debug(
+                        "record for %s not found... adding...", groupdata["date_time"]
+                    )
+                    syncdata.append(groupdata)
+                else:
+                    logging.debug(
+                        "record for %s FOUND... skipping...", groupdata["date_time"]
+                    )
+                csvfile.close()
+        except FileNotFoundError:
+            logging.debug(
+                "%s: file not found... adding record for %s ...",
+                csv_fullpath,
+                groupdata["date_time"],
+            )
+            syncdata.append(groupdata)
     return last_weight, last_date_time, syncdata
 
 
