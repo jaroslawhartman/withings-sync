@@ -82,6 +82,25 @@ This is one-time activity and it will not be needed to repeat.
 
 ## Tips
 
+### Garmin SSO errors
+
+Some users reported errors raised by the Garmin SSO login:
+
+```
+withings_sync.garmin.APIException: SSO error 401
+```
+
+or 
+
+```
+withings_sync.garmin.APIException: SSO error 403
+```
+
+These errors are raised if a user tries to login too frequently.
+E.g. by running the script every 10 minutes.
+
+**We recommend to run the script around 8-10 times per day (every 2-3 hours).**
+
 ### Docker
 
 ```
