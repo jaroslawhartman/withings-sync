@@ -1,6 +1,7 @@
 import os
 from setuptools import setup
 
+
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
 # README file and 2) it's easier to type in the README file than to put a raw
@@ -8,10 +9,12 @@ from setuptools import setup
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
     name='withings-sync',
-    version='3.2.0',
-    author='Masayuki Hamasaki',
+    version='3.3.0',
+    author='Masayuki Hamasaki, Steffen Vogel',
+    author_email='post@steffenvogel.de',
     description='A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.',
     license='MIT',
     keywords='garmin withings sync api scale smarthome',
