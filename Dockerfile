@@ -1,9 +1,8 @@
-FROM python:3.8-alpine
+FROM python:3.9
 
-RUN apk add --update --no-cache libxml2-dev libxslt-dev gcc musl-dev
-
-# Profit from Docker build cache buy building python lxml here..
-RUN pip3 install lxml requests
+RUN apt-get update && \
+	apt-get install -y \
+		python3-lxml
 
 RUN mkdir -p /src
 COPY . /src
