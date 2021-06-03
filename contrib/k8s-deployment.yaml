@@ -1,5 +1,5 @@
-# An alternative to the kubernetes job also submitted in the contrib/
-# directory
+# Deploy withings-sync as a Kubernetes deployment
+# Please also see contrib/k8s-job.yaml for a Kubernetes CronJob
 #
 # To install:
 # - kubectl create namespace FOO
@@ -7,7 +7,6 @@
 #
 # To check logs:
 # - kubectl -n FOO logs -l app=withings-sync
-#
 #
 # Because the app is running without STDIN, it will not pause to wait
 # for you to enter the oauth token.  Instead it will throw an error
@@ -17,13 +16,9 @@
 # follow the link given:
 #
 # - kubectl -n FOO exec -ti $( kubectl -n FOO get pods | awk '$3=="Running" {print $1; exit}' ) -- withings-sync
-#
-#
-#
 
 
 ---
-
 # Secret for credentials.  By defining this as stringData:
 # instead of data: we can enter details here in plain text and
 # it gets base64 encoded when added to the system.
@@ -43,13 +38,11 @@ stringData:
   TRAINERROAD_USERNAME: ""
 
 ---
-
 # PVC for storing Withings OAuth tokens.  Different
 # storage methods have different minimum sizes.
 #
 # If you don't have a default storage class, you must
 # specify it
-#
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -61,10 +54,9 @@ spec:
   # storageClassName: class
   resources:
     requests:
-      storage: 10Mi
+      storage: 1Mi
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,10 +72,6 @@ spec:
       labels:
         app: withings-sync
     spec:
-      # container image is only built for amd64 at the moment
-      nodeSelector:
-        kubernetes.io/arch: amd64
-
       containers:
       - name: withings-sync
         image: docker.io/stv0g/withings-sync
