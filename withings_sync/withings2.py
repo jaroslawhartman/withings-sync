@@ -3,6 +3,7 @@ import requests
 import json
 import pkg_resources
 import os
+import sys
 
 from datetime import datetime
 
@@ -16,7 +17,7 @@ class WithingsException(Exception):
 class Withings():
     HOME = os.environ.get('HOME', '.')
     AUTHORIZE_URL = 'https://account.withings.com/oauth2_user/authorize2'
-    TOKEN_URL = 'https://account.withings.com/oauth2/token'
+    TOKEN_URL = 'https://wbsapi.withings.net/v2/oauth2'
     GETMEAS_URL = 'https://wbsapi.withings.net/measure?action=getmeas'
 
     APP_CONFIG = os.environ.get('WITHINGS_APP',
@@ -110,25 +111,22 @@ class WithingsOAuth2(Withings):
         }
 
         req = requests.post(Withings.TOKEN_URL, params)
+        resp = req.json()
 
-        accessToken = req.json()
+        status = resp.get('status')
+        body = resp.get('body')
 
-        if accessToken.get('errors'):
-            log.error('Received error(s):')
-            for message in accessToken.get('errors'):
-                error = message.get('message')
-                log.error('  ' + error)
-                if 'invalid code' in error:
-                    log.error('Removing invalid authentification_code')
-                    self.user_config['authentification_code'] = ''
-
+        if status != 0:
+            log.error('Received error code: %d', status)
+            log.error('Check here for an interpretation of this error: '
+                      'http://developer.withings.com/api-reference#section/Response-status')
             log.error('')
-            log.error('If it\'s regarding an invalid code, '
-                      'try to start the script again to obtain a new link.')
+            log.error('If it\'s regarding an invalid code, try to start the'
+                      ' script again to obtain a new link.')
 
-        self.user_config['access_token'] = accessToken.get('access_token')
-        self.user_config['refresh_token'] = accessToken.get('refresh_token')
-        self.user_config['userid'] = accessToken.get('userid')
+        self.user_config['access_token'] = body.get('access_token')
+        self.user_config['refresh_token'] = body.get('refresh_token')
+        self.user_config['userid'] = body.get('userid')
 
     def refreshAccessToken(self):
         log.info('Refresh Access Token')
@@ -141,25 +139,22 @@ class WithingsOAuth2(Withings):
         }
 
         req = requests.post(Withings.TOKEN_URL, params)
+        resp = req.json()
 
-        accessToken = req.json()
+        status = resp.get('status')
+        body = resp.get('body')
 
-        if accessToken.get('errors'):
-            log.error('Received error(s):')
-            for message in accessToken.get('errors'):
-                error = message.get('message')
-                log.error('  ' + error)
-                if 'invalid code' in error:
-                    log.error('Removing invalid authentification_code')
-                    self.user_config['authentification_code'] = ''
-
+        if status != 0:
+            log.error('Received error code: %d', status)
+            log.error('Check here for an interpretation of this error: '
+                      'http://developer.withings.com/api-reference#section/Response-status')
             log.error('')
             log.error('If it\'s regarding an invalid code, try to start the'
                       ' script again to obtain a new link.')
 
-        self.user_config['access_token'] = accessToken.get('access_token')
-        self.user_config['refresh_token'] = accessToken.get('refresh_token')
-        self.user_config['userid'] = accessToken.get('userid')
+        self.user_config['access_token'] = body.get('access_token')
+        self.user_config['refresh_token'] = body.get('refresh_token')
+        self.user_config['userid'] = body.get('userid')
 
 
 class WithingsAccount(Withings):
