@@ -1,45 +1,48 @@
 ---
-apiVersion: "v1
-kind: Namespace
-metadata:
-  name: withings
----
-# Secret for Garmin and TrainerRoad credentials
-# PLEASE CHANGE!
+# Secret for credentials.  By defining this as stringData:
+# instead of data: we can enter details here in plain text and
+# it gets base64 encoded when added to the system.
+#
+# Leave unused variables defined, but empty ""
 apiVersion: v1
 kind: Secret
 metadata:
   name: credentials
-  namespace: withings
 type: Opaque
-data:
-  # Base64 encoded!!!
-  GARMIN_PASSWORD: ""
-  GARMIN_USERNAME: ""
+stringData:
+  # NOT base64 
+  GARMIN_PASSWORD: "someone@example.com"
+  GARMIN_USERNAME: "password-goes-here"
   TRAINERROAD_PASSWORD: ""
   TRAINERROAD_USERNAME: ""
+
 ---
-# PVC for storing Withings OAuth tokens
+# PVC for storing Withings OAuth tokens.  Different
+# storage methods have different minimum sizes.
+#
+# If you don't have a default storage class, you must
+# specify it
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   finalizers:
   - kubernetes.io/pvc-protection
   name: withings-oauth-cache
-  namespace: withings
 spec:
   accessModes:
   - ReadWriteOnce
+  # uncomment, and define if needed
+  # storageClassName: class
   resources:
     requests:
       storage: 1Mi
   volumeMode: Filesystem
+
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: withings-garmin-sync
-  namespace: withings
 spec:
   concurrencyPolicy: Allow
   failedJobsHistoryLimit: 1
@@ -50,9 +53,13 @@ spec:
           containers:
           - args:
             - -v
+
+            # override $HOME to put our oauth file in a known place
             env:
             - name: HOME
               value: /root
+
+            # read usernames/passwords from the secret we defined
             envFrom:
             - secretRef:
                 name: credentials
@@ -62,11 +69,21 @@ spec:
             volumeMounts:
             - mountPath: /root/
               name: oauth-cache
+
           restartPolicy: Never
+
+          # Never run this container as root
+          securityContext:
+            fsGroup: 1234
+            runAsGroup: 1234
+            runAsUser: 1234
+            runAsNonRoot: True
+          
           volumes:
           - name: oauth-cache
             persistentVolumeClaim:
               claimName: withings-oauth-cache
+
   schedule: '*/15 * * * *'
   successfulJobsHistoryLimit: 3
 
