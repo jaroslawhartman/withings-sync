@@ -95,7 +95,7 @@ spec:
         command:
         - sh
         - -c
-        - while true; do date; withings-sync; echo; sleep $( echo "3600 - ( $( date +%s ) % 3600 )" | bc ); done
+        - while true; do date; withings-sync; echo; sleep 10000; done
 
       # Never run this container as root
       securityContext:
