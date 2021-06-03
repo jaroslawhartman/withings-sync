@@ -84,6 +84,6 @@ spec:
             persistentVolumeClaim:
               claimName: withings-oauth-cache
 
-  schedule: '*/15 * * * *'
+  schedule: '* */3 * * *'
   successfulJobsHistoryLimit: 3
 
