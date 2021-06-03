@@ -101,6 +101,8 @@ E.g. by running the script every 10 minutes.
 
 **We recommend to run the script around 8-10 times per day (every 2-3 hours).**
 
+See also: https://github.com/jaroslawhartman/withings-sync/issues/31
+
 ### Docker
 
 ```
