@@ -103,6 +103,7 @@ class WithingsOAuth2(Withings):
         log.info('Get Access Token')
 
         params = {
+            'action': 'requesttoken',
             'grant_type': 'authorization_code',
             'client_id': self.app_config['client_id'],
             'client_secret': self.app_config['consumer_secret'],
@@ -132,6 +133,7 @@ class WithingsOAuth2(Withings):
         log.info('Refresh Access Token')
 
         params = {
+            'action': 'requesttoken',
             'grant_type': 'refresh_token',
             'client_id': self.app_config['client_id'],
             'client_secret': self.app_config['consumer_secret'],
