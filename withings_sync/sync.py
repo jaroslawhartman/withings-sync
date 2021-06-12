@@ -46,7 +46,6 @@ def get_args():
 
     parser.add_argument('--fromdate', '-f',
                         type=date_parser,
-                        default=date.today(),
                         metavar='DATE')
     parser.add_argument('--todate', '-t',
                         type=date_parser,
@@ -77,8 +76,13 @@ def sync(garmin_username, garmin_password,
     # Withings API
     withings = WithingsAccount()
 
-    startdate = int(time.mktime(fromdate.timetuple()))
+    if not fromdate:
+        startdate = withings.getLastSync()
+    else:
+        startdate = int(time.mktime(fromdate.timetuple()))
+
     enddate = int(time.mktime(todate.timetuple())) + 86399
+    logging.info("Fetching measurements from %s to %s", time.strftime('%Y-%m-%d %H:%M', time.gmtime(startdate)), time.strftime('%Y-%m-%d %H:%M', time.gmtime(enddate)))
 
     height = withings.getHeight()
 
@@ -88,6 +92,10 @@ def sync(garmin_username, garmin_password,
     if groups is None or len(groups) == 0:
         logging.error('No measurements to upload for date or period specified')
         return -1
+
+    # Save this sync so we don't re-download the same data again (if no range has been specified)
+    if not fromdate:
+        withings.setLastSync()
 
     # Create FIT file
     logging.debug('Generating fit file...')

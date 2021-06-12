@@ -2,10 +2,11 @@ import logging
 import requests
 import json
 import pkg_resources
+import time
 import os
 import sys
 
-from datetime import datetime
+from datetime import date, datetime
 
 log = logging.getLogger('withings')
 
@@ -56,8 +57,8 @@ class WithingsOAuth2(Withings):
         app_cfg = WithingsConfig(Withings.APP_CONFIG)
         self.app_config = app_cfg.config
 
-        user_cfg = WithingsConfig(Withings.USER_CONFIG)
-        self.user_config = user_cfg.config
+        self.user_cfg = WithingsConfig(Withings.USER_CONFIG)
+        self.user_config = self.user_cfg.config
 
         if not self.user_config.get('access_token'):
             if not self.user_config.get('authentification_code'):
@@ -67,7 +68,10 @@ class WithingsOAuth2(Withings):
 
         self.refreshAccessToken()
 
-        user_cfg.write()
+        self.user_cfg.write()
+
+    def updateConfig(self):
+        self.user_cfg.write()
 
     def getAuthenticationCode(self):
         params = {
@@ -163,6 +167,17 @@ class WithingsAccount(Withings):
     def __init__(self):
         self.withings = WithingsOAuth2()
 
+    def getLastSync(self):
+        if not self.withings.user_config.get('last_sync'):
+            return int(time.mktime(date.today().timetuple()))
+        else:
+            return self.withings.user_config['last_sync']
+    
+    def setLastSync(self):
+        self.withings.user_config['last_sync'] = int(time.time())
+        log.info('Saving Last Sync')
+        self.withings.updateConfig()
+
     def getMeasurements(self, startdate, enddate):
         log.info('Get Measurements')
 
@@ -180,7 +195,6 @@ class WithingsAccount(Withings):
 
         if measurements.get('status') == 0:
             log.debug('Measurements received')
-
             return [WithingsMeasureGroup(g) for
                     g in measurements.get('body').get('measuregrps')]
 
