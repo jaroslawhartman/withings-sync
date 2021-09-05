@@ -53,10 +53,16 @@ def get_args():
                         default=date.today(),
                         metavar='DATE')
 
+    parser.add_argument('--output', '-o',
+                        type=str,
+                        metavar='FILENAME',
+                        help=('Write downloaded measurements to FIT file.'))
+
     parser.add_argument('--no-upload',
                         action='store_true',
-                        help=('Won\'t upload to Garmin Connect and '
-                              'output binary-strings to stdout.'))
+                        help=('Won\'t upload to Garmin Connect or '
+                              'TrainerRoad.'))
+
     parser.add_argument('--verbose', '-v',
                         action='store_true',
                         help='Run verbosely')
@@ -67,7 +73,7 @@ def get_args():
 def sync(garmin_username, garmin_password,
          trainerroad_username, trainerroad_password,
          fromdate, todate,
-         no_upload, verbose):
+         output, no_upload, verbose):
 
 
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
@@ -154,8 +160,17 @@ def sync(garmin_username, garmin_password,
         logging.error('Invalid weight')
         return -1
 
+    if output is not None:
+        logging.info('Writing file to {}'.format(output))
+        try:
+            fitfile = open(output, "wb")
+            fitfile.write(fit.getvalue())
+            fitfile.close()
+        except (OSError, IOError):
+            logging.error('Unable to open output file!')
+
     if no_upload:
-        sys.stdout.buffer.write(fit.getvalue())
+        logging.info('Skipping upload')
         return 0
 
     # Upload to Trainer Road
