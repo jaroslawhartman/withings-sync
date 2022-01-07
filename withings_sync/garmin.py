@@ -139,26 +139,35 @@ class GarminConnect(object):
                 break
 
         # self.print_cookies(session.cookies)
-
         session.headers.update(headers)
 
         return session
+
+
+    @staticmethod
+    def get_json(page_html, key):
+        """Return json from text."""
+        found = re.search(key + r" = (\{.*\});", page_html, re.M)
+        if found:
+            json_text = found.group(1).replace('\\"', '"')
+            return json.loads(json_text)
+        return None
+
 
     def print_cookies(self, cookies):
         log.debug('Cookies: ')
         for key, value in list(cookies.items()):
             log.debug(' %s = %s', key, value)
 
+
     def login(self, username, password):
 
         session = self._get_session(email=username, password=password)
 
         try:
-            dashboard = session.get('http://connect.garmin.com/modern')
-
-            userdata_json_str = re.search(r'VIEWER_SOCIAL_PROFILE\s*=\s*JSON\.parse\((.+)\);$', dashboard.text, re.MULTILINE).group(1)
-            userdata = json.loads(json.loads(userdata_json_str))
-            username = userdata['displayName']
+            dashboard = session.get('http://connect.garmin.com/modern',follow_redirects=True)
+            userdata = GarminConnect.get_json(dashboard.text, "VIEWER_SOCIAL_PROFILE")
+            username = userdata['userName']
 
             log.info('Garmin Connect User Name: %s', username)
 
@@ -166,6 +175,7 @@ class GarminConnect(object):
             log.error(e)
             log.error('Unable to retrieve Garmin username! Most likely: '
                       'incorrect Garmin login or password!')
+            log.debug(dashboard.text)
 
         return session
 
