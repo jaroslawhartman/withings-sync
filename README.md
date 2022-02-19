@@ -33,7 +33,7 @@ $ pip install withings-sync
 usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD]
                      [--fromdate DATE] [--todate DATE] [--no-upload] [--to-json] [--verbose]
 
-A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Roadi or to provide a json string.
+A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
 optional arguments:
   -h, --help            show this help message and exit
