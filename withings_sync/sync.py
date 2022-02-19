@@ -3,6 +3,7 @@ import time
 import sys
 import os
 import logging
+import json
 
 from datetime import date, datetime
 
@@ -16,7 +17,7 @@ def get_args():
     parser = argparse.ArgumentParser(
         description=('A tool for synchronisation of Withings '
                      '(ex. Nokia Health Body) to Garmin Connect'
-                     ' and Trainer Road.')
+                     ' and Trainer Road or to provide a json string.')
     )
 
     def date_parser(s):
@@ -57,6 +58,10 @@ def get_args():
                         action='store_true',
                         help=('Won\'t upload to Garmin Connect and '
                               'output binary-strings to stdout.'))
+    parser.add_argument('--to-json', '-j',
+                        action='store_true',
+                        help=('Won\'t upload to Garmin Connect and '
+                              'output json to stdout.'))
     parser.add_argument('--verbose', '-v',
                         action='store_true',
                         help='Run verbosely')
@@ -67,12 +72,14 @@ def get_args():
 def sync(garmin_username, garmin_password,
          trainerroad_username, trainerroad_password,
          fromdate, todate,
-         no_upload, verbose):
+         no_upload, to_json, verbose):
 
-
-    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
+    if not to_json:
+        logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         stream=sys.stdout)
+    else:
+        d_data = {}
 
     # Withings API
     withings = WithingsAccount()
@@ -143,10 +150,22 @@ def sync(garmin_username, garmin_password,
                       dt, weight, fat_ratio,
                       muscle_mass, hydration,
                       bone_mass, bmi)
+        if to_json:
+            d_data[str(dt)] = {'unit': 'kg', \
+                    'weight': weight, \
+                    'fat_ratio': fat_ratio, \
+                    'muscle_mass': muscle_mass, \
+                    'hydration_ratio': hydration, \
+                    'bone_mass': bone_mass, \
+                    'bmi': bmi}
 
         if last_dt is None or dt > last_dt:
             last_dt = dt
             last_weight = weight
+
+    if to_json:
+        json_object = json.dumps(d_data, indent = 4)
+        print(json_object)
 
     fit.finish()
 
