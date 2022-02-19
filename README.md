@@ -5,6 +5,8 @@ A tool for synchronisation of Withings (ex. Nokia Health Body) to:
 - Garmin Connect
 - Trainer Road
 
+or to get json output data from Withings.
+
 **NOTE: For Docker usage hits see at end of this document:** https://hub.docker.com/r/stv0g/withings-sync
 
 **NOTE: Included support for Withings OAuth2! See 'Obtaining Withings authorization'**
@@ -29,9 +31,9 @@ $ pip install withings-sync
 
 ```
 usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD]
-                     [--fromdate DATE] [--todate DATE] [--no-upload] [--verbose]
+                     [--fromdate DATE] [--todate DATE] [--no-upload] [--to-json] [--verbose]
 
-A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.
+A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Roadi or to provide a json string.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -46,6 +48,7 @@ optional arguments:
   --fromdate DATE, -f DATE
   --todate DATE, -t DATE
   --no-upload           Won't upload to Garmin Connect and output binary-strings to stdout.
+  --to-json, -j         Won't upload to Garmin Connect and output json to stdout.
   --verbose, -v         Run verbosely
 ```
 
