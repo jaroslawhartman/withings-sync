@@ -7,6 +7,7 @@ trigger:
   event:
     - push
     - pull_request
+    - custom
 
 steps:
   - name: build-sync
