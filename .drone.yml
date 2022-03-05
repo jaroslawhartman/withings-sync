@@ -1,0 +1,60 @@
+---
+kind: pipeline
+type: docker
+name: build
+
+trigger:
+  event:
+    - push
+    - pull_request
+
+steps:
+  - name: build-sync
+    image: plugins/docker
+    volumes:
+      - name: cache-sync
+        path: /var/lib/docker
+    settings:
+      context: .
+      dockerfile: Dockerfile
+      tags:
+        - latest-${DRONE_BRANCH}
+      repo: docker.andne.net:5000/health/withings-sync
+      dry_run: true
+
+  - name: publish-sync
+    image: docker.andne.net:5000/plugins/docker
+    volumes:
+      - name: cache-sync
+        path: /var/lib/docker
+    settings:
+      context: .
+      dockerfile: Dockerfile
+      auto_tag: true
+      repo: docker.andne.net:5000/health/withings-sync
+
+volumes:
+  - name: cache-sync
+    temp: {}
+
+
+---
+kind: pipeline
+type: docker
+name: sync
+
+trigger:
+  event:
+    - cron
+    - custom
+
+steps:
+  - name: sync-data
+    image: docker.andne.net:5000/health/withings-sync
+    environment:
+      GARMIN_USERNAME:
+        from_secret: garmin_username
+      GARMIN_PASSWORD:
+        from_secret: garmin_password
+    commands:
+      - withings-sync --fromdate `date -I`
