@@ -1,8 +1,8 @@
 from datetime import timedelta
 import urllib.request
+import httpx
 import urllib.error
 import urllib.parse
-import cloudscraper
 import re
 import sys
 import json
@@ -42,7 +42,7 @@ class GarminConnect(object):
     # From https://github.com/cpfair/tapiriik
 
     def _get_session(self, record=None, email=None, password=None):
-        session = cloudscraper.CloudScraper()
+        session = httpx.Client(http2=True)
 
         # JSIG CAS, cool I guess.
         # Not quite OAuth though, so I'll continue to collect raw credentials.
@@ -87,7 +87,7 @@ class GarminConnect(object):
         if preResp.status_code != 200:
             raise APIException('SSO prestart error %s %s' % (preResp.status_code, preResp.text))
 
-        ssoResp = session.post('https://sso.garmin.com/sso/login', params=params, data=data, allow_redirects=False, headers=headers)
+        ssoResp = session.post('https://sso.garmin.com/sso/login', params=params, data=data, headers=headers)
         
         if ssoResp.status_code != 200 or 'temporarily unavailable' in ssoResp.text:
             raise APIException('SSO error %s %s' % (ssoResp.status_code, ssoResp.text))
@@ -105,9 +105,7 @@ class GarminConnect(object):
 
         # ...AND WE'RE NOT DONE YET!
 
-        gcRedeemResp = session.get('https://connect.garmin.com/modern',
-                                   allow_redirects=False,
-                                   headers=headers)
+        gcRedeemResp = session.get('https://connect.garmin.com/modern', headers=headers)
         if gcRedeemResp.status_code != 302:
             raise APIException(f'GC redeem-start error {gcRedeemResp.status_code} {gcRedeemResp.text}')
 
@@ -124,7 +122,7 @@ class GarminConnect(object):
             if url.startswith('/'):
                 url = url_prefix + url
             url_prefix = '/'.join(url.split('/')[:3])
-            gcRedeemResp = session.get(url, allow_redirects=False)
+            gcRedeemResp = session.get(url)
 
             if (current_redirect_count >= max_redirect_count and
                 gcRedeemResp.status_code != 200):
@@ -141,26 +139,35 @@ class GarminConnect(object):
                 break
 
         # self.print_cookies(session.cookies)
-
         session.headers.update(headers)
 
         return session
+
+
+    @staticmethod
+    def get_json(page_html, key):
+        """Return json from text."""
+        found = re.search(key + r" = (\{.*\});", page_html, re.M)
+        if found:
+            json_text = found.group(1).replace('\\"', '"')
+            return json.loads(json_text)
+        return None
+
 
     def print_cookies(self, cookies):
         log.debug('Cookies: ')
         for key, value in list(cookies.items()):
             log.debug(' %s = %s', key, value)
 
+
     def login(self, username, password):
 
         session = self._get_session(email=username, password=password)
 
         try:
-            dashboard = session.get('http://connect.garmin.com/modern')
-
-            userdata_json_str = re.search(r'VIEWER_SOCIAL_PROFILE\s*=\s*JSON\.parse\((.+)\);$', dashboard.text, re.MULTILINE).group(1)
-            userdata = json.loads(json.loads(userdata_json_str))
-            username = userdata['displayName']
+            dashboard = session.get('http://connect.garmin.com/modern',follow_redirects=True)
+            userdata = GarminConnect.get_json(dashboard.text, "VIEWER_SOCIAL_PROFILE")
+            username = userdata['userName']
 
             log.info('Garmin Connect User Name: %s', username)
 
@@ -168,6 +175,7 @@ class GarminConnect(object):
             log.error(e)
             log.error('Unable to retrieve Garmin username! Most likely: '
                       'incorrect Garmin login or password!')
+            log.debug(dashboard.text)
 
         return session
 
