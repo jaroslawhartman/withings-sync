@@ -109,7 +109,7 @@ See also: https://github.com/jaroslawhartman/withings-sync/issues/31
 ### Docker
 
 ```
-$ docker pull stv0g/withings-sync
+$ docker pull ghcr.io/jaroslawhartman/withings-sync:master
 ```
 
 First start to ensure the script can start successfully:
@@ -118,7 +118,7 @@ First start to ensure the script can start successfully:
 Obtaining Withings authorisation:
 
 ```
-$ docker run -v $HOME:/root --interactive --tty --name withings stv0g/withings-sync --garmin-username=<username> --garmin-password=<password>
+$ docker run -v $HOME:/root --interactive --tty --name withings  withings ghcr.io/jaroslawhartman/withings-sync:master--garmin-username=<username> --garmin-password=<password>
 
 Can't read config file config/withings_user.json
 User interaction needed to get Authentification Code from Withings!
