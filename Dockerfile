@@ -1,16 +1,13 @@
-FROM python:3.9 AS sync-build
+FROM python:3.9
 
-COPY . /workdir/
+RUN apt-get update && \
+	apt-get install -y \
+		python3-lxml
 
-WORKDIR /workdir
-RUN pip3 install -r requirements.txt
-RUN python3 setup.py bdist_wheel
+RUN mkdir -p /src
+COPY . /src
 
+RUN cd /src && \
+    python3 ./setup.py install
 
-FROM python:3.9 AS sync
-
-COPY --from=sync-build /workdir/dist/withings_sync-*.whl /tmp/
-RUN pip3 install /tmp/withings_sync-*.whl
-
-WORKDIR /root
-ENTRYPOINT ["/usr/bin/withings-sync"]
+ENTRYPOINT ["withings-sync"]
