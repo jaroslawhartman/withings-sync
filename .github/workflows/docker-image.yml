@@ -12,10 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker sync tool image
-      run: docker build . --target sync --file Dockerfile --tag Andne/withings_sync:$(date +%s)
+      run: docker build . --target sync --file Dockerfile --tag jaroslawhartman/withings_sync:$(date +%s)
   build-sync-cron:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker cron job image
-      run: docker build . --target sync-cron --file Dockerfile --tag Andne/withings_sync_cron:$(date +%s)
+      run: docker build . --target sync-cron --file Dockerfile --tag jaroslawhartman/withings_sync_cron:$(date +%s)
