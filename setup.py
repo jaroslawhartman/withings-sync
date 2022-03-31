@@ -29,7 +29,8 @@ setup(
     install_requires=[
         'lxml',
         'requests',
-        'cloudscraper'
+        'httpx',
+        'httpx[http2]'
     ],
     entry_points={
         'console_scripts': [
