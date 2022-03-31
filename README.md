@@ -7,8 +7,6 @@ A tool for synchronisation of Withings (ex. Nokia Health Body) to:
 
 or to get json output data from Withings.
 
-**NOTE: For Docker usage hits see at end of this document:** https://hub.docker.com/r/stv0g/withings-sync
-
 **NOTE: Included support for Withings OAuth2! See 'Obtaining Withings authorization'**
 
 ## References
