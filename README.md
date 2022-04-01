@@ -29,7 +29,7 @@ $ pip install withings-sync
 
 ```
 usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD]
-                     [--fromdate DATE] [--todate DATE] [--no-upload] [--to-json] [--verbose]
+                     [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload] [--verbose]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
@@ -45,8 +45,11 @@ optional arguments:
                         username to login TrainerRoad.
   --fromdate DATE, -f DATE
   --todate DATE, -t DATE
-  --no-upload           Won't upload to Garmin Connect and output binary-strings to stdout.
-  --to-json, -j         Won't upload to Garmin Connect and output json to stdout.
+  --to-fit, -F          Write output file in FIT format.
+  --to-json, -J         Write output file in JSON format.
+  --output BASENAME, -o BASENAME
+                        Write downloaded measurements to file.
+  --no-upload           Won't upload to Garmin Connect or TrainerRoad.
   --verbose, -v         Run verbosely
 ```
 

@@ -54,14 +54,21 @@ def get_args():
                         default=date.today(),
                         metavar='DATE')
 
+    parser.add_argument('--to-fit', '-F',
+                        action='store_true',
+                        help=('Write output file in FIT format.'))
+    parser.add_argument('--to-json', '-J',
+                        action='store_true',
+                        help=('Write output file in JSON format.'))
+    parser.add_argument('--output', '-o',
+                        type=str,
+                        metavar='BASENAME',
+                        help=('Write downloaded measurements to file.'))
+
     parser.add_argument('--no-upload',
                         action='store_true',
-                        help=('Won\'t upload to Garmin Connect and '
-                              'output binary-strings to stdout.'))
-    parser.add_argument('--to-json', '-j',
-                        action='store_true',
-                        help=('Won\'t upload to Garmin Connect and '
-                              'output json to stdout.'))
+                        help=('Won\'t upload to Garmin Connect or '
+                              'TrainerRoad.'))
     parser.add_argument('--verbose', '-v',
                         action='store_true',
                         help='Run verbosely')
@@ -72,14 +79,15 @@ def get_args():
 def sync(garmin_username, garmin_password,
          trainerroad_username, trainerroad_password,
          fromdate, todate,
-         no_upload, to_json, verbose):
+         to_fit, to_json, output,
+         no_upload, verbose):
 
-    if not to_json:
-        logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
+    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         stream=sys.stdout)
-    else:
-        d_data = {}
+
+    if to_json:
+        json_data = {}
 
     # Withings API
     withings = WithingsAccount()
@@ -151,7 +159,7 @@ def sync(garmin_username, garmin_password,
                       muscle_mass, hydration,
                       bone_mass, bmi)
         if to_json:
-            d_data[str(dt)] = {'unit': 'kg', \
+            json_data[str(dt)] = {'unit': 'kg', \
                     'weight': weight, \
                     'fat_ratio': fat_ratio, \
                     'muscle_mass': muscle_mass, \
@@ -163,18 +171,34 @@ def sync(garmin_username, garmin_password,
             last_dt = dt
             last_weight = weight
 
-    if to_json:
-        json_object = json.dumps(d_data, indent = 4)
-        print(json_object)
-
     fit.finish()
 
     if last_weight is None:
         logging.error('Invalid weight')
         return -1
 
+    if output is not None:
+        if to_fit:
+            filename = output + '.fit'
+            logging.info('Writing file to {}'.format(filename))
+            try:
+                fitfile = open(filename, "wb")
+                fitfile.write(fit.getvalue())
+                fitfile.close()
+            except (OSError, IOError):
+                logging.error('Unable to open output file!')
+        if to_json:
+            filename = output + '.json'
+            logging.info('Writing file to {}'.format(filename))
+            try:
+                jsonfile = open(filename, "w")
+                json.dump(json_data, jsonfile, indent = 4)
+                jsonfile.close()
+            except (OSError, IOError):
+                logging.error('Unable to open output file!')
+
     if no_upload:
-        sys.stdout.buffer.write(fit.getvalue())
+        logging.info('Skipping upload')
         return 0
 
     # Upload to Trainer Road
