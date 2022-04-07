@@ -68,7 +68,7 @@ def get_args():
                         default=GARMIN_USERNAME,
                         type=str,
                         metavar='GARMIN_USERNAME',
-                        help='username to login to Garmin Connect.')
+                        help='username to log in to Garmin Connect.')
     parser.add_argument('--garmin-password', '--gp',
                         default=GARMIN_PASSWORD,
                         type=str,
