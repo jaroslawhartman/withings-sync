@@ -79,7 +79,7 @@ def get_args():
                         default=TRAINERROAD_USERNAME,
                         type=str,
                         metavar='TRAINERROAD_USERNAME',
-                        help='username to login to TrainerRoad.')
+                        help='username to log in to TrainerRoad.')
     parser.add_argument('--trainerroad-password', '--tp', 
                         default=TRAINERROAD_PASSWORD,
                         type=str,
