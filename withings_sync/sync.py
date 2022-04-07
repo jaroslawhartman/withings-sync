@@ -84,7 +84,7 @@ def get_args():
                         default=TRAINERROAD_PASSWORD,
                         type=str,
                         metavar='TRAINERROAD_PASSWORD',
-                        help='password to login to TrainerRoad.')
+                        help='password to log in to TrainerRoad.')
 
     parser.add_argument('--fromdate', '-f',
                         type=date_parser,
