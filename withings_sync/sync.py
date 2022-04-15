@@ -281,7 +281,7 @@ def sync(
             filename = output + ".json"
             logging.info("Writing file to %s.", filename)
             try:
-                with open(filename, "w") as jsonfile:
+                with open(filename, "w", encoding="utf-8") as jsonfile:
                     json.dump(json_data, jsonfile, indent=4)
             except (OSError, IOError):
                 logging.error("Unable to open output file!")
