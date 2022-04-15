@@ -271,7 +271,7 @@ def sync(
     if output is not None:
         if to_fit:
             filename = output + ".fit"
-            logging.info("Writing file to {}".format(filename))
+            logging.info("Writing file to %s.", filename)
             try:
                 with open(filename, "wb") as fitfile:
                     fitfile.write(fit.getvalue())
@@ -279,7 +279,7 @@ def sync(
                 logging.error("Unable to open output file!")
         if to_json:
             filename = output + ".json"
-            logging.info("Writing file to {}".format(filename))
+            logging.info("Writing file to %s.", filename)
             try:
                 with open(filename, "w") as jsonfile:
                     json.dump(json_data, jsonfile, indent=4)
@@ -293,14 +293,14 @@ def sync(
     # Upload to Trainer Road
     if trainerroad_username:
         logging.info("Trainerroad username set -- attempting to sync")
-        logging.info(" Last weight {}".format(last_weight))
-        logging.info(" Measured {}".format(last_dt))
+        logging.info(" Last weight %s.", last_weight)
+        logging.info(" Measured %s.", last_dt)
 
         tr = TrainerRoad(trainerroad_username, trainerroad_password)
         tr.connect()
 
-        logging.info(f"Current TrainerRoad weight: {tr.weight} kg ")
-        logging.info(f"Updating TrainerRoad weight to {last_weight} kg")
+        logging.info("Current TrainerRoad weight: %s kg.", tr.weight)
+        logging.info("Updating TrainerRoad weight to %s kg.", last_weight)
 
         tr.weight = round(last_weight, 1)
         tr.disconnect()
