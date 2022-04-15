@@ -199,7 +199,7 @@ def sync():
             bmi = None
 
         if hydration and weight:
-            percent_hydration = hydration * 100.0 / weight
+            percent_hydration = round(hydration * 100.0 / weight, 2)
         else:
             percent_hydration = None
 
