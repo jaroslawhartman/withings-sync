@@ -62,8 +62,8 @@ def get_args():
         )
     )
 
-    def date_parser(s):
-        return datetime.strptime(s, "%Y-%m-%d")
+    def date_parser(date_string):
+        return datetime.strptime(date_string, "%Y-%m-%d")
 
     parser.add_argument(
         "--garmin-username",
@@ -189,12 +189,12 @@ def sync(
     fit.write_file_info()
     fit.write_file_creator()
 
-    last_dt = None
+    last_date_time = None
     last_weight = None
 
     for group in groups:
         # Get extra physical measurements
-        dt = group.get_datetime()
+        date_time = group.get_datetime()
         weight = group.get_weight()
         fat_ratio = group.get_fat_ratio()
         muscle_mass = group.get_muscle_mass()
@@ -221,9 +221,9 @@ def sync(
         else:
             percent_hydration = None
 
-        fit.write_device_info(timestamp=dt)
+        fit.write_device_info(timestamp=date_time)
         fit.write_weight_scale(
-            timestamp=dt,
+            timestamp=date_time,
             weight=weight,
             percent_fat=fat_ratio,
             percent_hydration=percent_hydration,
@@ -239,7 +239,7 @@ def sync(
             "hydration=%s %%, "
             "bone_mass=%s kg, "
             "bmi=%s",
-            dt,
+            date_time,
             weight,
             fat_ratio,
             muscle_mass,
@@ -248,7 +248,7 @@ def sync(
             bmi,
         )
         if to_json:
-            json_data[str(dt)] = {
+            json_data[str(date_time)] = {
                 "unit": "kg",
                 "weight": weight,
                 "fat_ratio": fat_ratio,
@@ -258,8 +258,8 @@ def sync(
                 "bmi": bmi,
             }
 
-        if last_dt is None or dt > last_dt:
-            last_dt = dt
+        if last_date_time is None or date_time > last_date_time:
+            last_date_time = date_time
             last_weight = weight
 
     fit.finish()
@@ -294,16 +294,16 @@ def sync(
     if trainerroad_username:
         logging.info("Trainerroad username set -- attempting to sync")
         logging.info(" Last weight %s.", last_weight)
-        logging.info(" Measured %s.", last_dt)
+        logging.info(" Measured %s.", last_date_time)
 
-        tr = TrainerRoad(trainerroad_username, trainerroad_password)
-        tr.connect()
+        t_road = TrainerRoad(trainerroad_username, trainerroad_password)
+        t_road.connect()
 
-        logging.info("Current TrainerRoad weight: %s kg.", tr.weight)
+        logging.info("Current TrainerRoad weight: %s kg.", t_road.weight)
         logging.info("Updating TrainerRoad weight to %s kg.", last_weight)
 
-        tr.weight = round(last_weight, 1)
-        tr.disconnect()
+        t_road.weight = round(last_weight, 1)
+        t_road.disconnect()
 
         logging.info("TrainerRoad update done!")
     else:
@@ -314,8 +314,7 @@ def sync(
         garmin = GarminConnect()
         session = garmin.login(garmin_username, garmin_password)
         logging.debug("attempting to upload fit file...")
-        r = garmin.upload_file(fit.getvalue(), session)
-        if r:
+        if garmin.upload_file(fit.getvalue(), session):
             logging.info("Fit file uploaded to Garmin Connect")
     else:
         logging.info("No Garmin username - skipping sync")
