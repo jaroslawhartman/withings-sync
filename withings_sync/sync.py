@@ -15,16 +15,14 @@ from withings_sync.fit import FitEncoder_Weight
 
 
 try:
-    secret = open("/run/secrets/garmin_username")
-    GARMIN_USERNAME = secret.read()
-    secret.close()
+    with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
+        GARMIN_USERNAME = secret.read()
 except Exception:
     GARMIN_USERNAME = ""
 
 try:
-    secret = open("/run/secrets/garmin_password")
-    GARMIN_PASSWORD = secret.read()
-    secret.close()
+    with open("/run/secrets/garmin_password", encoding="utf-8") as secret:
+        GARMIN_PASSWORD = secret.read()
 except Exception:
     GARMIN_PASSWORD = ""
 
@@ -36,16 +34,14 @@ if "GC_PASSWORD" in os.environ:
 
 
 try:
-    secret = open("/run/secrets/trainerroad_username")
-    TRAINERROAD_USERNAME = secret.read()
-    secret.close()
+    with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
+        TRAINERROAD_USERNAME = secret.read()
 except Exception:
     TRAINERROAD_USERNAME = ""
 
 try:
-    secret = open("/run/secrets/trainerroad_password")
-    TRAINERROAD_PASSWORD = secret.read()
-    secret.close()
+    with open("/run/secrets/trainerroad_password", encoding="utf-8") as secret:
+        TRAINERROAD_PASSWORD = secret.read()
 except Exception:
     TRAINERROAD_PASSWORD = ""
 
@@ -277,18 +273,16 @@ def sync(
             filename = output + ".fit"
             logging.info("Writing file to {}".format(filename))
             try:
-                fitfile = open(filename, "wb")
-                fitfile.write(fit.getvalue())
-                fitfile.close()
+                with open(filename, "wb") as fitfile:
+                    fitfile.write(fit.getvalue())
             except (OSError, IOError):
                 logging.error("Unable to open output file!")
         if to_json:
             filename = output + ".json"
             logging.info("Writing file to {}".format(filename))
             try:
-                jsonfile = open(filename, "w")
-                json.dump(json_data, jsonfile, indent=4)
-                jsonfile.close()
+                with open(filename, "w") as jsonfile:
+                    json.dump(json_data, jsonfile, indent=4)
             except (OSError, IOError):
                 logging.error("Unable to open output file!")
 
