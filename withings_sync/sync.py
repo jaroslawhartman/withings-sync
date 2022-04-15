@@ -17,13 +17,13 @@ from withings_sync.fit import FitEncoder_Weight
 try:
     with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
         GARMIN_USERNAME = secret.read()
-except Exception:
+except OSError:
     GARMIN_USERNAME = ""
 
 try:
     with open("/run/secrets/garmin_password", encoding="utf-8") as secret:
         GARMIN_PASSWORD = secret.read()
-except Exception:
+except OSError:
     GARMIN_PASSWORD = ""
 
 if "GC_USERNAME" in os.environ:
@@ -36,13 +36,13 @@ if "GC_PASSWORD" in os.environ:
 try:
     with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
         TRAINERROAD_USERNAME = secret.read()
-except Exception:
+except OSError:
     TRAINERROAD_USERNAME = ""
 
 try:
     with open("/run/secrets/trainerroad_password", encoding="utf-8") as secret:
         TRAINERROAD_PASSWORD = secret.read()
-except Exception:
+except OSError:
     TRAINERROAD_PASSWORD = ""
 
 if "TR_USERNAME" in os.environ:
@@ -275,7 +275,7 @@ def sync(
             try:
                 with open(filename, "wb") as fitfile:
                     fitfile.write(fit.getvalue())
-            except (OSError, IOError):
+            except OSError:
                 logging.error("Unable to open output file!")
         if to_json:
             filename = output + ".json"
@@ -283,7 +283,7 @@ def sync(
             try:
                 with open(filename, "w", encoding="utf-8") as jsonfile:
                     json.dump(json_data, jsonfile, indent=4)
-            except (OSError, IOError):
+            except OSError:
                 logging.error("Unable to open output file!")
 
     if no_upload:
