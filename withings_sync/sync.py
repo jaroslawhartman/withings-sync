@@ -131,39 +131,21 @@ def get_args():
     return parser.parse_args()
 
 
-def sync(
-    garmin_username,
-    garmin_password,
-    trainerroad_username,
-    trainerroad_password,
-    fromdate,
-    todate,
-    to_fit,
-    to_json,
-    output,
-    no_upload,
-    verbose,
-):
+def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
 
-    logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        stream=sys.stdout,
-    )
-
-    if to_json:
+    if ARGS.to_json:
         json_data = {}
 
     # Withings API
     withings = WithingsAccount()
 
-    if not fromdate:
+    if not ARGS.fromdate:
         startdate = withings.getLastSync()
     else:
-        startdate = int(time.mktime(fromdate.timetuple()))
+        startdate = int(time.mktime(ARGS.fromdate.timetuple()))
 
-    enddate = int(time.mktime(todate.timetuple())) + 86399
+    enddate = int(time.mktime(ARGS.todate.timetuple())) + 86399
     logging.info(
         "Fetching measurements from %s to %s",
         time.strftime("%Y-%m-%d %H:%M", time.gmtime(startdate)),
@@ -180,7 +162,7 @@ def sync(
         return -1
 
     # Save this sync so we don't re-download the same data again (if no range has been specified)
-    if not fromdate:
+    if not ARGS.fromdate:
         withings.setLastSync()
 
     # Create FIT file
@@ -247,7 +229,7 @@ def sync(
             bone_mass,
             bmi,
         )
-        if to_json:
+        if ARGS.to_json:
             json_data[str(date_time)] = {
                 "unit": "kg",
                 "weight": weight,
@@ -268,17 +250,17 @@ def sync(
         logging.error("Invalid weight")
         return -1
 
-    if output is not None:
-        if to_fit:
-            filename = output + ".fit"
+    if ARGS.output is not None:
+        if ARGS.to_fit:
+            filename = ARGS.output + ".fit"
             logging.info("Writing file to %s.", filename)
             try:
                 with open(filename, "wb") as fitfile:
                     fitfile.write(fit.getvalue())
             except OSError:
                 logging.error("Unable to open output file!")
-        if to_json:
-            filename = output + ".json"
+        if ARGS.to_json:
+            filename = ARGS.output + ".json"
             logging.info("Writing file to %s.", filename)
             try:
                 with open(filename, "w", encoding="utf-8") as jsonfile:
@@ -286,17 +268,17 @@ def sync(
             except OSError:
                 logging.error("Unable to open output file!")
 
-    if no_upload:
+    if ARGS.no_upload:
         logging.info("Skipping upload")
         return 0
 
     # Upload to Trainer Road
-    if trainerroad_username:
+    if ARGS.trainerroad_username:
         logging.info("Trainerroad username set -- attempting to sync")
         logging.info(" Last weight %s.", last_weight)
         logging.info(" Measured %s.", last_date_time)
 
-        t_road = TrainerRoad(trainerroad_username, trainerroad_password)
+        t_road = TrainerRoad(ARGS.trainerroad_username, ARGS.trainerroad_password)
         t_road.connect()
 
         logging.info("Current TrainerRoad weight: %s kg.", t_road.weight)
@@ -310,9 +292,9 @@ def sync(
         logging.info("No Trainerroad username or a new measurement " "- skipping sync")
 
     # Upload to Garmin Connect
-    if garmin_username:
+    if ARGS.garmin_username:
         garmin = GarminConnect()
-        session = garmin.login(garmin_username, garmin_password)
+        session = garmin.login(ARGS.garmin_username, ARGS.garmin_password)
         logging.debug("attempting to upload fit file...")
         if garmin.upload_file(fit.getvalue(), session):
             logging.info("Fit file uploaded to Garmin Connect")
@@ -321,8 +303,16 @@ def sync(
     return 0
 
 
+ARGS = get_args()
+
+
 def main():
     """Main"""
-    args = get_args()
+    logging.basicConfig(
+        level=logging.DEBUG if ARGS.verbose else logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        stream=sys.stdout,
+    )
+    logging.debug("Script invoked with the following arguments: %s", ARGS)
 
-    sync(**vars(args))
+    sync()
