@@ -319,6 +319,7 @@ def sync(
             logging.info("Fit file uploaded to Garmin Connect")
     else:
         logging.info("No Garmin username - skipping sync")
+    return 0
 
 
 def main():
