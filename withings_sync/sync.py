@@ -1,3 +1,4 @@
+"""This module syncs measurement data from Withings to Garmin a/o TrainerRoad."""
 import argparse
 import time
 import sys
@@ -56,6 +57,7 @@ if "TR_PASSWORD" in os.environ:
 
 
 def get_args():
+    """get command-line arguments"""
     parser = argparse.ArgumentParser(
         description=(
             "A tool for synchronisation of Withings "
@@ -146,6 +148,7 @@ def sync(
     no_upload,
     verbose,
 ):
+    """Sync measurements from Withings to Garmin a/o TrainerRoad"""
 
     logging.basicConfig(
         level=logging.DEBUG if verbose else logging.INFO,
@@ -325,6 +328,7 @@ def sync(
 
 
 def main():
+    """Main"""
     args = get_args()
 
     sync(**vars(args))
