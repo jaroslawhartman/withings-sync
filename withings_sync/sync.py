@@ -286,4 +286,8 @@ def sync(garmin_username, garmin_password,
 def main():
     args = get_args()
 
+    if sys.version_info < (3, 0):
+        print("Sorry, requires Python3, not Python2.")
+        sys.exit(1)
+
     sync(**vars(args))
