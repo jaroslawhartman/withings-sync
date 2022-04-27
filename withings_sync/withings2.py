@@ -392,7 +392,6 @@ class WithingsMeasure(object):
         self.type = measure.get('type')
         self.unit = measure.get('unit')
 
-    def __str__(self):
         type_s = 'unknown'
         unit_s = ''
         if self.type == self.TYPE_WEIGHT:
@@ -443,7 +442,15 @@ class WithingsMeasure(object):
         elif self.type == self.TYPE_PULSE_WAVE_VELOCITY:
             type_s = 'Pulse Wave Velocity'
             unit_s = 'm/s'
-        return '%s: %s %s' % (type_s, self.get_value(), unit_s)
+
+        self.type_s = type_s
+        self.unit_s = unit_s
+
+    def __str__(self):
+        return '%s: %s %s' % (self.type_s, self.get_value(), self.unit_s)
 
     def get_value(self):
         return self.value * pow(10, self.unit)
+
+    def json_dict(self):
+        return { f"{self.type_s.replace(' ','_')}": { "Value": round(self.get_value(), 2), "Unit": f'{self.unit_s}'}}
