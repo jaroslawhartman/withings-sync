@@ -182,16 +182,13 @@ def sync():
         muscle_mass = group.get_muscle_mass()
         hydration = group.get_hydration()
         bone_mass = group.get_bone_mass()
+        pulse_wave_velocity = group.get_pulse_wave_velocity()
+        heart_pulse = group.get_heart_pulse()
         raw_data = group.get_raw_data()
 
-        if weight is None:
-            logging.info(
-                "This Withings metric contains no weight data.  Not syncing..."
-            )
-            logging.debug("Detected data: ")
-            for dataentry in raw_data:
-                logging.debug(dataentry)
-            continue
+        logging.debug("%s Detected data: ", date_time)
+        for dataentry in raw_data:
+            logging.debug(dataentry)
 
         if height and weight:
             bmi = round(weight / pow(height, 2), 1)
@@ -202,6 +199,24 @@ def sync():
             percent_hydration = round(hydration * 100.0 / weight, 2)
         else:
             percent_hydration = None
+
+        if ARGS.to_json:
+            sdt = str(date_time)
+            if sdt not in json_data:
+                json_data[sdt] = {}
+            for dataentry in raw_data:
+                for k,jd in dataentry.json_dict().items():
+                    json_data[sdt][k] = jd
+            if bmi is not None:
+                json_data[sdt]['BMI'] = { "Value": bmi, "Unit": "kg/m^2"}
+            if percent_hydration is not None:
+                json_data[sdt]['Percent_Hydration'] = { "Value": percent_hydration, "Unit": "%"}
+
+        if weight is None:
+            logging.debug(
+                "This Withings metric contains no weight data.  Not syncing..."
+            )
+            continue
 
         fit.write_device_info(timestamp=date_time)
         fit.write_weight_scale(
@@ -229,16 +244,6 @@ def sync():
             bone_mass,
             bmi,
         )
-        if ARGS.to_json:
-            json_data[str(date_time)] = {
-                "unit": "kg",
-                "weight": weight,
-                "fat_ratio": fat_ratio,
-                "muscle_mass": muscle_mass,
-                "hydration_ratio": hydration,
-                "bone_mass": bone_mass,
-                "bmi": bmi,
-            }
 
         if last_date_time is None or date_time > last_date_time:
             last_date_time = date_time
