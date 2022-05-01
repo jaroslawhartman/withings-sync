@@ -190,8 +190,7 @@ class WithingsAccount:
         """get last sync timestamp"""
         if not self.withings.user_config.get("last_sync"):
             return int(time.mktime(date.today().timetuple()))
-        else:
-            return self.withings.user_config["last_sync"]
+        return self.withings.user_config["last_sync"]
 
     def setLastSync(self):
         """set last sync timestamp"""
