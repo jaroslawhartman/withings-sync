@@ -9,27 +9,23 @@ import requests
 
 log = logging.getLogger("withings")
 
+HOME = os.environ.get("HOME", ".")
+AUTHORIZE_URL = "https://account.withings.com/oauth2_user/authorize2"
+TOKEN_URL = "https://wbsapi.withings.net/v2/oauth2"
+GETMEAS_URL = "https://wbsapi.withings.net/measure?action=getmeas"
+
+APP_CONFIG = os.environ.get(
+    "WITHINGS_APP",
+    pkg_resources.resource_filename(__name__, "config/withings_app.json"),
+)
+USER_CONFIG = os.environ.get("WITHINGS_USER", HOME + "/.withings_user.json")
+
 
 class WithingsException(Exception):
     """Pass WithingsExceptions"""
 
 
-class Withings:
-    """Set parameters for Withings communication"""
-
-    HOME = os.environ.get("HOME", ".")
-    AUTHORIZE_URL = "https://account.withings.com/oauth2_user/authorize2"
-    TOKEN_URL = "https://wbsapi.withings.net/v2/oauth2"
-    GETMEAS_URL = "https://wbsapi.withings.net/measure?action=getmeas"
-
-    APP_CONFIG = os.environ.get(
-        "WITHINGS_APP",
-        pkg_resources.resource_filename(__name__, "config/withings_app.json"),
-    )
-    USER_CONFIG = os.environ.get("WITHINGS_USER", HOME + "/.withings_user.json")
-
-
-class WithingsConfig(Withings):
+class WithingsConfig:
     """This class takes care of the Withings config file"""
 
     config = {}
@@ -54,16 +50,16 @@ class WithingsConfig(Withings):
             json.dump(self.config, configfile, indent=4, sort_keys=True)
 
 
-class WithingsOAuth2(Withings):
+class WithingsOAuth2:
     """This class takes care of the Withings OAuth2 authentication"""
 
     app_config = user_config = None
 
     def __init__(self):
-        app_cfg = WithingsConfig(Withings.APP_CONFIG)
+        app_cfg = WithingsConfig(APP_CONFIG)
         self.app_config = app_cfg.config
 
-        self.user_cfg = WithingsConfig(Withings.USER_CONFIG)
+        self.user_cfg = WithingsConfig(USER_CONFIG)
         self.user_config = self.user_cfg.config
 
         if not self.user_config.get("access_token"):
@@ -102,7 +98,7 @@ class WithingsOAuth2(Withings):
         log.warning("(This is one-time activity)")
         log.warning("")
 
-        url = Withings.AUTHORIZE_URL + "?"
+        url = AUTHORIZE_URL + "?"
 
         for key, value in params.items():
             url = url + key + "=" + value + "&"
@@ -127,7 +123,7 @@ class WithingsOAuth2(Withings):
             "redirect_uri": self.app_config["callback_url"],
         }
 
-        req = requests.post(Withings.TOKEN_URL, params)
+        req = requests.post(TOKEN_URL, params)
         resp = req.json()
 
         status = resp.get("status")
@@ -161,7 +157,7 @@ class WithingsOAuth2(Withings):
             "refresh_token": self.user_config["refresh_token"],
         }
 
-        req = requests.post(Withings.TOKEN_URL, params)
+        req = requests.post(TOKEN_URL, params)
         resp = req.json()
 
         status = resp.get("status")
@@ -184,7 +180,7 @@ class WithingsOAuth2(Withings):
         self.user_config["userid"] = body.get("userid")
 
 
-class WithingsAccount(Withings):
+class WithingsAccount:
     """This class gets measurements from Withings"""
 
     def __init__(self):
@@ -209,13 +205,13 @@ class WithingsAccount(Withings):
 
         params = {
             "access_token": self.withings.user_config["access_token"],
-            # 'meastype': Withings.MEASTYPE_WEIGHT,
+            # 'meastype': MEASTYPE_WEIGHT,
             "category": 1,
             "startdate": startdate,
             "enddate": enddate,
         }
 
-        req = requests.post(Withings.GETMEAS_URL, params)
+        req = requests.post(GETMEAS_URL, params)
 
         measurements = req.json()
 
@@ -240,7 +236,7 @@ class WithingsAccount(Withings):
             "category": 1,
         }
 
-        req = requests.post(Withings.GETMEAS_URL, params)
+        req = requests.post(GETMEAS_URL, params)
 
         measurements = req.json()
 
