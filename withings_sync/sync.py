@@ -141,7 +141,7 @@ def sync():
     withings = WithingsAccount()
 
     if not ARGS.fromdate:
-        startdate = withings.getLastSync()
+        startdate = withings.get_lastsync()
     else:
         startdate = int(time.mktime(ARGS.fromdate.timetuple()))
 
@@ -152,9 +152,9 @@ def sync():
         time.strftime("%Y-%m-%d %H:%M", time.gmtime(enddate)),
     )
 
-    height = withings.getHeight()
+    height = withings.get_height()
 
-    groups = withings.getMeasurements(startdate=startdate, enddate=enddate)
+    groups = withings.get_measurements(startdate=startdate, enddate=enddate)
 
     # Only upload if there are measurement returned
     if groups is None or len(groups) == 0:
@@ -163,7 +163,7 @@ def sync():
 
     # Save this sync so we don't re-download the same data again (if no range has been specified)
     if not ARGS.fromdate:
-        withings.setLastSync()
+        withings.set_lastsync()
 
     # Create FIT file
     logging.debug("Generating fit file...")
