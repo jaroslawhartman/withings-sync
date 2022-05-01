@@ -92,17 +92,17 @@ class WithingsOAuth2(Withings):
             "redirect_uri": self.app_config["callback_url"],
         }
 
-        log.warn(
+        log.warning(
             "User interaction needed to get Authentification " "Code from Withings!"
         )
-        log.warn("")
-        log.warn(
+        log.warning("")
+        log.warning(
             "Open the following URL in your web browser and copy back "
             "the token. You will have *30 seconds* before the "
             "token expires. HURRY UP!"
         )
-        log.warn("(This is one-time activity)")
-        log.warn("")
+        log.warning("(This is one-time activity)")
+        log.warning("")
 
         url = Withings.AUTHORIZE_URL + "?"
 
