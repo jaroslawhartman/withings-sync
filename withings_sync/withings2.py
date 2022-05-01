@@ -230,9 +230,9 @@ class WithingsAccount(Withings):
 
     def getHeight(self):
         """get height from Withings"""
-        self.height = None
-        self.height_timestamp = None
-        self.height_group = None
+        height = None
+        height_timestamp = None
+        height_group = None
 
         log.debug("Get Height")
 
@@ -251,16 +251,16 @@ class WithingsAccount(Withings):
 
             # there could be multiple height records. use the latest one
             for record in measurements.get("body").get("measuregrps"):
-                self.height_group = WithingsMeasureGroup(record)
-                if self.height != None:
-                    if self.height_timestamp != None:
-                        if self.height_group.get_datetime() > self.height_timestamp:
-                            self.height = self.height_group.get_height()
+                height_group = WithingsMeasureGroup(record)
+                if height is not None:
+                    if height_timestamp is not None:
+                        if height_group.get_datetime() > height_timestamp:
+                            height = height_group.get_height()
                 else:
-                    self.height = self.height_group.get_height()
-                    self.height_timestamp = self.height_group.get_datetime()
+                    height = height_group.get_height()
+                    height_timestamp = height_group.get_datetime()
 
-        return self.height
+        return height
 
 
 class WithingsMeasureGroup(object):
