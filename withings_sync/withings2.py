@@ -13,8 +13,6 @@ log = logging.getLogger("withings")
 class WithingsException(Exception):
     """Pass WithingsExceptions"""
 
-    pass
-
 
 class Withings:
     """Set parameters for Withings communication"""
