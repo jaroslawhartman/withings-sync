@@ -1,8 +1,9 @@
 """This module takes care of the communication with Withings."""
-from datetime import datetime
+from datetime import date, datetime
 import logging
 import json
 import os
+import time
 import pkg_resources
 import requests
 
