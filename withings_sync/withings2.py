@@ -423,56 +423,26 @@ class WithingsMeasure:
         self.unit = measure.get("unit")
 
     def __str__(self):
-        type_s = "unknown"
-        unit_s = ""
-        if self.type == self.TYPE_WEIGHT:
-            type_s = "Weight"
-            unit_s = "kg"
-        elif self.type == self.TYPE_HEIGHT:
-            type_s = "Height"
-            unit_s = "meter"
-        elif self.type == self.TYPE_FAT_FREE_MASS:
-            type_s = "Fat Free Mass"
-            unit_s = "kg"
-        elif self.type == self.TYPE_FAT_RATIO:
-            type_s = "Fat Ratio"
-            unit_s = "%"
-        elif self.type == self.TYPE_FAT_MASS_WEIGHT:
-            type_s = "Fat Mass Weight"
-            unit_s = "kg"
-        elif self.type == self.TYPE_DIASTOLIC_BLOOD_PRESSURE:
-            type_s = "Diastolic Blood Pressure"
-            unit_s = "mmHg"
-        elif self.type == self.TYPE_SYSTOLIC_BLOOD_PRESSURE:
-            type_s = "Systolic Blood Pressure"
-            unit_s = "mmHg"
-        elif self.type == self.TYPE_HEART_PULSE:
-            type_s = "Heart Pulse"
-            unit_s = "bpm"
-        elif self.type == self.TYPE_TEMPERATURE:
-            type_s = "Temperature"
-            unit_s = "celsius"
-        elif self.type == self.TYPE_SP02:
-            type_s = "SP02"
-            unit_s = "%"
-        elif self.type == self.TYPE_BODY_TEMPERATURE:
-            type_s = "Body Temperature"
-            unit_s = "celsius"
-        elif self.type == self.TYPE_SKIN_TEMPERATURE:
-            type_s = "Skin Temperature"
-            unit_s = "celsius"
-        elif self.type == self.TYPE_MUSCLE_MASS:
-            type_s = "Muscle Mass"
-            unit_s = "kg"
-        elif self.type == self.TYPE_HYDRATION:
-            type_s = "Hydration"
-            unit_s = "kg"
-        elif self.type == self.TYPE_BONE_MASS:
-            type_s = "Bone Mass"
-            unit_s = "kg"
-        elif self.type == self.TYPE_PULSE_WAVE_VELOCITY:
-            type_s = "Pulse Wave Velocity"
-            unit_s = "m/s"
+        withings_table = {
+            self.TYPE_WEIGHT: ["Weight", "kg"],
+            self.TYPE_HEIGHT: ["Height", "meter"],
+            self.TYPE_FAT_FREE_MASS: ["Fat Free Mass", "kg"],
+            self.TYPE_FAT_RATIO: ["Fat Ratio", "%"],
+            self.TYPE_FAT_MASS_WEIGHT: ["Fat Mass Weight", "kg"],
+            self.TYPE_DIASTOLIC_BLOOD_PRESSURE: ["Diastolic Blood Pressure", "mmHg"],
+            self.TYPE_SYSTOLIC_BLOOD_PRESSURE: ["Systolic Blood Pressure", "mmHg"],
+            self.TYPE_HEART_PULSE: ["Heart Pulse", "bpm"],
+            self.TYPE_TEMPERATURE: ["Temperature", "celsius"],
+            self.TYPE_SP02: ["SP02", "%"],
+            self.TYPE_BODY_TEMPERATURE: ["Body Temperature", "celsius"],
+            self.TYPE_SKIN_TEMPERATURE: ["Skin Temperature", "celsius"],
+            self.TYPE_MUSCLE_MASS: ["Muscle Mass", "kg"],
+            self.TYPE_HYDRATION: ["Hydration", "kg"],
+            self.TYPE_BONE_MASS: ["Bone Mass", "kg"],
+            self.TYPE_PULSE_WAVE_VELOCITY: ["Pulse Wave Velocity", "m/s"],
+        }
+        type_s = withings_table.get(self.type, ["unknown", ""])[0]
+        unit_s = withings_table.get(self.type, ["unknown", ""])[1]
         return f"{type_s}: {self.get_value()} {unit_s}"
 
     def get_value(self):
