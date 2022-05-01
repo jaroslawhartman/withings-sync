@@ -1,13 +1,10 @@
 """This module takes care of the communication with Withings."""
+from datetime import datetime
 import logging
-import requests
 import json
-import pkg_resources
-import time
 import os
-import sys
-
-from datetime import date, datetime
+import pkg_resources
+import requests
 
 log = logging.getLogger("withings")
 
