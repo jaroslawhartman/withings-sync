@@ -1,3 +1,4 @@
+"""This module takes care of the communication with Withings."""
 import logging
 import requests
 import json
@@ -12,10 +13,14 @@ log = logging.getLogger("withings")
 
 
 class WithingsException(Exception):
+    """Pass WithingsExceptions"""
+
     pass
 
 
 class Withings:
+    """Set parameters for Withings communication"""
+
     HOME = os.environ.get("HOME", ".")
     AUTHORIZE_URL = "https://account.withings.com/oauth2_user/authorize2"
     TOKEN_URL = "https://wbsapi.withings.net/v2/oauth2"
@@ -29,6 +34,8 @@ class Withings:
 
 
 class WithingsConfig(Withings):
+    """This class takes care of the Withings config file"""
+
     config = {}
     config_file = ""
 
@@ -37,6 +44,7 @@ class WithingsConfig(Withings):
         self.read()
 
     def read(self):
+        """reads config file"""
         try:
             with open(self.config_file) as f:
                 self.config = json.load(f)
@@ -45,11 +53,14 @@ class WithingsConfig(Withings):
             self.config = {}
 
     def write(self):
+        """writes config file"""
         with open(self.config_file, "w") as f:
             json.dump(self.config, f, indent=4, sort_keys=True)
 
 
 class WithingsOAuth2(Withings):
+    """This class takes care of the Withings OAuth2 authentication"""
+
     app_config = user_config = None
 
     def __init__(self):
@@ -70,9 +81,11 @@ class WithingsOAuth2(Withings):
         self.user_cfg.write()
 
     def updateConfig(self):
+        """updates config file"""
         self.user_cfg.write()
 
     def getAuthenticationCode(self):
+        """get Withings authentication code"""
         params = {
             "response_type": "code",
             "client_id": self.app_config["client_id"],
@@ -106,6 +119,7 @@ class WithingsOAuth2(Withings):
         return authentification_code
 
     def getAccessToken(self):
+        """get Withings access token"""
         log.info("Get Access Token")
 
         params = {
@@ -140,6 +154,7 @@ class WithingsOAuth2(Withings):
         self.user_config["userid"] = body.get("userid")
 
     def refreshAccessToken(self):
+        """refresh Withings access token"""
         log.info("Refresh Access Token")
 
         params = {
@@ -174,21 +189,26 @@ class WithingsOAuth2(Withings):
 
 
 class WithingsAccount(Withings):
+    """This class gets measurements from Withings"""
+
     def __init__(self):
         self.withings = WithingsOAuth2()
 
     def getLastSync(self):
+        """get last sync timestamp"""
         if not self.withings.user_config.get("last_sync"):
             return int(time.mktime(date.today().timetuple()))
         else:
             return self.withings.user_config["last_sync"]
 
     def setLastSync(self):
+        """set last sync timestamp"""
         self.withings.user_config["last_sync"] = int(time.time())
         log.info("Saving Last Sync")
         self.withings.updateConfig()
 
     def getMeasurements(self, startdate, enddate):
+        """get Withings measurements"""
         log.info("Get Measurements")
 
         params = {
@@ -211,6 +231,7 @@ class WithingsAccount(Withings):
             ]
 
     def getHeight(self):
+        """get height from Withings"""
         self.height = None
         self.height_timestamp = None
         self.height_group = None
@@ -245,6 +266,8 @@ class WithingsAccount(Withings):
 
 
 class WithingsMeasureGroup(object):
+    """This class takes care of the group measurement functions"""
+
     def __init__(self, measuregrp):
         self._raw_data = measuregrp
         self.id = measuregrp.get("grpid")
@@ -261,6 +284,7 @@ class WithingsMeasureGroup(object):
         return len(self.measures)
 
     def get_datetime(self):
+        """convenient function to get date & time"""
         return datetime.fromtimestamp(self.date)
 
     def get_raw_data(self):
@@ -381,6 +405,8 @@ class WithingsMeasureGroup(object):
 
 
 class WithingsMeasure(object):
+    """This class takes care of the individual measurements"""
+
     TYPE_WEIGHT = 1
     TYPE_HEIGHT = 4
     TYPE_FAT_FREE_MASS = 5
@@ -458,4 +484,5 @@ class WithingsMeasure(object):
         return "%s: %s %s" % (type_s, self.get_value(), unit_s)
 
     def get_value(self):
+        """get value"""
         return self.value * pow(10, self.unit)
