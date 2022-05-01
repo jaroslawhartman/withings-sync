@@ -257,7 +257,7 @@ class WithingsAccount:
         return height
 
 
-class WithingsMeasureGroup(object):
+class WithingsMeasureGroup:
     """This class takes care of the group measurement functions"""
 
     def __init__(self, measuregrp):
@@ -396,7 +396,7 @@ class WithingsMeasureGroup(object):
         return None
 
 
-class WithingsMeasure(object):
+class WithingsMeasure:
     """This class takes care of the individual measurements"""
 
     TYPE_WEIGHT = 1
