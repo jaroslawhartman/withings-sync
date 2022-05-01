@@ -44,16 +44,16 @@ class WithingsConfig(Withings):
     def read(self):
         """reads config file"""
         try:
-            with open(self.config_file) as f:
-                self.config = json.load(f)
+            with open(self.config_file, encoding="utf8") as configfile:
+                self.config = json.load(configfile)
         except (ValueError, FileNotFoundError):
             log.error("Can't read config file " + self.config_file)
             self.config = {}
 
     def write(self):
         """writes config file"""
-        with open(self.config_file, "w") as f:
-            json.dump(self.config, f, indent=4, sort_keys=True)
+        with open(self.config_file, "w", encoding="utf8") as configfile:
+            json.dump(self.config, configfile, indent=4, sort_keys=True)
 
 
 class WithingsOAuth2(Withings):
