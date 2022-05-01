@@ -64,19 +64,21 @@ class WithingsOAuth2:
 
         if not self.user_config.get("access_token"):
             if not self.user_config.get("authentification_code"):
-                self.user_config["authentification_code"] = self.getAuthenticationCode()
+                self.user_config[
+                    "authentification_code"
+                ] = self.get_authenticationcode()
 
-            self.getAccessToken()
+            self.get_accesstoken()
 
-        self.refreshAccessToken()
+        self.refresh_accesstoken()
 
         self.user_cfg.write()
 
-    def updateConfig(self):
+    def update_config(self):
         """updates config file"""
         self.user_cfg.write()
 
-    def getAuthenticationCode(self):
+    def get_authenticationcode(self):
         """get Withings authentication code"""
         params = {
             "response_type": "code",
@@ -110,7 +112,7 @@ class WithingsOAuth2:
 
         return authentification_code
 
-    def getAccessToken(self):
+    def get_accesstoken(self):
         """get Withings access token"""
         log.info("Get Access Token")
 
@@ -145,7 +147,7 @@ class WithingsOAuth2:
         self.user_config["refresh_token"] = body.get("refresh_token")
         self.user_config["userid"] = body.get("userid")
 
-    def refreshAccessToken(self):
+    def refresh_accesstoken(self):
         """refresh Withings access token"""
         log.info("Refresh Access Token")
 
@@ -186,19 +188,19 @@ class WithingsAccount:
     def __init__(self):
         self.withings = WithingsOAuth2()
 
-    def getLastSync(self):
+    def get_lastsync(self):
         """get last sync timestamp"""
         if not self.withings.user_config.get("last_sync"):
             return int(time.mktime(date.today().timetuple()))
         return self.withings.user_config["last_sync"]
 
-    def setLastSync(self):
+    def set_lastsync(self):
         """set last sync timestamp"""
         self.withings.user_config["last_sync"] = int(time.time())
         log.info("Saving Last Sync")
-        self.withings.updateConfig()
+        self.withings.update_config()
 
-    def getMeasurements(self, startdate, enddate):
+    def get_measurements(self, startdate, enddate):
         """get Withings measurements"""
         log.info("Get Measurements")
 
@@ -222,7 +224,7 @@ class WithingsAccount:
             ]
         return None
 
-    def getHeight(self):
+    def get_height(self):
         """get height from Withings"""
         height = None
         height_timestamp = None
@@ -262,7 +264,7 @@ class WithingsMeasureGroup:
 
     def __init__(self, measuregrp):
         self._raw_data = measuregrp
-        self.id = measuregrp.get("grpid")
+        self.grpid = measuregrp.get("grpid")
         self.attrib = measuregrp.get("attrib")
         self.date = measuregrp.get("date")
         self.category = measuregrp.get("category")
