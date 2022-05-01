@@ -138,6 +138,17 @@ def sync_garmin(fit_file):
     return garmin.upload_file(fit_file.getvalue(), session)
 
 
+def sync_trainerroad(last_weight):
+    """Sync measured weight to TrainerRoad"""
+    t_road = TrainerRoad(ARGS.trainerroad_username, ARGS.trainerroad_password)
+    t_road.connect()
+    logging.info("Current TrainerRoad weight: %s kg ", t_road.weight)
+    logging.info("Updating TrainerRoad weight to %s kg", last_weight)
+    t_road.weight = round(last_weight, 1)
+    t_road.disconnect()
+    return t_road.weight
+
+
 def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
 
@@ -282,19 +293,10 @@ def sync():
     # Upload to Trainer Road
     if ARGS.trainerroad_username:
         logging.info("Trainerroad username set -- attempting to sync")
-        logging.info(" Last weight %s.", last_weight)
-        logging.info(" Measured %s.", last_date_time)
-
-        t_road = TrainerRoad(ARGS.trainerroad_username, ARGS.trainerroad_password)
-        t_road.connect()
-
-        logging.info("Current TrainerRoad weight: %s kg.", t_road.weight)
-        logging.info("Updating TrainerRoad weight to %s kg.", last_weight)
-
-        t_road.weight = round(last_weight, 1)
-        t_road.disconnect()
-
-        logging.info("TrainerRoad update done!")
+        logging.info(" Last weight %s", last_weight)
+        logging.info(" Measured %s", last_date_time)
+        if sync_trainerroad(last_weight):
+            logging.info("TrainerRoad update done!")
     else:
         logging.info("No Trainerroad username or a new measurement " "- skipping sync")
 
