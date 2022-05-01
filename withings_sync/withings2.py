@@ -220,6 +220,7 @@ class WithingsAccount:
                 WithingsMeasureGroup(g)
                 for g in measurements.get("body").get("measuregrps")
             ]
+        return None
 
     def getHeight(self):
         """get height from Withings"""
