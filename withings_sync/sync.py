@@ -4,6 +4,7 @@ import time
 import sys
 import os
 import logging
+import json
 
 from datetime import date, datetime
 
@@ -150,7 +151,6 @@ def sync_trainerroad(last_weight):
 
 def generate_fitdata(syncdata):
     """Generate fit data from measured data"""
-    # Create FIT file
     logging.debug("Generating fit data...")
 
     fit = FitEncoder_Weight()
@@ -168,9 +168,23 @@ def generate_fitdata(syncdata):
             muscle_mass=record["muscle_mass"],
             bmi=record["bmi"],
         )
+
     fit.finish()
+
     logging.debug("Fit data generated...")
     return fit
+
+
+def generate_jsondata(syncdata):
+    """Generate fit data from measured data"""
+    logging.debug("Generating json data...")
+
+    json_data = {}
+    for record in syncdata:
+        print(record)
+
+    logging.debug("Json data generated...")
+    return json_data
 
 
 def prepare_syncdata(height, groups):
@@ -242,17 +256,25 @@ def prepare_syncdata(height, groups):
     return last_weight, last_date_time, syncdata
 
 
-def write_to_file_when_needed(fit_data):
+def write_to_file_when_needed(fit_data, json_data):
     """Write measurements to file when requested"""
     if ARGS.output is not None:
         if ARGS.to_fit:
             filename = ARGS.output + ".fit"
-            logging.info("Writing file to %s.", filename)
+            logging.info("Writing fitfile to %s.", filename)
             try:
                 with open(filename, "wb") as fitfile:
                     fitfile.write(fit_data.getvalue())
             except OSError:
-                logging.error("Unable to open output file!")
+                logging.error("Unable to open output fitfile!")
+        if ARGS.to_json:
+            filename = ARGS.output + ".json"
+            logging.info("Writing jsonfile to %s.", filename)
+            try:
+                with open(filename, "w", encoding="utf-8") as jsonfile:
+                    json.dump(json_data, jsonfile, indent=4)
+            except OSError:
+                logging.error("Unable to open output jsonfile!")
 
 
 def sync():
@@ -288,8 +310,9 @@ def sync():
     last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
 
     fit_data = generate_fitdata(syncdata)
+    json_data = generate_jsondata(syncdata)
 
-    write_to_file_when_needed(fit_data)
+    write_to_file_when_needed(fit_data, json_data)
 
     if ARGS.no_upload:
         logging.info("Skipping upload")
