@@ -41,7 +41,7 @@ class WithingsConfig:
             with open(self.config_file, encoding="utf8") as configfile:
                 self.config = json.load(configfile)
         except (ValueError, FileNotFoundError):
-            log.error("Can't read config file " + self.config_file)
+            log.error("Can't read config file %s", self.config_file)
             self.config = {}
 
     def write(self):
