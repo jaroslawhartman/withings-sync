@@ -131,6 +131,13 @@ def get_args():
     return parser.parse_args()
 
 
+def sync_garmin(fit_file):
+    """Sync generated fit file to Garmin Connect"""
+    garmin = GarminConnect()
+    session = garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+    return garmin.upload_file(fit_file.getvalue(), session)
+
+
 def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
 
@@ -293,10 +300,8 @@ def sync():
 
     # Upload to Garmin Connect
     if ARGS.garmin_username:
-        garmin = GarminConnect()
-        session = garmin.login(ARGS.garmin_username, ARGS.garmin_password)
         logging.debug("attempting to upload fit file...")
-        if garmin.upload_file(fit.getvalue(), session):
+        if sync_garmin(fitfile):
             logging.info("Fit file uploaded to Garmin Connect")
     else:
         logging.info("No Garmin username - skipping sync")
