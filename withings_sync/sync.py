@@ -234,7 +234,25 @@ def prepare_syncdata(height, groups):
             last_weight = groupdata["weight"]
 
         syncdata.append(groupdata)
+
+    if last_weight is None:
+        logging.error("Invalid or no weight data detected, exiting...")
+        return -1
+
     return last_weight, last_date_time, syncdata
+
+
+def write_to_file_when_needed(fit_data):
+    """Write measurements to file when requested"""
+    if ARGS.output is not None:
+        if ARGS.to_fit:
+            filename = ARGS.output + ".fit"
+            logging.info("Writing file to %s.", filename)
+            try:
+                with open(filename, "wb") as fitfile:
+                    fitfile.write(fit_data.getvalue())
+            except OSError:
+                logging.error("Unable to open output file!")
 
 
 def sync():
@@ -268,21 +286,10 @@ def sync():
         withings.set_lastsync()
 
     last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
+
     fit_data = generate_fitdata(syncdata)
 
-    if last_weight is None:
-        logging.error("Invalid weight")
-        return -1
-
-    if ARGS.output is not None:
-        if ARGS.to_fit:
-            filename = ARGS.output + ".fit"
-            logging.info("Writing file to %s.", filename)
-            try:
-                with open(filename, "wb") as fitfile:
-                    fitfile.write(fit_data.getvalue())
-            except OSError:
-                logging.error("Unable to open output file!")
+    write_to_file_when_needed(fit_data)
 
     if ARGS.no_upload:
         logging.info("Skipping upload")
