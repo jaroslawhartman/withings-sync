@@ -473,7 +473,7 @@ class WithingsMeasure:
         elif self.type == self.TYPE_PULSE_WAVE_VELOCITY:
             type_s = "Pulse Wave Velocity"
             unit_s = "m/s"
-        return "%s: %s %s" % (type_s, self.get_value(), unit_s)
+        return f"{type_s}: {self.get_value()} {unit_s}"
 
     def get_value(self):
         """get value"""
