@@ -26,10 +26,10 @@ try:
 except OSError:
     GARMIN_PASSWORD = ""
 
-if "GC_USERNAME" in os.environ:
+if "GARMIN_USERNAME" in os.environ:
     GARMIN_USERNAME = os.getenv("GARMIN_USERNAME")
 
-if "GC_PASSWORD" in os.environ:
+if "GARMIN_PASSWORD" in os.environ:
     GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
 
 
@@ -45,10 +45,10 @@ try:
 except OSError:
     TRAINERROAD_PASSWORD = ""
 
-if "TR_USERNAME" in os.environ:
+if "TRAINERROAD_USERNAME" in os.environ:
     TRAINERROAD_USERNAME = os.getenv("TRAINERROAD_USERNAME")
 
-if "TR_PASSWORD" in os.environ:
+if "TRAINERROAD_PASSWORD" in os.environ:
     TRAINERROAD_PASSWORD = os.getenv("TRAINERROAD_PASSWORD")
 
 
