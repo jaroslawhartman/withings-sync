@@ -181,8 +181,15 @@ def generate_jsondata(syncdata):
 
     json_data = {}
     for record in syncdata:
-        print(record)
-
+        json_data[str(record["date_time"])] = {
+            "unit": "kg",
+            "weight": record["weight"],
+            "fat_ratio": record["fat_ratio"],
+            "muscle_mass": record["muscle_mass"],
+            "hydration_ratio": record["hydration"],
+            "bone_mass": record["bone_mass"],
+            "bmi": record["bmi"],
+        }
     logging.debug("Json data generated...")
     return json_data
 
