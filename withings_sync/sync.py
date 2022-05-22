@@ -131,11 +131,161 @@ def get_args():
     return parser.parse_args()
 
 
+def sync_garmin(fit_file):
+    """Sync generated fit file to Garmin Connect"""
+    garmin = GarminConnect()
+    session = garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+    return garmin.upload_file(fit_file.getvalue(), session)
+
+
+def sync_trainerroad(last_weight):
+    """Sync measured weight to TrainerRoad"""
+    t_road = TrainerRoad(ARGS.trainerroad_username, ARGS.trainerroad_password)
+    t_road.connect()
+    logging.info("Current TrainerRoad weight: %s kg ", t_road.weight)
+    logging.info("Updating TrainerRoad weight to %s kg", last_weight)
+    t_road.weight = round(last_weight, 1)
+    t_road.disconnect()
+    return t_road.weight
+
+
+def generate_fitdata(syncdata):
+    """Generate fit data from measured data"""
+    logging.debug("Generating fit data...")
+
+    fit = FitEncoder_Weight()
+    fit.write_file_info()
+    fit.write_file_creator()
+
+    for record in syncdata:
+        fit.write_device_info(timestamp=record["date_time"])
+        fit.write_weight_scale(
+            timestamp=record["date_time"],
+            weight=record["weight"],
+            percent_fat=record["fat_ratio"],
+            percent_hydration=record["percent_hydration"],
+            bone_mass=record["bone_mass"],
+            muscle_mass=record["muscle_mass"],
+            bmi=record["bmi"],
+        )
+
+    fit.finish()
+
+    logging.debug("Fit data generated...")
+    return fit
+
+
+def generate_jsondata(syncdata):
+    """Generate fit data from measured data"""
+    logging.debug("Generating json data...")
+
+    json_data = {}
+    for record in syncdata:
+        json_data[str(record["date_time"])] = {
+            "unit": "kg",
+            "weight": record["weight"],
+            "fat_ratio": record["fat_ratio"],
+            "muscle_mass": record["muscle_mass"],
+            "hydration_ratio": record["hydration"],
+            "bone_mass": record["bone_mass"],
+            "bmi": record["bmi"],
+        }
+    logging.debug("Json data generated...")
+    return json_data
+
+
+def prepare_syncdata(height, groups):
+    """Prepare measurement data to be sent"""
+    syncdata = []
+
+    last_date_time = None
+    last_weight = None
+
+    for group in groups:
+        # Get extra physical measurements
+        groupdata = {
+            "date_time": group.get_datetime(),
+            "height": height,
+            "weight": group.get_weight(),
+            "fat_ratio": group.get_fat_ratio(),
+            "muscle_mass": group.get_muscle_mass(),
+            "hydration": group.get_hydration(),
+            "percent_hydration": None,
+            "bone_mass": group.get_bone_mass(),
+            "bmi": None,
+        }
+        raw_data = group.get_raw_data()
+
+        if groupdata["weight"] is None:
+            logging.info(
+                "This Withings metric contains no weight data.  Not syncing..."
+            )
+            logging.debug("Detected data: ")
+            for dataentry in raw_data:
+                logging.debug(dataentry)
+            continue
+        if height:
+            groupdata["bmi"] = round(
+                groupdata["weight"] / pow(groupdata["height"], 2), 1
+            )
+        if groupdata["hydration"]:
+            groupdata["percent_hydration"] = round(
+                groupdata["hydration"] * 100.0 / groupdata["weight"], 2
+            )
+
+        logging.debug(
+            "Record: %s, height=%s m, "
+            "weight=%s kg, "
+            "fat_ratio=%s %%, "
+            "muscle_mass=%s kg, "
+            "percent_hydration=%s %%, "
+            "bone_mass=%s kg, "
+            "bmi=%s",
+            groupdata["date_time"],
+            groupdata["height"],
+            groupdata["weight"],
+            groupdata["fat_ratio"],
+            groupdata["muscle_mass"],
+            groupdata["percent_hydration"],
+            groupdata["bone_mass"],
+            groupdata["bmi"],
+        )
+        if last_date_time is None or groupdata["date_time"] > last_date_time:
+            last_date_time = groupdata["date_time"]
+            last_weight = groupdata["weight"]
+
+        syncdata.append(groupdata)
+
+    if last_weight is None:
+        logging.error("Invalid or no weight data detected, exiting...")
+        return -1
+
+    return last_weight, last_date_time, syncdata
+
+
+def write_to_file_when_needed(fit_data, json_data):
+    """Write measurements to file when requested"""
+    if ARGS.output is not None:
+        if ARGS.to_fit:
+            filename = ARGS.output + ".fit"
+            logging.info("Writing fitfile to %s.", filename)
+            try:
+                with open(filename, "wb") as fitfile:
+                    fitfile.write(fit_data.getvalue())
+            except OSError:
+                logging.error("Unable to open output fitfile!")
+        if ARGS.to_json:
+            filename = ARGS.output + ".json"
+            logging.info("Writing jsonfile to %s.", filename)
+            try:
+                with open(filename, "w", encoding="utf-8") as jsonfile:
+                    json.dump(json_data, jsonfile, indent=4)
+            except OSError:
+                logging.error("Unable to open output jsonfile!")
+
+
 def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
-
-    if ARGS.to_json:
-        json_data = {}
 
     # Withings API
     withings = WithingsAccount()
@@ -153,7 +303,6 @@ def sync():
     )
 
     height = withings.get_height()
-
     groups = withings.get_measurements(startdate=startdate, enddate=enddate)
 
     # Only upload if there are measurement returned
@@ -165,108 +314,12 @@ def sync():
     if not ARGS.fromdate:
         withings.set_lastsync()
 
-    # Create FIT file
-    logging.debug("Generating fit file...")
-    fit = FitEncoder_Weight()
-    fit.write_file_info()
-    fit.write_file_creator()
+    last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
 
-    last_date_time = None
-    last_weight = None
+    fit_data = generate_fitdata(syncdata)
+    json_data = generate_jsondata(syncdata)
 
-    for group in groups:
-        # Get extra physical measurements
-        date_time = group.get_datetime()
-        weight = group.get_weight()
-        fat_ratio = group.get_fat_ratio()
-        muscle_mass = group.get_muscle_mass()
-        hydration = group.get_hydration()
-        bone_mass = group.get_bone_mass()
-        raw_data = group.get_raw_data()
-
-        if weight is None:
-            logging.info(
-                "This Withings metric contains no weight data.  Not syncing..."
-            )
-            logging.debug("Detected data: ")
-            for dataentry in raw_data:
-                logging.debug(dataentry)
-            continue
-
-        if height and weight:
-            bmi = round(weight / pow(height, 2), 1)
-        else:
-            bmi = None
-
-        if hydration and weight:
-            percent_hydration = round(hydration * 100.0 / weight, 2)
-        else:
-            percent_hydration = None
-
-        fit.write_device_info(timestamp=date_time)
-        fit.write_weight_scale(
-            timestamp=date_time,
-            weight=weight,
-            percent_fat=fat_ratio,
-            percent_hydration=percent_hydration,
-            bone_mass=bone_mass,
-            muscle_mass=muscle_mass,
-            bmi=bmi,
-        )
-
-        logging.debug(
-            "Record: %s weight=%s kg, "
-            "fat_ratio=%s %%, "
-            "muscle_mass=%s kg, "
-            "hydration=%s %%, "
-            "bone_mass=%s kg, "
-            "bmi=%s",
-            date_time,
-            weight,
-            fat_ratio,
-            muscle_mass,
-            hydration,
-            bone_mass,
-            bmi,
-        )
-        if ARGS.to_json:
-            json_data[str(date_time)] = {
-                "unit": "kg",
-                "weight": weight,
-                "fat_ratio": fat_ratio,
-                "muscle_mass": muscle_mass,
-                "hydration_ratio": hydration,
-                "bone_mass": bone_mass,
-                "bmi": bmi,
-            }
-
-        if last_date_time is None or date_time > last_date_time:
-            last_date_time = date_time
-            last_weight = weight
-
-    fit.finish()
-
-    if last_weight is None:
-        logging.error("Invalid weight")
-        return -1
-
-    if ARGS.output is not None:
-        if ARGS.to_fit:
-            filename = ARGS.output + ".fit"
-            logging.info("Writing file to %s.", filename)
-            try:
-                with open(filename, "wb") as fitfile:
-                    fitfile.write(fit.getvalue())
-            except OSError:
-                logging.error("Unable to open output file!")
-        if ARGS.to_json:
-            filename = ARGS.output + ".json"
-            logging.info("Writing file to %s.", filename)
-            try:
-                with open(filename, "w", encoding="utf-8") as jsonfile:
-                    json.dump(json_data, jsonfile, indent=4)
-            except OSError:
-                logging.error("Unable to open output file!")
+    write_to_file_when_needed(fit_data, json_data)
 
     if ARGS.no_upload:
         logging.info("Skipping upload")
@@ -275,28 +328,17 @@ def sync():
     # Upload to Trainer Road
     if ARGS.trainerroad_username:
         logging.info("Trainerroad username set -- attempting to sync")
-        logging.info(" Last weight %s.", last_weight)
-        logging.info(" Measured %s.", last_date_time)
-
-        t_road = TrainerRoad(ARGS.trainerroad_username, ARGS.trainerroad_password)
-        t_road.connect()
-
-        logging.info("Current TrainerRoad weight: %s kg.", t_road.weight)
-        logging.info("Updating TrainerRoad weight to %s kg.", last_weight)
-
-        t_road.weight = round(last_weight, 1)
-        t_road.disconnect()
-
-        logging.info("TrainerRoad update done!")
+        logging.info(" Last weight %s", last_weight)
+        logging.info(" Measured %s", last_date_time)
+        if sync_trainerroad(last_weight):
+            logging.info("TrainerRoad update done!")
     else:
         logging.info("No Trainerroad username or a new measurement " "- skipping sync")
 
     # Upload to Garmin Connect
     if ARGS.garmin_username:
-        garmin = GarminConnect()
-        session = garmin.login(ARGS.garmin_username, ARGS.garmin_password)
         logging.debug("attempting to upload fit file...")
-        if garmin.upload_file(fit.getvalue(), session):
+        if sync_garmin(fit_data):
             logging.info("Fit file uploaded to Garmin Connect")
     else:
         logging.info("No Garmin username - skipping sync")
