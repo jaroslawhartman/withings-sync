@@ -418,34 +418,38 @@ class WithingsMeasure:
     TYPE_BONE_MASS = 88
     TYPE_PULSE_WAVE_VELOCITY = 91
 
+    self.withings_table = {
+        self.TYPE_WEIGHT: ["Weight", "kg"],
+        self.TYPE_HEIGHT: ["Height", "meter"],
+        self.TYPE_FAT_FREE_MASS: ["Fat Free Mass", "kg"],
+        self.TYPE_FAT_RATIO: ["Fat Ratio", "%"],
+        self.TYPE_FAT_MASS_WEIGHT: ["Fat Mass Weight", "kg"],
+        self.TYPE_DIASTOLIC_BLOOD_PRESSURE: ["Diastolic Blood Pressure", "mmHg"],
+        self.TYPE_SYSTOLIC_BLOOD_PRESSURE: ["Systolic Blood Pressure", "mmHg"],
+        self.TYPE_HEART_PULSE: ["Heart Pulse", "bpm"],
+        self.TYPE_TEMPERATURE: ["Temperature", "celsius"],
+        self.TYPE_SP02: ["SP02", "%"],
+        self.TYPE_BODY_TEMPERATURE: ["Body Temperature", "celsius"],
+        self.TYPE_SKIN_TEMPERATURE: ["Skin Temperature", "celsius"],
+        self.TYPE_MUSCLE_MASS: ["Muscle Mass", "kg"],
+        self.TYPE_HYDRATION: ["Hydration", "kg"],
+        self.TYPE_BONE_MASS: ["Bone Mass", "kg"],
+        self.TYPE_PULSE_WAVE_VELOCITY: ["Pulse Wave Velocity", "m/s"],
+    }
+
     def __init__(self, measure):
         self._raw_data = measure
         self.value = measure.get("value")
         self.type = measure.get("type")
         self.unit = measure.get("unit")
+        self.type_s = self.withings_table.get(self.type, ["unknown", ""])[0]
+        self.unit_s = self.withings_table.get(self.type, ["unknown", ""])[1]
 
     def __str__(self):
-        withings_table = {
-            self.TYPE_WEIGHT: ["Weight", "kg"],
-            self.TYPE_HEIGHT: ["Height", "meter"],
-            self.TYPE_FAT_FREE_MASS: ["Fat Free Mass", "kg"],
-            self.TYPE_FAT_RATIO: ["Fat Ratio", "%"],
-            self.TYPE_FAT_MASS_WEIGHT: ["Fat Mass Weight", "kg"],
-            self.TYPE_DIASTOLIC_BLOOD_PRESSURE: ["Diastolic Blood Pressure", "mmHg"],
-            self.TYPE_SYSTOLIC_BLOOD_PRESSURE: ["Systolic Blood Pressure", "mmHg"],
-            self.TYPE_HEART_PULSE: ["Heart Pulse", "bpm"],
-            self.TYPE_TEMPERATURE: ["Temperature", "celsius"],
-            self.TYPE_SP02: ["SP02", "%"],
-            self.TYPE_BODY_TEMPERATURE: ["Body Temperature", "celsius"],
-            self.TYPE_SKIN_TEMPERATURE: ["Skin Temperature", "celsius"],
-            self.TYPE_MUSCLE_MASS: ["Muscle Mass", "kg"],
-            self.TYPE_HYDRATION: ["Hydration", "kg"],
-            self.TYPE_BONE_MASS: ["Bone Mass", "kg"],
-            self.TYPE_PULSE_WAVE_VELOCITY: ["Pulse Wave Velocity", "m/s"],
-        }
-        type_s = withings_table.get(self.type, ["unknown", ""])[0]
-        unit_s = withings_table.get(self.type, ["unknown", ""])[1]
-        return f"{type_s}: {self.get_value()} {unit_s}"
+        return f"{self.type_s}: {self.get_value()} {self.unit_s}"
+
+    def json_dict(self):
+        return { f"{self.type_s.replace(' ','_')}": { "Value": round(self.get_value(), 2), "Unit": f'{self.unit_s}'}}
 
     def get_value(self):
         """get value"""
