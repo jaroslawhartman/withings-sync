@@ -418,23 +418,23 @@ class WithingsMeasure:
     TYPE_BONE_MASS = 88
     TYPE_PULSE_WAVE_VELOCITY = 91
 
-    self.withings_table = {
-        self.TYPE_WEIGHT: ["Weight", "kg"],
-        self.TYPE_HEIGHT: ["Height", "meter"],
-        self.TYPE_FAT_FREE_MASS: ["Fat Free Mass", "kg"],
-        self.TYPE_FAT_RATIO: ["Fat Ratio", "%"],
-        self.TYPE_FAT_MASS_WEIGHT: ["Fat Mass Weight", "kg"],
-        self.TYPE_DIASTOLIC_BLOOD_PRESSURE: ["Diastolic Blood Pressure", "mmHg"],
-        self.TYPE_SYSTOLIC_BLOOD_PRESSURE: ["Systolic Blood Pressure", "mmHg"],
-        self.TYPE_HEART_PULSE: ["Heart Pulse", "bpm"],
-        self.TYPE_TEMPERATURE: ["Temperature", "celsius"],
-        self.TYPE_SP02: ["SP02", "%"],
-        self.TYPE_BODY_TEMPERATURE: ["Body Temperature", "celsius"],
-        self.TYPE_SKIN_TEMPERATURE: ["Skin Temperature", "celsius"],
-        self.TYPE_MUSCLE_MASS: ["Muscle Mass", "kg"],
-        self.TYPE_HYDRATION: ["Hydration", "kg"],
-        self.TYPE_BONE_MASS: ["Bone Mass", "kg"],
-        self.TYPE_PULSE_WAVE_VELOCITY: ["Pulse Wave Velocity", "m/s"],
+    withings_table = {
+        TYPE_WEIGHT: ["Weight", "kg"],
+        TYPE_HEIGHT: ["Height", "meter"],
+        TYPE_FAT_FREE_MASS: ["Fat Free Mass", "kg"],
+        TYPE_FAT_RATIO: ["Fat Ratio", "%"],
+        TYPE_FAT_MASS_WEIGHT: ["Fat Mass Weight", "kg"],
+        TYPE_DIASTOLIC_BLOOD_PRESSURE: ["Diastolic Blood Pressure", "mmHg"],
+        TYPE_SYSTOLIC_BLOOD_PRESSURE: ["Systolic Blood Pressure", "mmHg"],
+        TYPE_HEART_PULSE: ["Heart Pulse", "bpm"],
+        TYPE_TEMPERATURE: ["Temperature", "celsius"],
+        TYPE_SP02: ["SP02", "%"],
+        TYPE_BODY_TEMPERATURE: ["Body Temperature", "celsius"],
+        TYPE_SKIN_TEMPERATURE: ["Skin Temperature", "celsius"],
+        TYPE_MUSCLE_MASS: ["Muscle Mass", "kg"],
+        TYPE_HYDRATION: ["Hydration", "kg"],
+        TYPE_BONE_MASS: ["Bone Mass", "kg"],
+        TYPE_PULSE_WAVE_VELOCITY: ["Pulse Wave Velocity", "m/s"],
     }
 
     def __init__(self, measure):

@@ -196,7 +196,7 @@ def generate_jsondata(syncdata):
     for record in syncdata:
         sdt = str(record["date_time"])
         json_data[sdt] = {}
-        for datum in record["raw_data"]:
+        for dataentry in record["raw_data"]:
             for k,jd in dataentry.json_dict().items():
                 json_data[sdt][k] = jd
         if "bmi" in record:
@@ -219,7 +219,7 @@ def prepare_syncdata(height, groups):
     for group in groups:
         # Get extra physical measurements
         dt = group.get_datetime()
-        if not exists syncDict[dt]:
+        if dt not in syncDict:
             syncDict[dt] = {}
         groupdata = {
             "date_time": group.get_datetime(),
@@ -230,8 +230,8 @@ def prepare_syncdata(height, groups):
             "hydration": group.get_hydration(),
             "percent_hydration": None,
             "bone_mass": group.get_bone_mass(),
-            "pulse_wave_velocity": group.get_pulse_wave_velocity()
-            "heart_pulse": group.get_heart_pulse()
+            "pulse_wave_velocity": group.get_pulse_wave_velocity(),
+            "heart_pulse": group.get_heart_pulse(),
             "bmi": None,
             "raw_data": group.get_raw_data()
         }
@@ -253,9 +253,10 @@ def prepare_syncdata(height, groups):
             )
 
         logging.debug("%s Detected data: ", dt)
-        for dataentry in raw_data:
+        #for dataentry in raw_data:
+        for dataentry in groupdata["raw_data"]:
             logging.debug(dataentry)
-       """
+       
         logging.debug(
             "Record: %s, height=%s m, "
             "weight=%s kg, "
@@ -273,7 +274,7 @@ def prepare_syncdata(height, groups):
             groupdata["bone_mass"],
             groupdata["bmi"],
         )
-        """
+       
         # join groups with same timestamp
         for k,v in groupdata.items():
             syncDict[dt][k] = v
@@ -283,7 +284,7 @@ def prepare_syncdata(height, groups):
         logging.debug("Processed data: ")
         for k,v in groupdata.items():
             logging.debug(k, v)
-         if last_date_time is None or groupdata["date_time"] > last_date_time:
+        if last_date_time is None or groupdata["date_time"] > last_date_time:
             last_date_time = groupdata["date_time"]
             last_weight = groupdata["weight"]
             logging.debug("last_dt: %s last_weight: %s", last_date_time, last_weight)
