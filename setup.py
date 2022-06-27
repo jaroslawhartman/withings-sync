@@ -29,6 +29,10 @@ setup(
     install_requires=[
         'lxml',
         'requests',
+        # request has a fix dependency on charset-normalizer charset_normalizer~=2.0.0
+        #  (see https://requests.readthedocs.io/en/latest/user/advanced/#encodings)
+        # We pin it here to avoid conflicts with httpx
+        'charset-normalizer~=2.0.0',
         'httpx',
         'httpx[http2]'
     ],
