@@ -1,13 +1,10 @@
 # withings-sync
 
-A tool for synchronisation of Withings (ex. Nokia Health Body) to:
+A tool for synchronisation of the Withings API to:
 
 - Garmin Connect
 - Trainer Road
-
-or to get json output data from Withings.
-
-**NOTE: Included support for Withings OAuth2! See 'Obtaining Withings authorization'**
+- raw JSON output
 
 ## References
 
@@ -28,21 +25,21 @@ $ pip install withings-sync
 ## Usage
 
 ```
-usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD]
-                     [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload] [--verbose]
+usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE]
+                     [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload] [--verbose]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
 optional arguments:
   -h, --help            show this help message and exit
   --garmin-username GARMIN_USERNAME, --gu GARMIN_USERNAME
-                        username to login Garmin Connect.
+                        username to log in to Garmin Connect.
   --garmin-password GARMIN_PASSWORD, --gp GARMIN_PASSWORD
-                        password to login Garmin Connect.
+                        password to log in to Garmin Connect.
   --trainerroad-username TRAINERROAD_USERNAME, --tu TRAINERROAD_USERNAME
-                        username to login TrainerRoad.
+                        username to log in to TrainerRoad.
   --trainerroad-password TRAINERROAD_PASSWORD, --tp TRAINERROAD_PASSWORD
-                        username to login TrainerRoad.
+                        password to log in to TrainerRoad.
   --fromdate DATE, -f DATE
   --todate DATE, -t DATE
   --to-fit, -F          Write output file in FIT format.
