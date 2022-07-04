@@ -63,7 +63,7 @@ spec:
             envFrom:
             - secretRef:
                 name: credentials
-            image: stv0g/withings-sync
+            image: ghcr.io/jaroslawhartman/withings-sync:master
             imagePullPolicy: Always
             name: withings-garmin-sync
             volumeMounts:
