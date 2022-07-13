@@ -243,7 +243,7 @@ def prepare_syncdata(height, groups):
             # )
             # logging.debug("Detected data: ")
             # continue
-        if height and "weight" in groupdata:
+        if height and groupdata["weight"]:
             groupdata["bmi"] = round(
                 groupdata["weight"] / pow(groupdata["height"], 2), 1
             )
