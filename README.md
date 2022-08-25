@@ -175,6 +175,26 @@ Edit the credentials in `contrib/k8s-job.yaml` and run:
 $ kubectl apply -f contrib/k8s-job.yaml
 ```
 
+
+### Run a periodic Linux job
+Open terminal and execute: 
+```bash
+sudo nano /usr/local/bin/withings-sync-periodic
+```
+
+Then, enter the following code:
+```bash
+#!/bin/sh
+while true
+do
+  withings-sync --gu # --gp #   #enter your garmin username and password
+  sleep 21600 #this is in seconds, so adjust accordinly, currently set for 6 hours.
+done
+```
+After saving run chmond +x /usr/local/bin/withings-sync-periodic
+
+You will have to restart "withings-sync-periodic" when you resetart your computer or server. 
+
 ### For advanced users - registering own Withings application
 
 The script has been registered as a Withings application and got assigned `Client ID` and `Consumer Secret`. If you wish to create your own application - feel free! 
