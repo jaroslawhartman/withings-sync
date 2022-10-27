@@ -342,10 +342,6 @@ def sync():
         logging.error("No measurements to upload for date or period specified")
         return -1
 
-    # Save this sync so we don't re-download the same data again (if no range has been specified)
-    if not ARGS.fromdate:
-        withings.set_lastsync()
-
     last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
 
     fit_data = generate_fitdata(syncdata)
@@ -353,27 +349,31 @@ def sync():
 
     write_to_file_when_needed(fit_data, json_data)
 
-    if ARGS.no_upload:
+    if not ARGS.no_upload:
+        # Upload to Trainer Road
+        if ARGS.trainerroad_username and last_weight is not None:
+            logging.info("Trainerroad username set -- attempting to sync")
+            logging.info(" Last weight %s", last_weight)
+            logging.info(" Measured %s", last_date_time)
+            if sync_trainerroad(last_weight):
+                logging.info("TrainerRoad update done!")
+        else:
+            logging.info("No Trainerroad username or a new measurement " "- skipping sync")
+
+        # Upload to Garmin Connect
+        if ARGS.garmin_username and fit_data is not None:
+            logging.debug("attempting to upload fit file...")
+            if sync_garmin(fit_data):
+                logging.info("Fit file uploaded to Garmin Connect")
+        else:
+            logging.info("No Garmin username - skipping sync")
+    else:
         logging.info("Skipping upload")
-        return 0
 
-    # Upload to Trainer Road
-    if ARGS.trainerroad_username and last_weight is not None:
-        logging.info("Trainerroad username set -- attempting to sync")
-        logging.info(" Last weight %s", last_weight)
-        logging.info(" Measured %s", last_date_time)
-        if sync_trainerroad(last_weight):
-            logging.info("TrainerRoad update done!")
-    else:
-        logging.info("No Trainerroad username or a new measurement " "- skipping sync")
+    # Save this sync so we don't re-download the same data again (if no range has been specified)
+    if not ARGS.fromdate:
+        withings.set_lastsync()
 
-    # Upload to Garmin Connect
-    if ARGS.garmin_username and fit_data is not None:
-        logging.debug("attempting to upload fit file...")
-        if sync_garmin(fit_data):
-            logging.info("Fit file uploaded to Garmin Connect")
-    else:
-        logging.info("No Garmin username - skipping sync")
     return 0
 
 
