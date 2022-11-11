@@ -54,20 +54,21 @@ class WithingsOAuth2:
     """This class takes care of the Withings OAuth2 authentication"""
 
     app_config = user_config = None
+    
 
-    def __init__(self):
+    def __init__(self, api_user_id):
         app_cfg = WithingsConfig(APP_CONFIG)
         self.app_config = app_cfg.config
 
         self.user_cfg = WithingsConfig(USER_CONFIG)
         self.user_config = self.user_cfg.config
+        self.api_user_id = api_user_id
 
-        if not self.user_config.get("access_token"):
-            if not self.user_config.get("authentification_code"):
-                self.user_config[
-                    "authentification_code"
-                ] = self.get_authenticationcode()
-
+        if (not self.user_config.get(self.api_user_id)) or (not self.user_config[self.api_user_id].get("authentification_code")) :
+            self.user_config[self.api_user_id] ={}
+            self.user_config[self.api_user_id]["authentification_code"] = self.get_authenticationcode()
+            
+        if not self.user_config[self.api_user_id].get("access_token"):
             self.get_accesstoken()
 
         self.refresh_accesstoken()
@@ -121,7 +122,7 @@ class WithingsOAuth2:
             "grant_type": "authorization_code",
             "client_id": self.app_config["client_id"],
             "client_secret": self.app_config["consumer_secret"],
-            "code": self.user_config["authentification_code"],
+            "code": self.user_config[self.api_user_id]["authentification_code"],
             "redirect_uri": self.app_config["callback_url"],
         }
 
@@ -143,9 +144,9 @@ class WithingsOAuth2:
                 " script again to obtain a new link."
             )
 
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config[self.api_user_id]["access_token"] = body.get("access_token")
+        self.user_config[self.api_user_id]["refresh_token"] = body.get("refresh_token")
+        self.user_config[self.api_user_id]["userid"] = body.get("userid")
 
     def refresh_accesstoken(self):
         """refresh Withings access token"""
@@ -156,7 +157,7 @@ class WithingsOAuth2:
             "grant_type": "refresh_token",
             "client_id": self.app_config["client_id"],
             "client_secret": self.app_config["consumer_secret"],
-            "refresh_token": self.user_config["refresh_token"],
+            "refresh_token": self.user_config[self.api_user_id]["refresh_token"],
         }
 
         req = requests.post(TOKEN_URL, params)
@@ -177,26 +178,59 @@ class WithingsOAuth2:
                 " script again to obtain a new link."
             )
 
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config[self.api_user_id]["access_token"] = body.get("access_token")
+        self.user_config[self.api_user_id]["refresh_token"] = body.get("refresh_token")
+        self.user_config[self.api_user_id]["userid"] = body.get("userid")
 
 
 class WithingsAccount:
     """This class gets measurements from Withings"""
 
-    def __init__(self):
-        self.withings = WithingsOAuth2()
+    def __init__(self, api_user_id):
+        self.api_user_id = str(api_user_id)
+        self.withings = WithingsOAuth2(self.api_user_id)
+
+    def get_garmin_username(self):
+        """get Garmin username"""
+        if not self.withings.user_config[self.api_user_id].get("garmin_username"):
+            garmin_username = input("Garmin username : ")
+            self.withings.user_config[self.api_user_id]["garmin_username"] = garmin_username
+            self.withings.update_config()
+        return self.withings.user_config[self.api_user_id]["garmin_username"]
+
+    def get_garmin_password(self):
+        """get Garmin password"""
+        if not self.withings.user_config[self.api_user_id].get("garmin_password"):
+            garmin_password = input("Garmin password : ")
+            self.withings.user_config[self.api_user_id]["garmin_password"] = garmin_password
+            self.withings.update_config()
+        return self.withings.user_config[self.api_user_id]["garmin_password"]
+
+    def get_trainerroad_username(self):
+        """get TrainerRoad username"""
+        if not self.withings.user_config[self.api_user_id].get("trainerroad_username"):
+            trainerroad_username = input("TrainerRoad username : ")
+            self.withings.user_config[self.api_user_id]["trainerroad_username"] = trainerroad_username
+            self.withings.update_config()
+        return self.withings.user_config[self.api_user_id]["trainerroad_username"]
+
+    def get_trainerroad_password(self):
+        """get TrainerRoad password"""
+        if not self.withings.user_config[self.api_user_id].get("trainerroad_password"):
+            trainerroad_password = input("TrainerRoad password : ")
+            self.withings.user_config[self.api_user_id]["trainerroad_password"] = trainerroad_password
+            self.withings.update_config()
+        return self.withings.user_config[self.api_user_id]["trainerroad_password"]
 
     def get_lastsync(self):
         """get last sync timestamp"""
-        if not self.withings.user_config.get("last_sync"):
+        if not self.withings.user_config[self.api_user_id].get("last_sync"):
             return int(time.mktime(date.today().timetuple()))
-        return self.withings.user_config["last_sync"]
+        return self.withings.user_config[self.api_user_id]["last_sync"]
 
     def set_lastsync(self):
         """set last sync timestamp"""
-        self.withings.user_config["last_sync"] = int(time.time())
+        self.withings.user_config[self.api_user_id]["last_sync"] = int(time.time())
         log.info("Saving Last Sync")
         self.withings.update_config()
 
@@ -205,7 +239,7 @@ class WithingsAccount:
         log.info("Get Measurements")
 
         params = {
-            "access_token": self.withings.user_config["access_token"],
+            "access_token": self.withings.user_config[self.api_user_id]["access_token"],
             # 'meastype': MEASTYPE_WEIGHT,
             "category": 1,
             "startdate": startdate,
@@ -233,7 +267,7 @@ class WithingsAccount:
         log.debug("Get Height")
 
         params = {
-            "access_token": self.withings.user_config["access_token"],
+            "access_token": self.withings.user_config[self.api_user_id]["access_token"],
             "meastype": WithingsMeasure.TYPE_HEIGHT,
             "category": 1,
         }

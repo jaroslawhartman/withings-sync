@@ -25,21 +25,19 @@ $ pip install withings-sync
 ## Usage
 
 ```
-usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE]
+usage: withings-sync [-h] [--withings-userid WITHINGS_USERID] [--garmin-upload] [--trainerroad-upload] [--fromdate DATE]
                      [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload] [--verbose]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --garmin-username GARMIN_USERNAME, --gu GARMIN_USERNAME
-                        username to log in to Garmin Connect.
-  --garmin-password GARMIN_PASSWORD, --gp GARMIN_PASSWORD
-                        password to log in to Garmin Connect.
-  --trainerroad-username TRAINERROAD_USERNAME, --tu TRAINERROAD_USERNAME
-                        username to log in to TrainerRoad.
-  --trainerroad-password TRAINERROAD_PASSWORD, --tp TRAINERROAD_PASSWORD
-                        password to log in to TrainerRoad.
+  --withings-userid WITHINGS_USERID, --wuid WITHINGS_USERID
+                        API userid to use for Withings.
+  --garmin-upload, --gu
+                        upload to Garmin Connect.
+  --trainerroad-upload, --tu
+                        upload to TrainerRoad.
   --fromdate DATE, -f DATE
   --todate DATE, -t DATE
   --to-fit, -F          Write output file in FIT format.
@@ -49,34 +47,6 @@ optional arguments:
   --no-upload           Won't upload to Garmin Connect or TrainerRoad.
   --verbose, -v         Run verbosely
 ```
-
-### Providing credentials via environment variables
-
-You can use the following environment variables for providing the Garmin and/or Trainerroad credentials:
-
-- `GARMIN_USERNAME`
-- `GARMIN_PASSWORD` 
-- `TRAINERROAD_USERNAME`
-- `TRAINERROAD_PASSWORD`
-
-### Providing credentials via secrets files
-
-You can also populate the following 'secrets' files to provide the Garmin and/or Trainerroad credentials:
-
-- `/run/secrets/garmin_username`
-- `/run/secrets/garmin_password`
-- `/run/secrets/trainerroad_username`
-- `/run/secrets/trainerroad_password`
-
-Secrets are useful in an orchestrated container context — see the [Docker Swarm](https://docs.docker.com/engine/swarm/secrets/) or [Rancher](https://rancher.com/docs/rancher/v1.6/en/cattle/secrets/) docs for more information on how to securely inject secrets into a container.
-
-### Order of priority for credentials
-
-In the case of credentials being available via multiple means (e.g. [environment variables](#providing-credentials-via-environment-variables) and [secrets files](#providing-credentials-via-secrets-files)), the order of resolution for determining which credentials to use is as follows, with later methods overriding credentials supplied by an earlier method:
-
-1. Read secrets file(s)
-2. Read environment variable(s)
-3. Use command invocation arugment(s)
 
 ### Obtaining Withings Authorization Code
 

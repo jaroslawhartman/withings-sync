@@ -13,43 +13,7 @@ from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoder_Weight
 
-
-try:
-    with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
-        GARMIN_USERNAME = secret.read()
-except OSError:
-    GARMIN_USERNAME = ""
-
-try:
-    with open("/run/secrets/garmin_password", encoding="utf-8") as secret:
-        GARMIN_PASSWORD = secret.read()
-except OSError:
-    GARMIN_PASSWORD = ""
-
-if "GARMIN_USERNAME" in os.environ:
-    GARMIN_USERNAME = os.getenv("GARMIN_USERNAME")
-
-if "GARMIN_PASSWORD" in os.environ:
-    GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
-
-
-try:
-    with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
-        TRAINERROAD_USERNAME = secret.read()
-except OSError:
-    TRAINERROAD_USERNAME = ""
-
-try:
-    with open("/run/secrets/trainerroad_password", encoding="utf-8") as secret:
-        TRAINERROAD_PASSWORD = secret.read()
-except OSError:
-    TRAINERROAD_PASSWORD = ""
-
-if "TRAINERROAD_USERNAME" in os.environ:
-    TRAINERROAD_USERNAME = os.getenv("TRAINERROAD_USERNAME")
-
-if "TRAINERROAD_PASSWORD" in os.environ:
-    TRAINERROAD_PASSWORD = os.getenv("TRAINERROAD_PASSWORD")
+WITHINGS_USERID = 1
 
 
 def get_args():
@@ -66,37 +30,26 @@ def get_args():
         return datetime.strptime(date_string, "%Y-%m-%d")
 
     parser.add_argument(
-        "--garmin-username",
-        "--gu",
-        default=GARMIN_USERNAME,
+        "--withings-userid",
+        "--wuid",
+        default=WITHINGS_USERID,
         type=str,
-        metavar="GARMIN_USERNAME",
-        help="username to log in to Garmin Connect.",
+        metavar="WITHINGS_USERID",
+        help="API userid to use for Withings.",
     )
+    
     parser.add_argument(
-        "--garmin-password",
-        "--gp",
-        default=GARMIN_PASSWORD,
-        type=str,
-        metavar="GARMIN_PASSWORD",
-        help="password to log in to Garmin Connect.",
+        "--garmin-upload",
+        "--gu",
+        action="store_true",
+        help=("upload to Garmin Connect."),
     )
 
     parser.add_argument(
-        "--trainerroad-username",
+        "--trainerroad-upload",
         "--tu",
-        default=TRAINERROAD_USERNAME,
-        type=str,
-        metavar="TRAINERROAD_USERNAME",
-        help="username to log in to TrainerRoad.",
-    )
-    parser.add_argument(
-        "--trainerroad-password",
-        "--tp",
-        default=TRAINERROAD_PASSWORD,
-        type=str,
-        metavar="TRAINERROAD_PASSWORD",
-        help="password to log in to TrainerRoad.",
+        action="store_true",
+        help=("upload to TrainerRoad."),
     )
 
     parser.add_argument("--fromdate", "-f", type=date_parser, metavar="DATE")
@@ -120,27 +73,21 @@ def get_args():
         metavar="BASENAME",
         help=("Write downloaded measurements to file."),
     )
-
-    parser.add_argument(
-        "--no-upload",
-        action="store_true",
-        help=("Won't upload to Garmin Connect or " "TrainerRoad."),
-    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Run verbosely")
 
     return parser.parse_args()
 
 
-def sync_garmin(fit_file):
+def sync_garmin(withings, fit_file):
     """Sync generated fit file to Garmin Connect"""
     garmin = GarminConnect()
-    session = garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+    session = garmin.login(withings.get_garmin_username(), withings.get_garmin_password())
     return garmin.upload_file(fit_file.getvalue(), session)
 
 
-def sync_trainerroad(last_weight):
+def sync_trainerroad(withings, last_weight):
     """Sync measured weight to TrainerRoad"""
-    t_road = TrainerRoad(ARGS.trainerroad_username, ARGS.trainerroad_password)
+    t_road = TrainerRoad(withings.get_trainerroad_username(), withings.get_trainerroad_password())
     t_road.connect()
     logging.info("Current TrainerRoad weight: %s kg ", t_road.weight)
     logging.info("Updating TrainerRoad weight to %s kg", last_weight)
@@ -257,7 +204,7 @@ def prepare_syncdata(height, groups):
         for dataentry in groupdata["raw_data"]:
             logging.debug(dataentry)
        
-        logging.debug(
+        logging.info(
             "Record: %s, height=%s m, "
             "weight=%s kg, "
             "fat_ratio=%s %%, "
@@ -320,7 +267,7 @@ def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
 
     # Withings API
-    withings = WithingsAccount()
+    withings = WithingsAccount(ARGS.withings_userid)
 
     if not ARGS.fromdate:
         startdate = withings.get_lastsync()
@@ -342,10 +289,6 @@ def sync():
         logging.error("No measurements to upload for date or period specified")
         return -1
 
-    # Save this sync so we don't re-download the same data again (if no range has been specified)
-    if not ARGS.fromdate:
-        withings.set_lastsync()
-
     last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
 
     fit_data = generate_fitdata(syncdata)
@@ -353,27 +296,27 @@ def sync():
 
     write_to_file_when_needed(fit_data, json_data)
 
-    if ARGS.no_upload:
-        logging.info("Skipping upload")
-        return 0
-
     # Upload to Trainer Road
-    if ARGS.trainerroad_username and last_weight is not None:
-        logging.info("Trainerroad username set -- attempting to sync")
+    if ARGS.trainerroad_upload and last_weight is not None:
+        logging.info("attempting to sync Trainerroad")
         logging.info(" Last weight %s", last_weight)
         logging.info(" Measured %s", last_date_time)
-        if sync_trainerroad(last_weight):
+        if sync_trainerroad(withings, last_weight):
             logging.info("TrainerRoad update done!")
-    else:
-        logging.info("No Trainerroad username or a new measurement " "- skipping sync")
+        else:
+            return -1
 
     # Upload to Garmin Connect
-    if ARGS.garmin_username and fit_data is not None:
-        logging.debug("attempting to upload fit file...")
-        if sync_garmin(fit_data):
+    if ARGS.garmin_upload and fit_data is not None:
+        logging.debug("attempting to upload fit file to Garmin...")
+        if sync_garmin(withings, fit_data):
             logging.info("Fit file uploaded to Garmin Connect")
-    else:
-        logging.info("No Garmin username - skipping sync")
+        else:
+            return -1
+            
+    # Save this sync so we don't re-download the same data again (if no range has been specified)
+    if not ARGS.fromdate:
+        withings.set_lastsync()
     return 0
 
 
