@@ -237,12 +237,14 @@ def prepare_syncdata(height, groups):
         }
 
 
-        # if groupdata["weight"] is None:
-            # logging.info(
-            #    "This Withings metric contains no weight data.  Not syncing..."
-            # )
-            # logging.debug("Detected data: ")
-            # continue
+        if groupdata["weight"] is None:
+            logging.info(
+                "%s This Withings metric contains no weight data.  Not syncing...", dt
+            )
+            groupdata_log_raw_data(groupdata)
+            # for now, remove the entry as we're handling weight data
+            del syncDict[dt]
+            continue
         if height and groupdata["weight"]:
             groupdata["bmi"] = round(
                 groupdata["weight"] / pow(groupdata["height"], 2), 1
@@ -253,10 +255,8 @@ def prepare_syncdata(height, groups):
             )
 
         logging.debug("%s Detected data: ", dt)
-        #for dataentry in raw_data:
-        for dataentry in groupdata["raw_data"]:
-            logging.debug(dataentry)
-       
+        groupdata_log_raw_data(groupdata)
+
         logging.debug(
             "Record: %s, height=%s m, "
             "weight=%s kg, "
@@ -282,8 +282,8 @@ def prepare_syncdata(height, groups):
     for groupdata in syncDict.values():
         syncdata.append(groupdata)
         logging.debug("Processed data: ")
-        for k,v in groupdata.items():
-            logging.debug(k, v)
+        for k, v in groupdata.items():
+            logging.debug("%s=%s", k, v)
         if last_date_time is None or groupdata["date_time"] > last_date_time:
             last_date_time = groupdata["date_time"]
             last_weight = groupdata["weight"]
@@ -293,6 +293,11 @@ def prepare_syncdata(height, groups):
         logging.error("Invalid or no weight data detected")
 
     return last_weight, last_date_time, syncdata
+
+
+def groupdata_log_raw_data(groupdata):
+    for dataentry in groupdata["raw_data"]:
+        logging.debug("%s", dataentry)
 
 
 def write_to_file_when_needed(fit_data, json_data):
