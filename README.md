@@ -202,3 +202,33 @@ Configure them in `config/withings_app.json`, for example:
 ```
 
 For the callback URL you will need to setup a webserver hosting `contrib/withings.html`.
+
+### Run a periodic docker-compose cronjob
+
+We take the official docker image and override the entrypoint to crond.
+
+If you have completed the initial setup (withings_user.json created and working), you can create the following config
+
+```
+version: "3.8"
+services:
+  withings-sync:
+    container_name: withings-sync
+    image: ghcr.io/jaroslawhartman/withings-sync:master
+    volumes:
+      - "${VOLUME_PATH}/withings-sync:/root" 
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=${TIME_ZONE}
+    entrypoint: "/root/entrypoint.sh"
+```
+
+The `entrypoint.sh` will then register the cronjob. For example:
+
+```
+#!/bin/sh
+echo "0 */3 * * * withings-sync --gu garmin-username --gp 'mypassword' -v | tee -a /root/withings-sync.log" > /etc/crontabs/root
+crond -f -l 6 -L /dev/stdout
+```
+
+This will run the job every 3 hours and writing the output to console and the `/root/withings-sync.log`.
