@@ -181,7 +181,7 @@ The script has been registered as a Withings application and got assigned `Clien
 
 
 * First you need a Withings account. [Sign up here](https://account.withings.com/connectionuser/account_create).
-* Then you need a a Withings developer app registered. [Create your app here](https://account.withings.com/partner/add_oauth2).
+* Then you need a Withings developer app registered. [Create your app here](https://account.withings.com/partner/add_oauth2).
 
 Note, registering it is quite cumbersome, as you need to have a callback URL and an Icon. Anyway, when done, you should have the following identifiers:
 
@@ -202,3 +202,20 @@ Configure them in `config/withings_app.json`, for example:
 ```
 
 For the callback URL you will need to setup a webserver hosting `contrib/withings.html`.
+
+
+
+
+### docker cron
+
+docker run -d --name withings-sync --entrypoint crond -f
+docker run --name withings-sync --entrypoint "crond -f"
+
+
+docker exec -i withings-sync \
+sh -c "cat <<-CONFIG | crontab -
+42 */3 * * * withings-sync -v --no-upload | tee -a /var/log/withings-sync.log
+CONFIG"
+        
+docker exec -i withings-sync \
+          sh -c "tail -f /var/log/withings-sync.log"
