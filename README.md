@@ -181,7 +181,7 @@ The script has been registered as a Withings application and got assigned `Clien
 
 
 * First you need a Withings account. [Sign up here](https://account.withings.com/connectionuser/account_create).
-* Then you need a a Withings developer app registered. [Create your app here](https://account.withings.com/partner/add_oauth2).
+* Then you need a Withings developer app registered. [Create your app here](https://account.withings.com/partner/add_oauth2).
 
 Note, registering it is quite cumbersome, as you need to have a callback URL and an Icon. Anyway, when done, you should have the following identifiers:
 
@@ -227,8 +227,9 @@ The `entrypoint.sh` will then register the cronjob. For example:
 
 ```
 #!/bin/sh
-echo "0 */3 * * * withings-sync --gu garmin-username --gp 'mypassword' -v | tee -a /root/withings-sync.log" > /etc/crontabs/root
+echo "$(( $RANDOM % 59 +0 )) */3 * * * withings-sync --gu garmin-username --gp 'mypassword' -v | tee -a /root/withings-sync.log" > /etc/crontabs/root
 crond -f -l 6 -L /dev/stdout
 ```
 
-This will run the job every 3 hours and writing the output to console and the `/root/withings-sync.log`.
+This will run the job every 3 hours (at a random minute) and writing the output to console and the `/root/withings-sync.log`.
+
