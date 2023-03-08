@@ -13,7 +13,6 @@ from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoder_Weight
 
-
 try:
     with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
         GARMIN_USERNAME = secret.read()
@@ -195,18 +194,27 @@ def generate_fitdata(syncdata):
     fit.write_file_creator()
 
     for record in syncdata:
-        if "weight" not in record:
+        if "diastolic_blood_pressure" in record:
+            fit.write_device_info(timestamp=record["date_time"])
+            fit.write_blood_pressure(
+                timestamp=record["date_time"],
+                diastolic_blood_pressure=record["diastolic_blood_pressure"],
+                systolic_blood_presure=record["systolic_blood_pressure"],
+                heart_pulse=record["heart_pulse"],
+            )
             next
-        fit.write_device_info(timestamp=record["date_time"])
-        fit.write_weight_scale(
-            timestamp=record["date_time"],
-            weight=record["weight"],
-            percent_fat=record["fat_ratio"],
-            percent_hydration=record["percent_hydration"],
-            bone_mass=record["bone_mass"],
-            muscle_mass=record["muscle_mass"],
-            bmi=record["bmi"],
-        )
+        if "weight" in record:
+            fit.write_device_info(timestamp=record["date_time"])
+            fit.write_weight_scale(
+                timestamp=record["date_time"],
+                weight=record["weight"],
+                percent_fat=record["fat_ratio"],
+                percent_hydration=record["percent_hydration"],
+                bone_mass=record["bone_mass"],
+                muscle_mass=record["muscle_mass"],
+                bmi=record["bmi"],
+            )
+            next
 
     fit.finish()
 
@@ -240,79 +248,116 @@ def prepare_syncdata(height, groups):
     last_date_time = None
     last_weight = None
 
-    syncDict = {}
+    sync_dict = {}
 
     for group in groups:
         # Get extra physical measurements
         dt = group.get_datetime()
-        if dt not in syncDict:
-            syncDict[dt] = {}
-        groupdata = {
+        group_data = {
             "date_time": group.get_datetime(),
-            "height": height,
-            "weight": group.get_weight(),
-            "fat_ratio": group.get_fat_ratio(),
-            "muscle_mass": group.get_muscle_mass(),
-            "hydration": group.get_hydration(),
-            "percent_hydration": None,
-            "bone_mass": group.get_bone_mass(),
-            "pulse_wave_velocity": group.get_pulse_wave_velocity(),
-            "heart_pulse": group.get_heart_pulse(),
-            "bmi": None,
-            "raw_data": group.get_raw_data()
+            "type": "None"
         }
 
+        if dt not in sync_dict:
+            sync_dict[dt] = {}
 
-        if groupdata["weight"] is None:
+        if group.get_weight():
+            group_data = {
+                "date_time": group.get_datetime(),
+                "height": height,
+                "weight": group.get_weight(),
+                "fat_ratio": group.get_fat_ratio(),
+                "muscle_mass": group.get_muscle_mass(),
+                "hydration": group.get_hydration(),
+                "percent_hydration": None,
+                "bone_mass": group.get_bone_mass(),
+                "pulse_wave_velocity": group.get_pulse_wave_velocity(),
+                "heart_pulse": group.get_heart_pulse(),
+                "bmi": None,
+                "raw_data": group.get_raw_data(),
+                "type": "weight",
+            }
+
+        if group.get_diastolic_blood_pressure():
+            group_data = {
+                "date_time": group.get_datetime(),
+                "diastolic_blood_pressure": group.get_diastolic_blood_pressure(),
+                "systolic_blood_pressure": group.get_systolic_blood_pressure(),
+                "heart_pulse": group.get_heart_pulse(),
+                "raw_data": group.get_raw_data(),
+                "type": "blood_pressure"
+            }
+
+        if "weight" not in group_data and not (
+                "diastolic_blood_pressure" in group_data and "BLOOD_PRESSURE" in ARGS.features):
+            collected_metrics = "weight data"
+            if "BLOOD_PRESSURE" in ARGS.features:
+                collected_metrics += " or blood pressure"
+
             logging.info(
-                "%s This Withings metric contains no weight data.  Not syncing...", dt
+                "%s This Withings metric contains no %s.  Not syncing...", dt, collected_metrics
             )
-            groupdata_log_raw_data(groupdata)
+            groupdata_log_raw_data(group_data)
             # for now, remove the entry as we're handling weight data
-            del syncDict[dt]
+            del sync_dict[dt]
             continue
-        if height and groupdata["weight"]:
-            groupdata["bmi"] = round(
-                groupdata["weight"] / pow(groupdata["height"], 2), 1
+
+        if height and "weight" in group_data:
+            group_data["bmi"] = round(
+                group_data["weight"] / pow(group_data["height"], 2), 1
             )
-        if groupdata["hydration"]:
-            groupdata["percent_hydration"] = round(
-                groupdata["hydration"] * 100.0 / groupdata["weight"], 2
+        if "hydration" in group_data and group_data["hydration"]:
+            group_data["percent_hydration"] = round(
+                group_data["hydration"] * 100.0 / group_data["weight"], 2
             )
 
         logging.debug("%s Detected data: ", dt)
-        groupdata_log_raw_data(groupdata)
+        groupdata_log_raw_data(group_data)
+        if "weight" in group_data:
+            logging.debug(
+                "Record: %s, type=%s\n"
+                "height=%s m, "
+                "weight=%s kg, "
+                "fat_ratio=%s %%, "
+                "muscle_mass=%s kg, "
+                "percent_hydration=%s %%, "
+                "bone_mass=%s kg, "
+                "bmi=%s",
+                group_data["date_time"],
+                group_data["type"],
+                group_data["height"],
+                group_data["weight"],
+                group_data["fat_ratio"],
+                group_data["muscle_mass"],
+                group_data["percent_hydration"],
+                group_data["bone_mass"],
+                group_data["bmi"],
+            )
+        if "diastolic_blood_pressure" in group_data:
+            logging.debug(
+                "Record: %s, type=%s\n"
+                "diastolic_blood_pressure=%s kg, "
+                "systolic_blood_pressure=%s %%, "
+                "heart_pulse=%s kg, ",
+                group_data["date_time"],
+                group_data["type"],
+                group_data["diastolic_blood_pressure"],
+                group_data["systolic_blood_pressure"],
+                group_data["heart_pulse"],
+            )
 
-        logging.debug(
-            "Record: %s, height=%s m, "
-            "weight=%s kg, "
-            "fat_ratio=%s %%, "
-            "muscle_mass=%s kg, "
-            "percent_hydration=%s %%, "
-            "bone_mass=%s kg, "
-            "bmi=%s",
-            groupdata["date_time"],
-            groupdata["height"],
-            groupdata["weight"],
-            groupdata["fat_ratio"],
-            groupdata["muscle_mass"],
-            groupdata["percent_hydration"],
-            groupdata["bone_mass"],
-            groupdata["bmi"],
-        )
-       
         # join groups with same timestamp
-        for k,v in groupdata.items():
-            syncDict[dt][k] = v
+        for k, v in group_data.items():
+            sync_dict[dt][k] = v
 
-    for groupdata in syncDict.values():
-        syncdata.append(groupdata)
+    for group_data in sync_dict.values():
+        syncdata.append(group_data)
         logging.debug("Processed data: ")
-        for k, v in groupdata.items():
+        for k, v in group_data.items():
             logging.debug("%s=%s", k, v)
-        if last_date_time is None or groupdata["date_time"] > last_date_time:
-            last_date_time = groupdata["date_time"]
-            last_weight = groupdata["weight"]
+        if last_date_time is None or group_data["date_time"] > last_date_time:
+            last_date_time = group_data["date_time"]
+            last_weight = group_data["weight"]
             logging.debug("last_dt: %s last_weight: %s", last_date_time, last_weight)
 
     if last_weight is None:
