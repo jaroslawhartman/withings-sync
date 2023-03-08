@@ -46,6 +46,8 @@ optional arguments:
   --to-json, -J         Write output file in JSON format.
   --output BASENAME, -o BASENAME
                         Write downloaded measurements to file.
+  --features            Enable Features
+                        BLOOD_PRESSURE = sync blood pressure
   --no-upload           Won't upload to Garmin Connect or TrainerRoad.
   --verbose, -v         Run verbosely
 ```
@@ -55,7 +57,7 @@ optional arguments:
 You can use the following environment variables for providing the Garmin and/or Trainerroad credentials:
 
 - `GARMIN_USERNAME`
-- `GARMIN_PASSWORD` 
+- `GARMIN_PASSWORD`
 - `TRAINERROAD_USERNAME`
 - `TRAINERROAD_PASSWORD`
 
