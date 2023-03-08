@@ -351,6 +351,8 @@ def prepare_syncdata(height, groups):
         for k, v in group_data.items():
             sync_dict[dt][k] = v
 
+    last_measurement_type = None
+
     for group_data in sync_dict.values():
         syncdata.append(group_data)
         logging.debug("Processed data: ")
@@ -358,13 +360,13 @@ def prepare_syncdata(height, groups):
             logging.debug("%s=%s", k, v)
         if last_date_time is None or group_data["date_time"] > last_date_time:
             last_date_time = group_data["date_time"]
-            last_weight = group_data["weight"]
+            last_measurement_type = group_data["type"]
             logging.debug("last_dt: %s last_weight: %s", last_date_time, last_weight)
 
-    if last_weight is None:
-        logging.error("Invalid or no weight data detected")
+    if last_measurement_type is None:
+        logging.error("Invalid or no data detected")
 
-    return last_weight, last_date_time, syncdata
+    return last_measurement_type, last_date_time, syncdata
 
 
 def groupdata_log_raw_data(groupdata):
@@ -419,7 +421,7 @@ def sync():
         logging.error("No measurements to upload for date or period specified")
         return -1
 
-    last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
+    last_measurement_type, last_date_time, syncdata = prepare_syncdata(height, groups)
 
     fit_data = generate_fitdata(syncdata)
     json_data = generate_jsondata(syncdata)
@@ -427,15 +429,21 @@ def sync():
     write_to_file_when_needed(fit_data, json_data)
 
     if not ARGS.no_upload:
+        # get weight entries (in case of only blood_pressure)
+        only_weight_entries = list(filter(lambda x: (x["type"] == "weight"), syncdata))
+        last_weight_exists = len(only_weight_entries) > 0
         # Upload to Trainer Road
-        if ARGS.trainerroad_username and last_weight is not None:
+        if ARGS.trainerroad_username and last_weight_exists:
+            # sort and get last weight
+            last_weight_measurement = sorted(only_weight_entries, key=lambda x: x["date_time"])[-1]
+            last_weight = last_weight_measurement["weight"]
             logging.info("Trainerroad username set -- attempting to sync")
             logging.info(" Last weight %s", last_weight)
             logging.info(" Measured %s", last_date_time)
             if sync_trainerroad(last_weight):
                 logging.info("TrainerRoad update done!")
         else:
-            logging.info("No Trainerroad username or a new measurement " "- skipping sync")
+            logging.info("No TrainerRoad username or a new measurement " "- skipping sync")
 
         # Upload to Garmin Connect
         if ARGS.garmin_username and fit_data is not None:
@@ -471,3 +479,7 @@ def main():
         sys.exit(1)
 
     sync()
+
+
+if __name__ == '__main__':
+    main()
