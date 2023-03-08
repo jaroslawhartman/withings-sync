@@ -32,7 +32,6 @@ if "GARMIN_USERNAME" in os.environ:
 if "GARMIN_PASSWORD" in os.environ:
     GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
 
-
 try:
     with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
         TRAINERROAD_USERNAME = secret.read()
@@ -90,6 +89,7 @@ def get_args():
         metavar="TRAINERROAD_USERNAME",
         help="username to log in to TrainerRoad.",
     )
+
     parser.add_argument(
         "--trainerroad-password",
         "--tp",
@@ -99,32 +99,44 @@ def get_args():
         help="password to log in to TrainerRoad.",
     )
 
-    parser.add_argument("--fromdate", "-f", type=date_parser, metavar="DATE")
     parser.add_argument(
-        "--todate", "-t", type=date_parser, default=date.today(), metavar="DATE"
+        "--fromdate", "-f",
+        type=date_parser,
+        metavar="DATE"
     )
 
     parser.add_argument(
-        "--to-fit", "-F", action="store_true", help=("Write output file in FIT format.")
+        "--todate", "-t",
+        type=date_parser,
+        default=date.today(),
+        metavar="DATE"
     )
+
+    parser.add_argument(
+        "--to-fit", "-F",
+        action="store_true",
+        help="Write output file in FIT format."
+    )
+
     parser.add_argument(
         "--to-json",
         "-J",
         action="store_true",
-        help=("Write output file in JSON format."),
+        help="Write output file in JSON format.",
     )
+
     parser.add_argument(
         "--output",
         "-o",
         type=str,
         metavar="BASENAME",
-        help=("Write downloaded measurements to file."),
+        help="Write downloaded measurements to file.",
     )
 
     parser.add_argument(
         "--no-upload",
         action="store_true",
-        help=("Won't upload to Garmin Connect or " "TrainerRoad."),
+        help="Won't upload to Garmin Connect or " "TrainerRoad.",
     )
 
     parser.add_argument(
@@ -211,12 +223,12 @@ def generate_jsondata(syncdata):
         sdt = str(record["date_time"])
         json_data[sdt] = {}
         for dataentry in record["raw_data"]:
-            for k,jd in dataentry.json_dict().items():
+            for k, jd in dataentry.json_dict().items():
                 json_data[sdt][k] = jd
         if "bmi" in record:
-            json_data[sdt]["BMI"] = { "Value": record["bmi"], "Unit": "kg/m^2"}
+            json_data[sdt]["BMI"] = {"Value": record["bmi"], "Unit": "kg/m^2"}
         if "percent_hydration" in record:
-             json_data[sdt]["Percent_Hydration"] = { "Value": record["percent_hydration"], "Unit": "%"}
+            json_data[sdt]["Percent_Hydration"] = {"Value": record["percent_hydration"], "Unit": "%"}
     logging.debug("Json data generated...")
     return json_data
 
