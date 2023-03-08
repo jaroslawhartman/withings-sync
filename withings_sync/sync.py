@@ -126,7 +126,21 @@ def get_args():
         action="store_true",
         help=("Won't upload to Garmin Connect or " "TrainerRoad."),
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Run verbosely")
+
+    parser.add_argument(
+        "--features",
+        nargs='+',
+        default=[],
+        metavar="FEATURES_ENABLED",
+        help="Enable Features like FULL_SYNC"
+    )
+
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Run verbosely"
+    )
 
     return parser.parse_args()
 
