@@ -231,6 +231,29 @@ class FitEncoder_Weight(FitEncoder):
         header = self.record_header(lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
         self.buf.write(header + values)
 
+    def write_blood_pressure(self,
+                             timestamp,
+                             diastolic_blood_pressure=None,
+                             systolic_blood_presure=None,
+                             heart_pulse=None,):
+        content = [
+            (253, FitBaseType.uint32, self.timestamp(timestamp), 1),
+            (9, FitBaseType.uint8, diastolic_blood_pressure, 1),
+            (10, FitBaseType.uint8, systolic_blood_presure, 1),
+            (11, FitBaseType.uint8, heart_pulse, 1),
+        ]
+        fields, values = self._build_content_block(content)
+
+        if not self.weight_scale_defined:
+            header = self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
+            msg_number = self.GMSG_NUMS['weight_scale']
+            fixed_content = pack('BBHB', 0, 0, msg_number, len(content))  # reserved, architecture(0: little endian)
+            self.buf.write(header + fixed_content + fields)
+            self.weight_scale_defined = True
+
+        header = self.record_header(lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
+        self.buf.write(header + values)
+
     def record_header(self, definition=False, lmsg_type=0):
         msg = 0
         if definition:
