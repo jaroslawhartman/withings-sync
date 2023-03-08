@@ -202,8 +202,7 @@ def generate_fitdata(syncdata):
                 systolic_blood_presure=record["systolic_blood_pressure"],
                 heart_pulse=record["heart_pulse"],
             )
-            next
-        if "weight" in record:
+        elif "weight" in record:
             fit.write_device_info(timestamp=record["date_time"])
             fit.write_weight_scale(
                 timestamp=record["date_time"],
@@ -214,6 +213,8 @@ def generate_fitdata(syncdata):
                 muscle_mass=record["muscle_mass"],
                 bmi=record["bmi"],
             )
+        else:
+            # unkown entry. skipping
             next
 
     fit.finish()
