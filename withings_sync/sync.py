@@ -11,7 +11,7 @@ from datetime import date, datetime
 from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
-from withings_sync.fit import FitEncoder_Weight
+from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
 
 try:
     with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
@@ -142,8 +142,8 @@ def get_args():
         "--features",
         nargs='+',
         default=[],
-        metavar="FEATURES_ENABLED",
-        help="Enable Features like FULL_SYNC"
+        metavar="BLOOD_PRESSURE",
+        help="Enable Features like BLOOD_PRESSURE"
     )
 
     parser.add_argument(
@@ -178,33 +178,20 @@ def generate_fitdata(syncdata):
     """Generate fit data from measured data"""
     logging.debug("Generating fit data...")
 
-    have_weight = False
-    for record in syncdata:
-        if "weight" in record:
-            have_weight = True
-            break
-        next
+    weight_measurements = list(filter(lambda x: (x["type"] == "weight"), syncdata))
+    blood_pressure_measurements = list(filter(lambda x: (x["type"] == "blood_pressure"), syncdata))
 
-    if not have_weight:
-        logging.info("No weight data to sync for FIT file")
-        return None
+    fit_weight = None
+    fit_blood_pressure = None
 
-    fit = FitEncoder_Weight()
-    fit.write_file_info()
-    fit.write_file_creator()
+    if len(weight_measurements) > 0:
+        fit_weight = FitEncoderWeight()
+        fit_weight.write_file_info()
+        fit_weight.write_file_creator()
 
-    for record in syncdata:
-        if "diastolic_blood_pressure" in record:
-            fit.write_device_info(timestamp=record["date_time"])
-            fit.write_blood_pressure(
-                timestamp=record["date_time"],
-                diastolic_blood_pressure=record["diastolic_blood_pressure"],
-                systolic_blood_presure=record["systolic_blood_pressure"],
-                heart_pulse=record["heart_pulse"],
-            )
-        elif "weight" in record:
-            fit.write_device_info(timestamp=record["date_time"])
-            fit.write_weight_scale(
+        for record in weight_measurements:
+            fit_weight.write_device_info(timestamp=record["date_time"])
+            fit_weight.write_weight_scale(
                 timestamp=record["date_time"],
                 weight=record["weight"],
                 percent_fat=record["fat_ratio"],
@@ -213,14 +200,31 @@ def generate_fitdata(syncdata):
                 muscle_mass=record["muscle_mass"],
                 bmi=record["bmi"],
             )
-        else:
-            # unkown entry. skipping
-            next
 
-    fit.finish()
+        fit_weight.finish()
+    else:
+        logging.info("No weight data to sync for FIT file")
+
+    if len(blood_pressure_measurements) > 0:
+        fit_blood_pressure = FitEncoderBloodPressure()
+        fit_blood_pressure.write_file_info()
+        fit_blood_pressure.write_file_creator()
+
+        for record in blood_pressure_measurements:
+            fit_blood_pressure.write_device_info(timestamp=record["date_time"])
+            fit_blood_pressure.write_blood_pressure(
+                timestamp=record["date_time"],
+                diastolic_blood_pressure=record["diastolic_blood_pressure"],
+                systolic_blood_pressure=record["systolic_blood_pressure"],
+                heart_rate=record["heart_pulse"],
+            )
+
+        fit_blood_pressure.finish()
+    else:
+        logging.info("No blood pressure data to sync for FIT file")
 
     logging.debug("Fit data generated...")
-    return fit
+    return fit_weight, fit_blood_pressure
 
 
 def generate_jsondata(syncdata):
@@ -374,17 +378,24 @@ def groupdata_log_raw_data(groupdata):
         logging.debug("%s", dataentry)
 
 
-def write_to_file_when_needed(fit_data, json_data):
+def write_to_fitfile(filename, fit_data):
+    logging.info("Writing fitfile to %s.", filename)
+    try:
+        with open(filename, "wb") as fitfile:
+            fitfile.write(fit_data.getvalue())
+    except OSError:
+        logging.error("Unable to open output fitfile! %s", filename)
+
+
+def write_to_file_when_needed(fit_data_weigth, fit_data_blood_pressure, json_data):
     """Write measurements to file when requested"""
     if ARGS.output is not None:
-        if ARGS.to_fit and fit_data is not None:
-            filename = ARGS.output + ".fit"
-            logging.info("Writing fitfile to %s.", filename)
-            try:
-                with open(filename, "wb") as fitfile:
-                    fitfile.write(fit_data.getvalue())
-            except OSError:
-                logging.error("Unable to open output fitfile!")
+        if ARGS.to_fit:
+            if fit_data_weigth is not None:
+                write_to_fitfile(ARGS.output + ".weight.fit", fit_data_weigth)
+            if fit_data_blood_pressure is not None:
+                write_to_fitfile(ARGS.output + ".blood_pressure.fit", fit_data_blood_pressure)
+
         if ARGS.to_json:
             filename = ARGS.output + ".json"
             logging.info("Writing jsonfile to %s.", filename)
@@ -423,10 +434,10 @@ def sync():
 
     last_measurement_type, last_date_time, syncdata = prepare_syncdata(height, groups)
 
-    fit_data = generate_fitdata(syncdata)
+    fit_data_weight, fit_data_blood_pressure = generate_fitdata(syncdata)
     json_data = generate_jsondata(syncdata)
 
-    write_to_file_when_needed(fit_data, json_data)
+    write_to_file_when_needed(fit_data_weight, fit_data_blood_pressure, json_data)
 
     if not ARGS.no_upload:
         # get weight entries (in case of only blood_pressure)
@@ -446,10 +457,12 @@ def sync():
             logging.info("No TrainerRoad username or a new measurement " "- skipping sync")
 
         # Upload to Garmin Connect
-        if ARGS.garmin_username and fit_data is not None:
+        if ARGS.garmin_username and (fit_data_weight is not None or fit_data_blood_pressure is not None):
             logging.debug("attempting to upload fit file...")
-            if sync_garmin(fit_data):
-                logging.info("Fit file uploaded to Garmin Connect")
+            if fit_data_weight is not None and sync_garmin(fit_data_weight):
+                logging.info("Fit file with weight information uploaded to Garmin Connect")
+            if fit_data_blood_pressure is not None and sync_garmin(fit_data_blood_pressure):
+                logging.info("Fit file with blood pressure information uploaded to Garmin Connect")
         else:
             logging.info("No Garmin username - skipping sync")
     else:
@@ -480,6 +493,3 @@ def main():
 
     sync()
 
-
-if __name__ == '__main__':
-    main()
