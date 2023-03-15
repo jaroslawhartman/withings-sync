@@ -258,6 +258,7 @@ def prepare_syncdata(height, groups):
     for group in groups:
         # Get extra physical measurements
         dt = group.get_datetime()
+        # create a default group_data
         group_data = {
             "date_time": group.get_datetime(),
             "type": "None",
@@ -293,6 +294,7 @@ def prepare_syncdata(height, groups):
                 "type": "blood_pressure"
             }
 
+        # execute the code below, if this is not a whitelisted entry like weight and blood pressure
         if "weight" not in group_data and not (
                 "diastolic_blood_pressure" in group_data and "BLOOD_PRESSURE" in ARGS.features):
             collected_metrics = "weight data"
@@ -303,7 +305,7 @@ def prepare_syncdata(height, groups):
                 "%s This Withings metric contains no %s.  Not syncing...", dt, collected_metrics
             )
             groupdata_log_raw_data(group_data)
-            # for now, remove the entry as we're handling weight data
+            # for now, remove the entry as we're handling only weight and feature enabled data
             del sync_dict[dt]
             continue
 
