@@ -36,7 +36,8 @@ class FitBaseType(object):
     uint8z = {'#': 10, 'endian': 0, 'field': 0x0A, 'name': 'uint8z', 'invalid': 0x00, 'size': 1}
     uint16z = {'#': 11, 'endian': 1, 'field': 0x8B, 'name': 'uint16z', 'invalid': 0x0000, 'size': 2}
     uint32z = {'#': 12, 'endian': 1, 'field': 0x8C, 'name': 'uint32z', 'invalid': 0x00000000, 'size': 4}
-    byte = {'#': 13, 'endian': 0, 'field': 0x0D, 'name': 'byte', 'invalid': 0xFF, 'size': 1}  # array of byte, field is invalid if all bytes are invalid
+    byte = {'#': 13, 'endian': 0, 'field': 0x0D, 'name': 'byte', 'invalid': 0xFF,
+            'size': 1}  # array of byte, field is invalid if all bytes are invalid
 
     @staticmethod
     def get_format(basetype):
@@ -49,7 +50,7 @@ class FitBaseType(object):
     @staticmethod
     def pack(basetype, value):
         """function to avoid DeprecationWarning"""
-        if basetype['#'] in (1,2,3,4,5,6,10,11,12):
+        if basetype['#'] in (1, 2, 3, 4, 5, 6, 10, 11, 12):
             value = int(value)
         fmt = FitBaseType.get_format(basetype)
         return pack(fmt, value)
@@ -58,35 +59,26 @@ class FitBaseType(object):
 class Fit(object):
     HEADER_SIZE = 12
 
+    # not sure if this is the mesg_num
     GMSG_NUMS = {
         'file_id': 0,
         'device_info': 23,
         'weight_scale': 30,
         'file_creator': 49,
+        'blood_pressure': 51,
     }
 
 
 class FitEncoder(Fit):
-    def timestamp(self, t):
-        """the timestamp in fit protocol is seconds since
-        UTC 00:00 Dec 31 1989 (631065600)"""
-        if isinstance(t, datetime):
-            t = time.mktime(t.timetuple())
-        return t - 631065600
-
-
-class FitEncoder_Weight(FitEncoder):
     FILE_TYPE = 9
     LMSG_TYPE_FILE_INFO = 0
     LMSG_TYPE_FILE_CREATOR = 1
     LMSG_TYPE_DEVICE_INFO = 2
-    LMSG_TYPE_WEIGHT_SCALE = 3
 
     def __init__(self):
         self.buf = BytesIO()
         self.write_header()  # create header first
         self.device_info_defined = False
-        self.weight_scale_defined = False
 
     def __str__(self):
         orig_pos = self.buf.tell()
@@ -133,7 +125,7 @@ class FitEncoder_Weight(FitEncoder):
             (1, FitBaseType.uint16, manufacturer, None),
             (2, FitBaseType.uint16, product, None),
             (5, FitBaseType.uint16, number, None),
-            (0, FitBaseType.enum, self.FILE_TYPE, None), # type
+            (0, FitBaseType.enum, self.FILE_TYPE, None),  # type
         ]
         fields, values = self._build_content_block(content)
 
@@ -146,11 +138,10 @@ class FitEncoder_Weight(FitEncoder):
             self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_FILE_INFO),
             fixed_content,
             fields,
-            #record
+            # record
             self.record_header(lmsg_type=self.LMSG_TYPE_FILE_INFO),
             values,
         ]))
-
 
     def write_file_creator(self, software_version=None, hardware_version=None):
         content = [
@@ -166,7 +157,7 @@ class FitEncoder_Weight(FitEncoder):
             self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_FILE_CREATOR),
             fixed_content,
             fields,
-            #record
+            # record
             self.record_header(lmsg_type=self.LMSG_TYPE_FILE_CREATOR),
             values,
         ]))
@@ -198,37 +189,6 @@ class FitEncoder_Weight(FitEncoder):
             self.device_info_defined = True
 
         header = self.record_header(lmsg_type=self.LMSG_TYPE_DEVICE_INFO)
-        self.buf.write(header + values)
-
-    def write_weight_scale(self, timestamp, weight, percent_fat=None, percent_hydration=None,
-                           visceral_fat_mass=None, bone_mass=None, muscle_mass=None, basal_met=None,
-                           active_met=None, physique_rating=None, metabolic_age=None,
-                           visceral_fat_rating=None, bmi=None):
-        content = [
-            (253, FitBaseType.uint32, self.timestamp(timestamp), 1),
-            (0, FitBaseType.uint16, weight, 100),
-            (1, FitBaseType.uint16, percent_fat, 100),
-            (2, FitBaseType.uint16, percent_hydration, 100),
-            (3, FitBaseType.uint16, visceral_fat_mass, 100),
-            (4, FitBaseType.uint16, bone_mass, 100),
-            (5, FitBaseType.uint16, muscle_mass, 100),
-            (7, FitBaseType.uint16, basal_met, 4),
-            (9, FitBaseType.uint16, active_met, 4),
-            (8, FitBaseType.uint8, physique_rating, 1),
-            (10, FitBaseType.uint8, metabolic_age, 1),
-            (11, FitBaseType.uint8, visceral_fat_rating, 1),
-            (13, FitBaseType.uint16, bmi, 10),
-        ]
-        fields, values = self._build_content_block(content)
-
-        if not self.weight_scale_defined:
-            header = self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
-            msg_number = self.GMSG_NUMS['weight_scale']
-            fixed_content = pack('BBHB', 0, 0, msg_number, len(content))  # reserved, architecture(0: little endian)
-            self.buf.write(header + fixed_content + fields)
-            self.weight_scale_defined = True
-
-        header = self.record_header(lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
         self.buf.write(header + values)
 
     def record_header(self, definition=False, lmsg_type=0):
@@ -268,3 +228,89 @@ class FitEncoder_Weight(FitEncoder):
     def getvalue(self):
         return self.buf.getvalue()
 
+    def timestamp(self, t):
+        """the timestamp in fit protocol is seconds since
+        UTC 00:00 Dec 31 1989 (631065600)"""
+        if isinstance(t, datetime):
+            t = time.mktime(t.timetuple())
+        return t - 631065600
+
+
+class FitEncoderBloodPressure(FitEncoder):
+    # Here might be dragons - no idea what lsmg stand for, found 14 somewhere in the deepest web
+    LMSG_TYPE_BLOOD_PRESSURE = 14
+
+    def __init__(self):
+        super().__init__()
+        self.blood_pressure_monitor_defined = False
+
+    def write_blood_pressure(self,
+                             timestamp,
+                             diastolic_blood_pressure=None,
+                             systolic_blood_pressure=None,
+                             mean_arterial_pressure=None,
+                             map_3_sample_mean=None,
+                             map_morning_values=None,
+                             map_evening_values=None,
+                             heart_rate=None, ):
+        # BLOOD PRESSURE FILE MESSAGES
+        content = [
+            (253, FitBaseType.uint32, self.timestamp(timestamp), 1),
+            (0, FitBaseType.uint16, systolic_blood_pressure, 1),
+            (1, FitBaseType.uint16, diastolic_blood_pressure, 1),
+            (2, FitBaseType.uint16, mean_arterial_pressure, 1),
+            (3, FitBaseType.uint16, map_3_sample_mean, 1),
+            (4, FitBaseType.uint16, map_morning_values, 1),
+            (5, FitBaseType.uint16, map_evening_values, 1),
+            (6, FitBaseType.uint8, heart_rate, 1),
+        ]
+        fields, values = self._build_content_block(content)
+
+        if not self.blood_pressure_monitor_defined:
+            header = self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_BLOOD_PRESSURE)
+            msg_number = self.GMSG_NUMS['blood_pressure']
+            fixed_content = pack('BBHB', 0, 0, msg_number, len(content))  # reserved, architecture(0: little endian)
+            self.buf.write(header + fixed_content + fields)
+            self.blood_pressure_monitor_defined = True
+
+        header = self.record_header(lmsg_type=self.LMSG_TYPE_BLOOD_PRESSURE)
+        self.buf.write(header + values)
+
+
+class FitEncoderWeight(FitEncoder):
+    LMSG_TYPE_WEIGHT_SCALE = 3
+
+    def __init__(self):
+        super().__init__()
+        self.weight_scale_defined = False
+
+    def write_weight_scale(self, timestamp, weight, percent_fat=None, percent_hydration=None,
+                           visceral_fat_mass=None, bone_mass=None, muscle_mass=None, basal_met=None,
+                           active_met=None, physique_rating=None, metabolic_age=None,
+                           visceral_fat_rating=None, bmi=None):
+        content = [
+            (253, FitBaseType.uint32, self.timestamp(timestamp), 1),
+            (0, FitBaseType.uint16, weight, 100),
+            (1, FitBaseType.uint16, percent_fat, 100),
+            (2, FitBaseType.uint16, percent_hydration, 100),
+            (3, FitBaseType.uint16, visceral_fat_mass, 100),
+            (4, FitBaseType.uint16, bone_mass, 100),
+            (5, FitBaseType.uint16, muscle_mass, 100),
+            (7, FitBaseType.uint16, basal_met, 4),
+            (9, FitBaseType.uint16, active_met, 4),
+            (8, FitBaseType.uint8, physique_rating, 1),
+            (10, FitBaseType.uint8, metabolic_age, 1),
+            (11, FitBaseType.uint8, visceral_fat_rating, 1),
+            (13, FitBaseType.uint16, bmi, 10),
+        ]
+        fields, values = self._build_content_block(content)
+
+        if not self.weight_scale_defined:
+            header = self.record_header(definition=True, lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
+            msg_number = self.GMSG_NUMS['weight_scale']
+            fixed_content = pack('BBHB', 0, 0, msg_number, len(content))  # reserved, architecture(0: little endian)
+            self.buf.write(header + fixed_content + fields)
+            self.weight_scale_defined = True
+
+        header = self.record_header(lmsg_type=self.LMSG_TYPE_WEIGHT_SCALE)
+        self.buf.write(header + values)

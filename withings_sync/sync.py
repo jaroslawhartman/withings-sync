@@ -11,8 +11,7 @@ from datetime import date, datetime
 from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
-from withings_sync.fit import FitEncoder_Weight
-
+from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
 
 try:
     with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
@@ -31,7 +30,6 @@ if "GARMIN_USERNAME" in os.environ:
 
 if "GARMIN_PASSWORD" in os.environ:
     GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
-
 
 try:
     with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
@@ -90,6 +88,7 @@ def get_args():
         metavar="TRAINERROAD_USERNAME",
         help="username to log in to TrainerRoad.",
     )
+
     parser.add_argument(
         "--trainerroad-password",
         "--tp",
@@ -99,34 +98,60 @@ def get_args():
         help="password to log in to TrainerRoad.",
     )
 
-    parser.add_argument("--fromdate", "-f", type=date_parser, metavar="DATE")
     parser.add_argument(
-        "--todate", "-t", type=date_parser, default=date.today(), metavar="DATE"
+        "--fromdate", "-f",
+        type=date_parser,
+        metavar="DATE"
     )
 
     parser.add_argument(
-        "--to-fit", "-F", action="store_true", help=("Write output file in FIT format.")
+        "--todate", "-t",
+        type=date_parser,
+        default=date.today(),
+        metavar="DATE"
     )
+
+    parser.add_argument(
+        "--to-fit", "-F",
+        action="store_true",
+        help="Write output file in FIT format."
+    )
+
     parser.add_argument(
         "--to-json",
         "-J",
         action="store_true",
-        help=("Write output file in JSON format."),
+        help="Write output file in JSON format.",
     )
+
     parser.add_argument(
         "--output",
         "-o",
         type=str,
         metavar="BASENAME",
-        help=("Write downloaded measurements to file."),
+        help="Write downloaded measurements to file.",
     )
 
     parser.add_argument(
         "--no-upload",
         action="store_true",
-        help=("Won't upload to Garmin Connect or " "TrainerRoad."),
+        help="Won't upload to Garmin Connect or " "TrainerRoad.",
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Run verbosely")
+
+    parser.add_argument(
+        "--features",
+        nargs='+',
+        default=[],
+        metavar="BLOOD_PRESSURE",
+        help="Enable Features like BLOOD_PRESSURE"
+    )
+
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Run verbosely"
+    )
 
     return parser.parse_args()
 
@@ -153,39 +178,53 @@ def generate_fitdata(syncdata):
     """Generate fit data from measured data"""
     logging.debug("Generating fit data...")
 
-    have_weight = False
-    for record in syncdata:
-        if "weight" in record:
-            have_weight = True
-            break
-        next
+    weight_measurements = list(filter(lambda x: (x["type"] == "weight"), syncdata))
+    blood_pressure_measurements = list(filter(lambda x: (x["type"] == "blood_pressure"), syncdata))
 
-    if not have_weight:
+    fit_weight = None
+    fit_blood_pressure = None
+
+    if len(weight_measurements) > 0:
+        fit_weight = FitEncoderWeight()
+        fit_weight.write_file_info()
+        fit_weight.write_file_creator()
+
+        for record in weight_measurements:
+            fit_weight.write_device_info(timestamp=record["date_time"])
+            fit_weight.write_weight_scale(
+                timestamp=record["date_time"],
+                weight=record["weight"],
+                percent_fat=record["fat_ratio"],
+                percent_hydration=record["percent_hydration"],
+                bone_mass=record["bone_mass"],
+                muscle_mass=record["muscle_mass"],
+                bmi=record["bmi"],
+            )
+
+        fit_weight.finish()
+    else:
         logging.info("No weight data to sync for FIT file")
-        return None
 
-    fit = FitEncoder_Weight()
-    fit.write_file_info()
-    fit.write_file_creator()
+    if len(blood_pressure_measurements) > 0:
+        fit_blood_pressure = FitEncoderBloodPressure()
+        fit_blood_pressure.write_file_info()
+        fit_blood_pressure.write_file_creator()
 
-    for record in syncdata:
-        if "weight" not in record:
-            next
-        fit.write_device_info(timestamp=record["date_time"])
-        fit.write_weight_scale(
-            timestamp=record["date_time"],
-            weight=record["weight"],
-            percent_fat=record["fat_ratio"],
-            percent_hydration=record["percent_hydration"],
-            bone_mass=record["bone_mass"],
-            muscle_mass=record["muscle_mass"],
-            bmi=record["bmi"],
-        )
+        for record in blood_pressure_measurements:
+            fit_blood_pressure.write_device_info(timestamp=record["date_time"])
+            fit_blood_pressure.write_blood_pressure(
+                timestamp=record["date_time"],
+                diastolic_blood_pressure=record["diastolic_blood_pressure"],
+                systolic_blood_pressure=record["systolic_blood_pressure"],
+                heart_rate=record["heart_pulse"],
+            )
 
-    fit.finish()
+        fit_blood_pressure.finish()
+    else:
+        logging.info("No blood pressure data to sync for FIT file")
 
     logging.debug("Fit data generated...")
-    return fit
+    return fit_weight, fit_blood_pressure
 
 
 def generate_jsondata(syncdata):
@@ -197,12 +236,12 @@ def generate_jsondata(syncdata):
         sdt = str(record["date_time"])
         json_data[sdt] = {}
         for dataentry in record["raw_data"]:
-            for k,jd in dataentry.json_dict().items():
+            for k, jd in dataentry.json_dict().items():
                 json_data[sdt][k] = jd
         if "bmi" in record:
-            json_data[sdt]["BMI"] = { "Value": record["bmi"], "Unit": "kg/m^2"}
+            json_data[sdt]["BMI"] = {"Value": record["bmi"], "Unit": "kg/m^2"}
         if "percent_hydration" in record:
-             json_data[sdt]["Percent_Hydration"] = { "Value": record["percent_hydration"], "Unit": "%"}
+            json_data[sdt]["Percent_Hydration"] = {"Value": record["percent_hydration"], "Unit": "%"}
     logging.debug("Json data generated...")
     return json_data
 
@@ -214,85 +253,126 @@ def prepare_syncdata(height, groups):
     last_date_time = None
     last_weight = None
 
-    syncDict = {}
+    sync_dict = {}
 
     for group in groups:
         # Get extra physical measurements
         dt = group.get_datetime()
-        if dt not in syncDict:
-            syncDict[dt] = {}
-        groupdata = {
+        # create a default group_data
+        group_data = {
             "date_time": group.get_datetime(),
-            "height": height,
-            "weight": group.get_weight(),
-            "fat_ratio": group.get_fat_ratio(),
-            "muscle_mass": group.get_muscle_mass(),
-            "hydration": group.get_hydration(),
-            "percent_hydration": None,
-            "bone_mass": group.get_bone_mass(),
-            "pulse_wave_velocity": group.get_pulse_wave_velocity(),
-            "heart_pulse": group.get_heart_pulse(),
-            "bmi": None,
-            "raw_data": group.get_raw_data()
+            "type": "None",
+            "raw_data": group.get_raw_data(),
         }
 
+        if dt not in sync_dict:
+            sync_dict[dt] = {}
 
-        if groupdata["weight"] is None:
+        if group.get_weight():
+            group_data = {
+                "date_time": group.get_datetime(),
+                "height": height,
+                "weight": group.get_weight(),
+                "fat_ratio": group.get_fat_ratio(),
+                "muscle_mass": group.get_muscle_mass(),
+                "hydration": group.get_hydration(),
+                "percent_hydration": None,
+                "bone_mass": group.get_bone_mass(),
+                "pulse_wave_velocity": group.get_pulse_wave_velocity(),
+                "heart_pulse": group.get_heart_pulse(),
+                "bmi": None,
+                "raw_data": group.get_raw_data(),
+                "type": "weight",
+            }
+        elif group.get_diastolic_blood_pressure():
+            group_data = {
+                "date_time": group.get_datetime(),
+                "diastolic_blood_pressure": group.get_diastolic_blood_pressure(),
+                "systolic_blood_pressure": group.get_systolic_blood_pressure(),
+                "heart_pulse": group.get_heart_pulse(),
+                "raw_data": group.get_raw_data(),
+                "type": "blood_pressure"
+            }
+
+        # execute the code below, if this is not a whitelisted entry like weight and blood pressure
+        if "weight" not in group_data and not (
+                "diastolic_blood_pressure" in group_data and "BLOOD_PRESSURE" in ARGS.features):
+            collected_metrics = "weight data"
+            if "BLOOD_PRESSURE" in ARGS.features:
+                collected_metrics += " or blood pressure"
+
             logging.info(
-                "%s This Withings metric contains no weight data.  Not syncing...", dt
+                "%s This Withings metric contains no %s.  Not syncing...", dt, collected_metrics
             )
-            groupdata_log_raw_data(groupdata)
-            # for now, remove the entry as we're handling weight data
-            del syncDict[dt]
+            groupdata_log_raw_data(group_data)
+            # for now, remove the entry as we're handling only weight and feature enabled data
+            del sync_dict[dt]
             continue
-        if height and groupdata["weight"]:
-            groupdata["bmi"] = round(
-                groupdata["weight"] / pow(groupdata["height"], 2), 1
+
+        if height and "weight" in group_data:
+            group_data["bmi"] = round(
+                group_data["weight"] / pow(group_data["height"], 2), 1
             )
-        if groupdata["hydration"]:
-            groupdata["percent_hydration"] = round(
-                groupdata["hydration"] * 100.0 / groupdata["weight"], 2
+        if "hydration" in group_data and group_data["hydration"]:
+            group_data["percent_hydration"] = round(
+                group_data["hydration"] * 100.0 / group_data["weight"], 2
             )
 
         logging.debug("%s Detected data: ", dt)
-        groupdata_log_raw_data(groupdata)
+        groupdata_log_raw_data(group_data)
+        if "weight" in group_data:
+            logging.debug(
+                "Record: %s, type=%s\n"
+                "height=%s m, "
+                "weight=%s kg, "
+                "fat_ratio=%s %%, "
+                "muscle_mass=%s kg, "
+                "percent_hydration=%s %%, "
+                "bone_mass=%s kg, "
+                "bmi=%s",
+                group_data["date_time"],
+                group_data["type"],
+                group_data["height"],
+                group_data["weight"],
+                group_data["fat_ratio"],
+                group_data["muscle_mass"],
+                group_data["percent_hydration"],
+                group_data["bone_mass"],
+                group_data["bmi"],
+            )
+        if "diastolic_blood_pressure" in group_data:
+            logging.debug(
+                "Record: %s, type=%s\n"
+                "diastolic_blood_pressure=%s kg, "
+                "systolic_blood_pressure=%s %%, "
+                "heart_pulse=%s kg, ",
+                group_data["date_time"],
+                group_data["type"],
+                group_data["diastolic_blood_pressure"],
+                group_data["systolic_blood_pressure"],
+                group_data["heart_pulse"],
+            )
 
-        logging.debug(
-            "Record: %s, height=%s m, "
-            "weight=%s kg, "
-            "fat_ratio=%s %%, "
-            "muscle_mass=%s kg, "
-            "percent_hydration=%s %%, "
-            "bone_mass=%s kg, "
-            "bmi=%s",
-            groupdata["date_time"],
-            groupdata["height"],
-            groupdata["weight"],
-            groupdata["fat_ratio"],
-            groupdata["muscle_mass"],
-            groupdata["percent_hydration"],
-            groupdata["bone_mass"],
-            groupdata["bmi"],
-        )
-       
         # join groups with same timestamp
-        for k,v in groupdata.items():
-            syncDict[dt][k] = v
+        for k, v in group_data.items():
+            sync_dict[dt][k] = v
 
-    for groupdata in syncDict.values():
-        syncdata.append(groupdata)
+    last_measurement_type = None
+
+    for group_data in sync_dict.values():
+        syncdata.append(group_data)
         logging.debug("Processed data: ")
-        for k, v in groupdata.items():
+        for k, v in group_data.items():
             logging.debug("%s=%s", k, v)
-        if last_date_time is None or groupdata["date_time"] > last_date_time:
-            last_date_time = groupdata["date_time"]
-            last_weight = groupdata["weight"]
+        if last_date_time is None or group_data["date_time"] > last_date_time:
+            last_date_time = group_data["date_time"]
+            last_measurement_type = group_data["type"]
             logging.debug("last_dt: %s last_weight: %s", last_date_time, last_weight)
 
-    if last_weight is None:
-        logging.error("Invalid or no weight data detected")
+    if last_measurement_type is None:
+        logging.error("Invalid or no data detected")
 
-    return last_weight, last_date_time, syncdata
+    return last_measurement_type, last_date_time, syncdata
 
 
 def groupdata_log_raw_data(groupdata):
@@ -300,17 +380,24 @@ def groupdata_log_raw_data(groupdata):
         logging.debug("%s", dataentry)
 
 
-def write_to_file_when_needed(fit_data, json_data):
+def write_to_fitfile(filename, fit_data):
+    logging.info("Writing fitfile to %s.", filename)
+    try:
+        with open(filename, "wb") as fitfile:
+            fitfile.write(fit_data.getvalue())
+    except OSError:
+        logging.error("Unable to open output fitfile! %s", filename)
+
+
+def write_to_file_when_needed(fit_data_weigth, fit_data_blood_pressure, json_data):
     """Write measurements to file when requested"""
     if ARGS.output is not None:
-        if ARGS.to_fit and fit_data is not None:
-            filename = ARGS.output + ".fit"
-            logging.info("Writing fitfile to %s.", filename)
-            try:
-                with open(filename, "wb") as fitfile:
-                    fitfile.write(fit_data.getvalue())
-            except OSError:
-                logging.error("Unable to open output fitfile!")
+        if ARGS.to_fit:
+            if fit_data_weigth is not None:
+                write_to_fitfile(ARGS.output + ".weight.fit", fit_data_weigth)
+            if fit_data_blood_pressure is not None:
+                write_to_fitfile(ARGS.output + ".blood_pressure.fit", fit_data_blood_pressure)
+
         if ARGS.to_json:
             filename = ARGS.output + ".json"
             logging.info("Writing jsonfile to %s.", filename)
@@ -347,29 +434,37 @@ def sync():
         logging.error("No measurements to upload for date or period specified")
         return -1
 
-    last_weight, last_date_time, syncdata = prepare_syncdata(height, groups)
+    last_measurement_type, last_date_time, syncdata = prepare_syncdata(height, groups)
 
-    fit_data = generate_fitdata(syncdata)
+    fit_data_weight, fit_data_blood_pressure = generate_fitdata(syncdata)
     json_data = generate_jsondata(syncdata)
 
-    write_to_file_when_needed(fit_data, json_data)
+    write_to_file_when_needed(fit_data_weight, fit_data_blood_pressure, json_data)
 
     if not ARGS.no_upload:
+        # get weight entries (in case of only blood_pressure)
+        only_weight_entries = list(filter(lambda x: (x["type"] == "weight"), syncdata))
+        last_weight_exists = len(only_weight_entries) > 0
         # Upload to Trainer Road
-        if ARGS.trainerroad_username and last_weight is not None:
+        if ARGS.trainerroad_username and last_weight_exists:
+            # sort and get last weight
+            last_weight_measurement = sorted(only_weight_entries, key=lambda x: x["date_time"])[-1]
+            last_weight = last_weight_measurement["weight"]
             logging.info("Trainerroad username set -- attempting to sync")
             logging.info(" Last weight %s", last_weight)
             logging.info(" Measured %s", last_date_time)
             if sync_trainerroad(last_weight):
                 logging.info("TrainerRoad update done!")
         else:
-            logging.info("No Trainerroad username or a new measurement " "- skipping sync")
+            logging.info("No TrainerRoad username or a new measurement " "- skipping sync")
 
         # Upload to Garmin Connect
-        if ARGS.garmin_username and fit_data is not None:
+        if ARGS.garmin_username and (fit_data_weight is not None or fit_data_blood_pressure is not None):
             logging.debug("attempting to upload fit file...")
-            if sync_garmin(fit_data):
-                logging.info("Fit file uploaded to Garmin Connect")
+            if fit_data_weight is not None and sync_garmin(fit_data_weight):
+                logging.info("Fit file with weight information uploaded to Garmin Connect")
+            if fit_data_blood_pressure is not None and sync_garmin(fit_data_blood_pressure):
+                logging.info("Fit file with blood pressure information uploaded to Garmin Connect")
         else:
             logging.info("No Garmin username - skipping sync")
     else:
@@ -399,3 +494,4 @@ def main():
         sys.exit(1)
 
     sync()
+
