@@ -260,7 +260,8 @@ def prepare_syncdata(height, groups):
         dt = group.get_datetime()
         group_data = {
             "date_time": group.get_datetime(),
-            "type": "None"
+            "type": "None",
+            "raw_data": group.get_raw_data(),
         }
 
         if dt not in sync_dict:
@@ -282,8 +283,7 @@ def prepare_syncdata(height, groups):
                 "raw_data": group.get_raw_data(),
                 "type": "weight",
             }
-
-        if group.get_diastolic_blood_pressure():
+        elif group.get_diastolic_blood_pressure():
             group_data = {
                 "date_time": group.get_datetime(),
                 "diastolic_blood_pressure": group.get_diastolic_blood_pressure(),
