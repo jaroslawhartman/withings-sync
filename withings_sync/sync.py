@@ -17,12 +17,16 @@ from withings_sync.fit import FitEncoder_Weight
 try:
     with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
         GARMIN_USERNAME = secret.read().strip()
+        if GARMIN_USERNAME != secret.read():
+             logging.warn("GARMIN_USERNAME contains whitespace at start or end, this could be a conf error.")
 except OSError:
     GARMIN_USERNAME = ""
 
 try:
     with open("/run/secrets/garmin_password", encoding="utf-8") as secret:
         GARMIN_PASSWORD = secret.read().strip()
+        if GARMIN_PASSWORD != secret.read():
+             logging.warn("GARMIN_PASSWORD contains whitespace at start or end, this could be a conf error.")
 except OSError:
     GARMIN_PASSWORD = ""
 
@@ -36,12 +40,16 @@ if "GARMIN_PASSWORD" in os.environ:
 try:
     with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
         TRAINERROAD_USERNAME = secret.read().strip()
+        if TRAINERROAD_USERNAME != secret.read():
+             logging.warn("TRAINERROAD_USERNAME contains whitespace at start or end, this could be a conf error.")
 except OSError:
     TRAINERROAD_USERNAME = ""
 
 try:
     with open("/run/secrets/trainerroad_password", encoding="utf-8") as secret:
         TRAINERROAD_PASSWORD = secret.read().strip()
+        if TRAINERROAD_PASSWORD != secret.read():
+             logging.warn("TRAINERROAD_PASSWORD contains whitespace at start or end, this could be a conf error.")
 except OSError:
     TRAINERROAD_PASSWORD = ""
 
