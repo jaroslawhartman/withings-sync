@@ -15,13 +15,13 @@ from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
 
 try:
     with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
-        GARMIN_USERNAME = secret.read()
+        GARMIN_USERNAME = secret.read().strip("\n")
 except OSError:
     GARMIN_USERNAME = ""
 
 try:
     with open("/run/secrets/garmin_password", encoding="utf-8") as secret:
-        GARMIN_PASSWORD = secret.read()
+        GARMIN_PASSWORD = secret.read().strip("\n")
 except OSError:
     GARMIN_PASSWORD = ""
 
@@ -33,13 +33,13 @@ if "GARMIN_PASSWORD" in os.environ:
 
 try:
     with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
-        TRAINERROAD_USERNAME = secret.read()
+        TRAINERROAD_USERNAME = secret.read().strip("\n")
 except OSError:
     TRAINERROAD_USERNAME = ""
 
 try:
     with open("/run/secrets/trainerroad_password", encoding="utf-8") as secret:
-        TRAINERROAD_PASSWORD = secret.read()
+        TRAINERROAD_PASSWORD = secret.read().strip("\n")
 except OSError:
     TRAINERROAD_PASSWORD = ""
 
