@@ -417,6 +417,25 @@ class WithingsMeasure:
     TYPE_HYDRATION = 77
     TYPE_BONE_MASS = 88
     TYPE_PULSE_WAVE_VELOCITY = 91
+    TYPE_VO2MAX = 123
+    TYPE_QRS_INTERVAL = 135
+    TYPE_PR_INTERVAL = 136
+    TYPE_QT_INTERVAL = 137
+    TYPE_CORRECTED_QT_INTERVAL = 138
+    TYPE_ATRIAL_FIBRILLATION_PPG = 139
+    TYPE_FAT_MASS_SEGMENTS = 174
+    TYPE_EXTRACELLULAR_WATER = 168
+    TYPE_INTRACELLULAR_WATER = 169
+    TYPE_VISCERAL_FAT = 170
+    TYPE_MUSCLE_MASS_SEGMENTS = 175
+    TYPE_VASCULAR_AGE = 155
+    TYPE_ATRIAL_FIBRILLATION = 130
+    TYPE_NERVE_HEALTH_LEFT_FOOT = 158
+    TYPE_NERVE_HEALTH_RIGHT_FOOT = 159
+    TYPE_NERVE_HEALTH_FEET = 167
+    TYPE_ELECTRODERMAL_ACTIVITY_FEET = 196
+    TYPE_ELECTRODERMAL_ACTIVITY_LEFT_FOOT = 197
+    TYPE_ELECTRODERMAL_ACTIVITY_RIGHT_FOOT = 198
 
     withings_table = {
         TYPE_WEIGHT: ["Weight", "kg"],
@@ -435,6 +454,25 @@ class WithingsMeasure:
         TYPE_HYDRATION: ["Hydration", "kg"],
         TYPE_BONE_MASS: ["Bone Mass", "kg"],
         TYPE_PULSE_WAVE_VELOCITY: ["Pulse Wave Velocity", "m/s"],
+        TYPE_VO2MAX: ["VO2 max", "ml/min/kg"],
+        TYPE_QRS_INTERVAL: ["QRS interval duration based on ECG signal", "ms"],
+        TYPE_PR_INTERVAL: ["PR interval duration based on ECG signal", "ms"],
+        TYPE_QT_INTERVAL: ["QT interval duration based on ECG signal", "ms"],
+        TYPE_CORRECTED_QT_INTERVAL: ["Corrected QT interval duration based on ECG signal", "ms"],
+        TYPE_ATRIAL_FIBRILLATION_PPG: ["Atrial fibrillation result from PPG", "ms"],
+        TYPE_FAT_MASS_SEGMENTS: ["Fat Mass for segments in mass unit", "kg"],
+        TYPE_EXTRACELLULAR_WATER: ["Extracellular Water", "kg"],
+        TYPE_INTRACELLULAR_WATER: ["Intracellular Water", "kg"],
+        TYPE_VISCERAL_FAT: ["Extracellular Water", "kg"],
+        TYPE_MUSCLE_MASS_SEGMENTS: ["Muscle Mass for segments in mass unit", "kg"],
+        TYPE_VASCULAR_AGE: ["Vascular age", "years"],
+        TYPE_ATRIAL_FIBRILLATION: ["Atrial fibrillation result", "ms"],
+        TYPE_NERVE_HEALTH_LEFT_FOOT: ["Nerve Health Score left foot", ""],
+        TYPE_NERVE_HEALTH_RIGHT_FOOT: ["Nerve Health Score right foot", ""],
+        TYPE_NERVE_HEALTH_FEET: ["Nerve Health Score feet", ""],
+        TYPE_ELECTRODERMAL_ACTIVITY_FEET: ["Electrodermal activity feet", ""],
+        TYPE_ELECTRODERMAL_ACTIVITY_LEFT_FOOT: ["Electrodermal activity left foot", ""],
+        TYPE_ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: ["Electrodermal activity right foot", ""],
     }
 
     def __init__(self, measure):
