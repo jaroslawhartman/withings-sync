@@ -489,8 +489,8 @@ def main():
     )
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
-    if sys.version_info < (3, 0):
-        print("Sorry, requires Python3, not Python2.")
+    if sys.version_info < (3, 7):
+        print("Sorry, requires at least Python3.7 to avoid issues with SSL.")
         sys.exit(1)
 
     sync()
