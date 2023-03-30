@@ -13,7 +13,7 @@ class TrainerRoad:
     _weight = 'Weight'
     _units_metric = 'kmh'
     _units_imperial = 'mph'
-    _input_data_names = (_ftp, _weight, 'Marketing')
+    _input_data_names = (_ftp, _weight, 'Marketing', 'DateOfBirth')
     _select_data_names = ('TimeZoneId', 'IsPrivate',
                           'Units', 'IsVirtualPowerEnabled')
     _numerical_verify = (_ftp, _weight)
