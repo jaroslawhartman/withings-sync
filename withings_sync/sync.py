@@ -422,8 +422,8 @@ def sync():
     enddate = int(time.mktime(ARGS.todate.timetuple())) + 86399
     logging.info(
         "Fetching measurements from %s to %s",
-        time.strftime("%Y-%m-%d %H:%M", time.gmtime(startdate)),
-        time.strftime("%Y-%m-%d %H:%M", time.gmtime(enddate)),
+        time.strftime("%Y-%m-%d %H:%M", time.localtime(startdate)),
+        time.strftime("%Y-%m-%d %H:%M", time.localtime(enddate)),
     )
 
     height = withings.get_height()
