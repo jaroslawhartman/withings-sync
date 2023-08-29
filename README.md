@@ -205,6 +205,23 @@ Configure them in `config/withings_app.json`, for example:
 
 For the callback URL you will need to setup a webserver hosting `contrib/withings.html`.
 
+To do this in a Docker installation, you can use the environment variable `WITHINGS_APP` to point to a mounted `withings_app.json`
+
+Example docker-compose:
+```
+  withings-sync:
+    container_name: withings-sync
+    image: ghcr.io/jaroslawhartman/withings-sync:latest
+    volumes:
+      - "withings-sync:/root"
+      - "/etc/localtime:/etc/localtime:ro"
+    environment:
+      WITHINGS_APP: /root/withings_app.json
+(...)
+```
+You can then add the app-config in `withings-sync/withings_app.json`
+
+
 ### Run a periodic docker-compose cronjob
 
 We take the official docker image and override the entrypoint to crond.

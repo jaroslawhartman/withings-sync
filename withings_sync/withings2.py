@@ -67,8 +67,15 @@ class WithingsOAuth2:
                 self.user_config[
                     "authentification_code"
                 ] = self.get_authenticationcode()
+            try:
+                self.get_accesstoken()
+            except Exception as e:
+                log.warning("Could not get access-token. Trying to renew auth_code")
+                self.user_config[
+                    "authentification_code"
+                ] = self.get_authenticationcode()
+                self.get_accesstoken()
 
-            self.get_accesstoken()
 
         self.refresh_accesstoken()
 
@@ -142,6 +149,7 @@ class WithingsOAuth2:
                 "If it's regarding an invalid code, try to start the"
                 " script again to obtain a new link."
             )
+            raise
 
         self.user_config["access_token"] = body.get("access_token")
         self.user_config["refresh_token"] = body.get("refresh_token")
