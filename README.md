@@ -6,16 +6,6 @@ A tool for synchronisation of the Withings API to:
 - Trainer Road
 - raw JSON output
 
-## References
-
-* SSO authorization derived from https://github.com/cpfair/tapiriik
-* TrainerRoad API from https://github.com/stuwilkins/python-trainerroad 
-
-## Credits / Authors
-
-* Based on [withings-garmin](https://github.com/ikasamah/withings-garmin) by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
-* Based on [withings-garmin-v2](https://github.com/jaroslawhartman/withings-garmin-v2) by Jarek Hartman, improved Python 3 compatability, code-style and setuptools packaging, Kubernetes and Docker support.
-
 ## Installation
 
 ```bash
@@ -78,7 +68,7 @@ In the case of credentials being available via multiple means (e.g. [environment
 
 1. Read secrets file(s)
 2. Read environment variable(s)
-3. Use command invocation arugment(s)
+3. Use command invocation argument(s)
 
 ### Obtaining Withings Authorization Code
 
@@ -252,3 +242,29 @@ crond -f -l 6 -L /dev/stdout
 
 This will run the job every 3 hours (at a random minute) and writing the output to console and the `/root/withings-sync.log`.
 
+## Release
+
+Release works via the GitHub [Draft a new Release](https://github.com/jaroslawhartman/withings-sync/releases/new) 
+function.
+Keep in mind to bump the `version` key in `setup.py`.
+
+### Docker Image
+
+An image is created magically by GitHub Action and published 
+to [ghcr](https://github.com/jaroslawhartman/withings-sync/pkgs/container/withings-sync).
+
+### pypi
+
+You'll find a script to create and upload a release to pypi here `contrib/do_release.sh`.
+It requires [twine](https://pypi.org/project/twine/).
+This needs the permission on the [pypi-project](https://pypi.org/project/withings-sync/).
+
+## References
+
+* SSO authorization derived from https://github.com/cpfair/tapiriik
+* TrainerRoad API from https://github.com/stuwilkins/python-trainerroad
+
+## Credits / Authors
+
+* Based on [withings-garmin](https://github.com/ikasamah/withings-garmin) by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
+* Based on [withings-garmin-v2](https://github.com/jaroslawhartman/withings-garmin-v2) by Jarek Hartman, improved Python 3 compatability, code-style and setuptools packaging, Kubernetes and Docker support.
