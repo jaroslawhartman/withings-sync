@@ -18,7 +18,7 @@ setup(
     description="A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road.",
     license="MIT",
     keywords="garmin withings sync api scale smarthome",
-    url="http://packages.python.org/an_example_pypi_project",
+    url="https://github.com/jaroslawhartman/withings-sync",
     packages=["withings_sync"],
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
