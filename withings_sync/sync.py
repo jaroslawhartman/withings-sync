@@ -7,6 +7,7 @@ import logging
 import json
 
 from datetime import date, datetime
+from importlib.metadata import version
 
 from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
@@ -498,6 +499,7 @@ def main():
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         stream=sys.stdout,
     )
+    logging.debug("withings-sync script version %s", version("withings-sync"))
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
     if sys.version_info < (3, 7):
