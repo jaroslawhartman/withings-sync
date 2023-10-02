@@ -69,7 +69,7 @@ def get_args():
         default=GARMIN_USERNAME,
         type=str,
         metavar="GARMIN_USERNAME",
-        help="username to log in to Garmin Connect.",
+        help="Username to log in to Garmin Connect.",
     )
     parser.add_argument(
         "--garmin-password",
@@ -77,7 +77,7 @@ def get_args():
         default=GARMIN_PASSWORD,
         type=str,
         metavar="GARMIN_PASSWORD",
-        help="password to log in to Garmin Connect.",
+        help="Password to log in to Garmin Connect.",
     )
 
     parser.add_argument(
@@ -86,7 +86,7 @@ def get_args():
         default=TRAINERROAD_USERNAME,
         type=str,
         metavar="TRAINERROAD_USERNAME",
-        help="username to log in to TrainerRoad.",
+        help="Username to log in to TrainerRoad.",
     )
 
     parser.add_argument(
@@ -95,26 +95,28 @@ def get_args():
         default=TRAINERROAD_PASSWORD,
         type=str,
         metavar="TRAINERROAD_PASSWORD",
-        help="password to log in to TrainerRoad.",
+        help="Password to log in to TrainerRoad.",
     )
 
     parser.add_argument(
         "--fromdate", "-f",
         type=date_parser,
-        metavar="DATE"
+        metavar="DATE",
+        help="Date to start syncing from. Ex: 2023-12-20",
     )
 
     parser.add_argument(
         "--todate", "-t",
         type=date_parser,
         default=date.today(),
-        metavar="DATE"
+        metavar="DATE",
+        help="Date for the last sync. Ex: 2023-12-30",
     )
 
     parser.add_argument(
         "--to-fit", "-F",
         action="store_true",
-        help="Write output file in FIT format."
+        help="Write output file in FIT format.",
     )
 
     parser.add_argument(
@@ -135,7 +137,7 @@ def get_args():
     parser.add_argument(
         "--no-upload",
         action="store_true",
-        help="Won't upload to Garmin Connect or " "TrainerRoad.",
+        help="Won't upload to Garmin Connect or TrainerRoad.",
     )
 
     parser.add_argument(
@@ -143,14 +145,14 @@ def get_args():
         nargs='+',
         default=[],
         metavar="BLOOD_PRESSURE",
-        help="Enable Features like BLOOD_PRESSURE"
+        help="Enable Features like BLOOD_PRESSURE."
     )
 
     parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
-        help="Run verbosely"
+        help="Run verbosely."
     )
 
     return parser.parse_args()
@@ -343,9 +345,9 @@ def prepare_syncdata(height, groups):
         if "diastolic_blood_pressure" in group_data:
             logging.debug(
                 "Record: %s, type=%s\n"
-                "diastolic_blood_pressure=%s kg, "
-                "systolic_blood_pressure=%s %%, "
-                "heart_pulse=%s kg, ",
+                "diastolic_blood_pressure=%s mmHg, "
+                "systolic_blood_pressure=%s mmHg, "
+                "heart_pulse=%s BPM, ",
                 group_data["date_time"],
                 group_data["type"],
                 group_data["diastolic_blood_pressure"],
