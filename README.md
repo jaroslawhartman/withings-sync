@@ -51,6 +51,9 @@ You can use the following environment variables for providing the Garmin and/or 
 - `TRAINERROAD_USERNAME`
 - `TRAINERROAD_PASSWORD`
 
+The CLI also uses python-dotenv to populate the variables above. Therefore setting the environment variables
+has the same effect as placing the variables in a `.env` file in the working directory.
+
 ### Providing credentials via secrets files
 
 You can also populate the following 'secrets' files to provide the Garmin and/or Trainerroad credentials:
@@ -67,7 +70,7 @@ Secrets are useful in an orchestrated container context — see the [Docker Swar
 In the case of credentials being available via multiple means (e.g. [environment variables](#providing-credentials-via-environment-variables) and [secrets files](#providing-credentials-via-secrets-files)), the order of resolution for determining which credentials to use is as follows, with later methods overriding credentials supplied by an earlier method:
 
 1. Read secrets file(s)
-2. Read environment variable(s)
+2. Read environment variable(s), variables set explicitly take precedence over values from a `.env` file.
 3. Use command invocation argument(s)
 
 ### Obtaining Withings Authorization Code
