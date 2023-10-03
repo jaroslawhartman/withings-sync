@@ -5,6 +5,7 @@ import sys
 import os
 import logging
 import json
+import dotenv
 
 from datetime import date, datetime
 from importlib.metadata import version
@@ -25,6 +26,8 @@ try:
         GARMIN_PASSWORD = secret.read().strip("\n")
 except OSError:
     GARMIN_PASSWORD = ""
+
+dotenv.load_dotenv()
 
 if "GARMIN_USERNAME" in os.environ:
     GARMIN_USERNAME = os.getenv("GARMIN_USERNAME")
