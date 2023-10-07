@@ -2,6 +2,7 @@
 import logging
 import garth
 import os
+import io
 
 log = logging.getLogger("garmin")
 
@@ -21,42 +22,31 @@ class APIException(Exception):
 class GarminConnect:
     """Main GarminConnect class"""
 
-    @staticmethod
-    def get_session(email=None, password=None):
+    def __init__(self) -> None:
+        self.client = garth.Client()
+
+    def login(self, email=None, password=None):
         logged_in = False
         if os.path.exists('./garmin_session'):
-            garth.resume('./garmin_session')
+            self.client.load('./garmin_session')
             try:
-                garth.client.username
+                self.client.username
                 logged_in = True
             except Exception:
                 pass
 
         if not logged_in:
             try:
-                garth.login(email, password)
-                garth.save('./garmin_session')
+                self.client.login(email, password)
+                self.client.dump('./garmin_session')
             except Exception as ex:
                 raise APIException("Authentication failure: {}. Did you enter correct credentials?".format(ex))
 
 
-    @staticmethod
-    def login(username, password):
-        """login to Garmin"""
-        return GarminConnect.get_session(email=username, password=password)
-
     def upload_file(self, ffile):
         """upload fit file to Garmin connect"""
-        files = {"data": ("withings.fit", ffile)}
-        res = garth.client.post('connect', '/upload-service/upload/.fit', files=files, api=True, headers={'di-backend': 'connectapi.garmin.com'})
-        try:
-            resp = res.json()
-            if "detailedImportResult" not in resp:
-                raise KeyError
-        except (ValueError, KeyError):
-            if res.status_code == 204:  # HTTP result 204 - 'no content'
-                log.error("No data to upload, try to use --fromdate and --todate")
-            else:
-                log.error("Bad response during GC upload: %s", res.status_code)
-
-        return res.status_code in [200, 201, 204]
+        # Convert the fitfile to a in-memory file for upload
+        fit_file = io.BytesIO(ffile.getvalue())
+        fit_file.name = 'withings.fit'
+        self.client.upload(fit_file)
+        return True
