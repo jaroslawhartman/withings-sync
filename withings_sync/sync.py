@@ -166,7 +166,7 @@ def sync_garmin(fit_file):
     """Sync generated fit file to Garmin Connect"""
     garmin = GarminConnect()
     garmin.login(ARGS.garmin_username, ARGS.garmin_password)
-    return garmin.upload_file(fit_file.getvalue())
+    return garmin.upload_file(fit_file)
 
 
 def sync_trainerroad(last_weight):
