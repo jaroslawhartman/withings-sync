@@ -15,43 +15,28 @@ from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
 
-try:
-    with open("/run/secrets/garmin_username", encoding="utf-8") as secret:
-        GARMIN_USERNAME = secret.read().strip("\n")
-except OSError:
-    GARMIN_USERNAME = ""
 
-try:
-    with open("/run/secrets/garmin_password", encoding="utf-8") as secret:
-        GARMIN_PASSWORD = secret.read().strip("\n")
-except OSError:
-    GARMIN_PASSWORD = ""
+def load_variable(env_var, secrets_file):
+    """Load a variable from an environment variable or from a secrets file"""
+    # Try to read the value from the secrets file. Silently fail if the file
+    # cannot be read and use an empty value
+    try:
+        with open(secrets_file, encoding='utf-8') as secret:
+            value = secret.read().strip("\n")
+    except OSError:
+        value = ""
+
+    # Load variable from environment if it exists, otherwise use the
+    # value read from the secrets file.
+    return os.getenv(env_var, value)
 
 dotenv.load_dotenv()
 
-if "GARMIN_USERNAME" in os.environ:
-    GARMIN_USERNAME = os.getenv("GARMIN_USERNAME")
+GARMIN_USERNAME = load_variable('GARMIN_USERNAME', "/run/secrets/garmin_username")
+GARMIN_PASSWORD = load_variable('GARMIN_PASSWORD', "/run/secrets/garmin_password")
+TRAINERROAD_USERNAME = load_variable('TRAINERROAD_USERNAME', "/run/secrets/trainerroad_username")
+TRAINERROAD_PASSWORD = load_variable('TRAINERROAD_PASSWORD', "/run/secrets/trainerroad_password")
 
-if "GARMIN_PASSWORD" in os.environ:
-    GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
-
-try:
-    with open("/run/secrets/trainerroad_username", encoding="utf-8") as secret:
-        TRAINERROAD_USERNAME = secret.read().strip("\n")
-except OSError:
-    TRAINERROAD_USERNAME = ""
-
-try:
-    with open("/run/secrets/trainerroad_password", encoding="utf-8") as secret:
-        TRAINERROAD_PASSWORD = secret.read().strip("\n")
-except OSError:
-    TRAINERROAD_PASSWORD = ""
-
-if "TRAINERROAD_USERNAME" in os.environ:
-    TRAINERROAD_USERNAME = os.getenv("TRAINERROAD_USERNAME")
-
-if "TRAINERROAD_PASSWORD" in os.environ:
-    TRAINERROAD_PASSWORD = os.getenv("TRAINERROAD_PASSWORD")
 
 
 def get_args():
