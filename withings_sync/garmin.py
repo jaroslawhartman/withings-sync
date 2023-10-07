@@ -7,6 +7,10 @@ import io
 log = logging.getLogger("garmin")
 
 
+HOME = os.getenv('HOME', '.')
+GARMIN_SESSION = os.getenv('GARMIN_SESSION', HOME + '/.garmin_session')
+
+
 class LoginSucceeded(Exception):
     """Used to raise on LoginSucceeded"""
 
@@ -27,8 +31,8 @@ class GarminConnect:
 
     def login(self, email=None, password=None):
         logged_in = False
-        if os.path.exists('./garmin_session'):
-            self.client.load('./garmin_session')
+        if os.path.exists(GARMIN_SESSION):
+            self.client.load(GARMIN_SESSION)
             try:
                 self.client.username
                 logged_in = True
@@ -38,7 +42,7 @@ class GarminConnect:
         if not logged_in:
             try:
                 self.client.login(email, password)
-                self.client.dump('./garmin_session')
+                self.client.dump(GARMIN_SESSION)
             except Exception as ex:
                 raise APIException("Authentication failure: {}. Did you enter correct credentials?".format(ex))
 
