@@ -10,6 +10,11 @@ import dotenv
 from datetime import date, datetime
 from importlib.metadata import version
 
+# Load the environment variables from a .env (dotenv) file.
+# This is done prior to importing other modules such that all variables, 
+# also the ones accessed in those modules, can be set in the dotenv file.
+dotenv.load_dotenv()
+
 from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
@@ -30,7 +35,6 @@ def load_variable(env_var, secrets_file):
     # value read from the secrets file.
     return os.getenv(env_var, value)
 
-dotenv.load_dotenv()
 
 GARMIN_USERNAME = load_variable('GARMIN_USERNAME', "/run/secrets/garmin_username")
 GARMIN_PASSWORD = load_variable('GARMIN_PASSWORD', "/run/secrets/garmin_password")
