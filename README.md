@@ -161,6 +161,9 @@ JaHa.WAW.PL
 Garmin Connect User Name: JaHa.WAW.PL
 Fit file uploaded to Garmin Connect
 ```
+### Garmin auth
+
+You can configure the location of the garmin session file with the variabe `GARMIN_SESSION`.
 
 ### Run a periodic Kubernetes job
 
