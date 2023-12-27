@@ -458,6 +458,8 @@ def sync():
             fit_data_weight is not None or fit_data_blood_pressure is not None
         ):
             logging.debug("attempting to upload fit file...")
+            gar_wg_state = None
+            gar_bp_state = None
             if fit_data_weight is not None:
                 gar_wg_state = sync_garmin(fit_data_weight)
                 if gar_wg_state:
