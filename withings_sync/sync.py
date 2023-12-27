@@ -458,16 +458,14 @@ def sync():
             fit_data_weight is not None or fit_data_blood_pressure is not None
         ):
             logging.debug("attempting to upload fit file...")
+            gar_wg_state = None
+            gar_bp_state = None
             if fit_data_weight is not None:
                 gar_wg_state = sync_garmin(fit_data_weight)
                 if gar_wg_state:
                     logging.info(
                         "Fit file with weight information uploaded to Garmin Connect"
                     )
-                    # Save this sync so we don't re-download the same data again (if no range has been specified)
-                    if not ARGS.fromdate:
-                        withings.set_lastsync()
-
             if fit_data_blood_pressure is not None:
                 gar_bp_state = sync_garmin(fit_data_blood_pressure)
                 if gar_bp_state:
@@ -475,8 +473,10 @@ def sync():
                         "Fit file with blood pressure information uploaded to Garmin Connect"
                     )
                     # Save this sync so we don't re-download the same data again (if no range has been specified)
-                    if not ARGS.fromdate:
-                        withings.set_lastsync()
+            if gar_wg_state or gar_bp_state:
+                # Save this sync so we don't re-download the same data again (if no range has been specified)
+                if not ARGS.fromdate:
+                    withings.set_lastsync()
         else:
             logging.info("No Garmin username - skipping sync")
     else:
