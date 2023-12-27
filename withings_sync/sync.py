@@ -472,7 +472,6 @@ def sync():
                     logging.info(
                         "Fit file with blood pressure information uploaded to Garmin Connect"
                     )
-                    # Save this sync so we don't re-download the same data again (if no range has been specified)
             if gar_wg_state or gar_bp_state:
                 # Save this sync so we don't re-download the same data again (if no range has been specified)
                 if not ARGS.fromdate:
