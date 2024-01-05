@@ -11,8 +11,8 @@ metadata:
 type: Opaque
 stringData:
   # NOT base64 
-  GARMIN_PASSWORD: "someone@example.com"
-  GARMIN_USERNAME: "password-goes-here"
+  GARMIN_USERNAME: "someone@example.com"
+  GARMIN_PASSWORD: "password-goes-here"
   TRAINERROAD_PASSWORD: ""
   TRAINERROAD_USERNAME: ""
 
@@ -39,7 +39,7 @@ spec:
   volumeMode: Filesystem
 
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: withings-garmin-sync

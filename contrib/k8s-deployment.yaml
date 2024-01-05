@@ -32,8 +32,8 @@ metadata:
 type: Opaque
 stringData:
   # NOT base64 
-  GARMIN_PASSWORD: "someone@example.com"
-  GARMIN_USERNAME: "password-goes-here"
+  GARMIN_USERNAME: "someone@example.com"
+  GARMIN_PASSWORD: "password-goes-here"
   TRAINERROAD_PASSWORD: ""
   TRAINERROAD_USERNAME: ""
 
@@ -74,7 +74,7 @@ spec:
     spec:
       containers:
       - name: withings-sync
-        image: docker.io/stv0g/withings-sync
+        image: ghcr.io/jaroslawhartman/withings-sync:master
         imagePullPolicy: IfNotPresent
 
         # override $HOME to put our oauth file in a known place
