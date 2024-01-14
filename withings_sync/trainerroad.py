@@ -15,7 +15,8 @@ class TrainerRoad:
     _units_imperial = 'mph'
     _input_data_names = (_ftp, _weight, 'Marketing', 'DateOfBirth')
     _select_data_names = ('TimeZoneId', 'IsPrivate',
-                          'Units', 'IsVirtualPowerEnabled')
+                          'Units', 'IsVirtualPowerEnabled',
+                          'GenderId', 'GenderCustomText', 'Locale')
     _numerical_verify = (_ftp, _weight)
     _string_verify = _select_data_names + ('Marketing',)
     _login_url = 'https://www.trainerroad.com/app/login'
@@ -63,6 +64,7 @@ class TrainerRoad:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.disconnect()
 
+
     def _parse_value(self, tree, name):
         rtn = tree.xpath('//form//input[@name="{}"]/@value'.format(name))
         if not rtn:
@@ -72,8 +74,12 @@ class TrainerRoad:
     def _parse_name(self, tree, name):
         rtn = tree.xpath('//form//select[@name="{}"]//option'
                          '[@selected="selected"]/@value'.format(name))
+
         if not rtn:
-            raise RuntimeError('Input {} not found in form'.format(name))
+            if name == 'GenderCustomText':
+                return ""
+            else:
+                raise RuntimeError('Input {} not found in form'.format(name))
 
         return rtn[0]
 
@@ -82,7 +88,7 @@ class TrainerRoad:
             raise RuntimeError('Not Connected')
 
         r = self._session.get(url)
-        
+
         if r.status_code != 200:
             raise RuntimeError("Error getting info from TrainerRoad (Code {})"
                                .format(r.status_code))
@@ -106,7 +112,7 @@ class TrainerRoad:
 
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(r.text), parser)
-        
+
         token = self._parse_value(tree, self._rvt)
 
         input_data = {}
@@ -116,7 +122,7 @@ class TrainerRoad:
         select_data = {}
         for key in self._select_data_names:
             select_data[key] = self._parse_name(tree, key)
-            
+
         return (dict(**input_data, **select_data), token)
 
     def _write_profile(self, new_values):
@@ -134,6 +140,12 @@ class TrainerRoad:
             if key == self._weight and data['Units'] == self._units_imperial:
                 value = round(value/0.45359237, 1)
                 logger.debug("Converting Weight to lbs {}".format(value))
+
+            # ONLY if GenderId == 4 ("Prefer to self-describe")
+            # add GenderCustomText
+            if key == "GenderCustomText" and data["GenderId" ] != "4":
+                continue
+
             data[key] = str(value)
 
         logger.info("New profile values {}".format(data))

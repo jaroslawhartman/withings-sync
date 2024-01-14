@@ -11,7 +11,7 @@ from datetime import date, datetime
 from importlib.metadata import version
 
 # Load the environment variables from a .env (dotenv) file.
-# This is done prior to importing other modules such that all variables, 
+# This is done prior to importing other modules such that all variables,
 # also the ones accessed in those modules, can be set in the dotenv file.
 dotenv.load_dotenv()
 
@@ -164,9 +164,11 @@ def sync_trainerroad(last_weight):
     t_road.connect()
     logging.info("Current TrainerRoad weight: %s kg ", t_road.weight)
     logging.info("Updating TrainerRoad weight to %s kg", last_weight)
-    t_road.weight = round(last_weight, 1)
+    wt = round(last_weight, 1)
+    t_road.weight = wt
     t_road.disconnect()
-    return t_road.weight
+
+    return wt
 
 
 def generate_fitdata(syncdata):
