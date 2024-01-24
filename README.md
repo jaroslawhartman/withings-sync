@@ -252,15 +252,17 @@ This will run the job every 3 hours (at a random minute) and writing the output 
 
 Release works via the GitHub [Draft a new Release](https://github.com/jaroslawhartman/withings-sync/releases/new) 
 function.
-Keep in mind to bump the `version` key in `setup.py`.
+The `version` key in `setup.py` will be bumped automatically (Version will be written to .VERSION file).
+Keep in mind to update the `.VERSION` if a major release is done.
 
 ### Docker Image
 
 An image is created magically by GitHub Action and published 
 to [ghcr](https://github.com/jaroslawhartman/withings-sync/pkgs/container/withings-sync).
 
-### pypi
+### Manual release: pypi
 
+Will be conducted automatically within the Github-Release cycle.
 You'll find a script to create and upload a release to pypi here `contrib/do_release.sh`.
 It requires [twine](https://pypi.org/project/twine/).
 This needs the permission on the [pypi-project](https://pypi.org/project/withings-sync/).

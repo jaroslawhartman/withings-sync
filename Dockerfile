@@ -9,7 +9,9 @@ RUN apk add --no-cache --virtual .build-deps \
     apk add --no-cache libxslt libxml2
 
 RUN mkdir -p /src
-COPY . /src
+COPY ./withings_sync /src
+COPY ./setup.py /src
+COPY ./.VERSION /src
 
 RUN cd /src && \
     python3 ./setup.py install
