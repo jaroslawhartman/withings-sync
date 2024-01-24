@@ -297,6 +297,9 @@ def prepare_syncdata(height, groups):
             collected_metrics = "weight data"
             if "BLOOD_PRESSURE" in ARGS.features:
                 collected_metrics += " or blood pressure"
+            elif "diastolic_blood_pressure" in group_data:
+                collected_metrics += ", but blood pressure (to enable sync set --features BLOOD_PRESSURE)"
+
 
             logging.info(
                 "%s This Withings metric contains no %s.  Not syncing...", dt, collected_metrics
@@ -478,8 +481,10 @@ def sync():
                 # Save this sync so we don't re-download the same data again (if no range has been specified)
                 if not ARGS.fromdate:
                     withings.set_lastsync()
-        else:
+        elif ARGS.garmin_username is None:
             logging.info("No Garmin username - skipping sync")
+        else:
+            logging.info("No Garmin data selected - skipping sync")
     else:
         logging.info("Skipping upload")
     return 0
