@@ -1,56 +1,52 @@
 """This module handles the Garmin connectivity."""
-import logging
-import garth
-import os
+
 import io
+import logging
+import os
+
+import garth
 
 log = logging.getLogger("garmin")
 
-
-HOME = os.getenv('HOME', '.')
-GARMIN_SESSION = os.getenv('GARMIN_SESSION', HOME + '/.garmin_session')
+HOME = os.getenv("HOME", ".")
+GARMIN_SESSION = os.path.join(HOME, ".garmin_session")
 
 
 class LoginSucceeded(Exception):
-    """Used to raise on LoginSucceeded"""
+    """Raised when login succeeds."""
 
 
 class LoginFailed(Exception):
-    """Used to raise on LoginFailed"""
+    """Raised when login fails."""
 
 
 class APIException(Exception):
-    """Used to raise on APIException"""
+    """Raised for API exceptions."""
 
 
 class GarminConnect:
-    """Main GarminConnect class"""
+    """Main GarminConnect class."""
 
     def __init__(self) -> None:
         self.client = garth.Client()
 
     def login(self, email=None, password=None):
-        logged_in = False
         if os.path.exists(GARMIN_SESSION):
             self.client.load(GARMIN_SESSION)
-            try:
-                self.client.username
-                logged_in = True
-            except Exception:
-                pass
+            if hasattr(self.client, "username"):
+                return
 
-        if not logged_in:
-            try:
-                self.client.login(email, password)
-                self.client.dump(GARMIN_SESSION)
-            except Exception as ex:
-                raise APIException("Authentication failure: {}. Did you enter correct credentials?".format(ex))
-
+        try:
+            self.client.login(email, password)
+            self.client.dump(GARMIN_SESSION)
+        except Exception as ex:
+            raise APIException(
+                f"Authentication failure: {ex}. Did you enter correct credentials?"
+            )
 
     def upload_file(self, ffile):
-        """upload fit file to Garmin connect"""
-        # Convert the fitfile to a in-memory file for upload
+        """Upload fit file to Garmin Connect."""
         fit_file = io.BytesIO(ffile.getvalue())
-        fit_file.name = 'withings.fit'
+        fit_file.name = "withings.fit"
         self.client.upload(fit_file)
         return True
