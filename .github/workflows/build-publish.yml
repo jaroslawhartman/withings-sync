@@ -11,7 +11,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
-
     - name: Update version file ⬆️
       uses: brettdorrans/write-version-to-file@v1.1.0
       with:
