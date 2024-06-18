@@ -11,6 +11,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
+    - name: Update version file ⬆️
+      uses: brettdorrans/write-version-to-file@v1.1.0
+      with:
+        filename: '.VERSION'
+        placeholder: '${VERSION}'
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
