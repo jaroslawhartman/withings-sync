@@ -12,6 +12,7 @@ RUN mkdir -p /src
 COPY ./withings_sync /src
 COPY ./setup.py /src
 COPY ./.VERSION /src
+COPY ./README.md /src
 
 RUN cd /src && \
     python3 ./setup.py install
