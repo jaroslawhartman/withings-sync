@@ -9,7 +9,7 @@ import garth
 log = logging.getLogger("garmin")
 
 HOME = os.getenv("HOME", ".")
-GARMIN_SESSION = os.path.join(HOME, ".garmin_session")
+GARMIN_SESSION = os.getenv('GARMIN_SESSION', os.path.join(HOME, ".garmin_session"))
 
 
 class LoginSucceeded(Exception):
