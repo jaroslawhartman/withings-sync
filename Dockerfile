@@ -12,6 +12,6 @@ RUN mkdir -p /src
 COPY . /src
 
 RUN cd /src && \
-    python3 ./setup.py install
+    pip install -e .
 
 ENTRYPOINT ["withings-sync"]
