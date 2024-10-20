@@ -26,7 +26,7 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: MIT License",
     ],
-    install_requires=["lxml", "requests", "garth>=0.4.32", "python-dotenv"],
+    install_requires=["lxml", "requests", "garth>=0.4.32", "setuptools", "python-dotenv"],
     entry_points={
         "console_scripts": ["withings-sync=withings_sync.sync:main"],
     },
