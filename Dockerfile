@@ -12,6 +12,6 @@ RUN mkdir -p /src
 COPY . /src
 
 RUN cd /src && \
-    pip install -e .
+    pip install .
 
 ENTRYPOINT ["withings-sync"]
