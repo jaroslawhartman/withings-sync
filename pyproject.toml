@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "withings-sync"
+version = "4.2.6-rc.2"
+description = "A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road."
+authors = ["Steffen Vogel <post@steffenvogel.de>",
+           "Masayuki Hamasaki",
+          ]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "withings_sync"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+garth = "^0.4.46"
+requests = "^2.32.3"
+lxml = "^5.3.0"
+python-dotenv = "^1.0.1"
+importlib-resources = "^6.4.5"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+pylint = "^3.3.1"
+
+[tool.poetry.scripts]
+withings-sync = "withings_sync.sync:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
