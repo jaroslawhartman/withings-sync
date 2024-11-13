@@ -8,7 +8,7 @@ set -e
 VER=$(sed -n -e 's/.*version = "\(.*\)".*/\1/p' < pyproject.toml)
 
 function tag_if_not_tagged {
-  TAG=v$1
+  TAG=v$VER
   if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
     echo "tag ${TAG} already exists"
   else
@@ -19,7 +19,6 @@ function tag_if_not_tagged {
 }
 
 function publish_to_pypi() {
-  VERSION=$1
   echo "creating sdist.."
   poetry build
   # Publish to pypi.org
