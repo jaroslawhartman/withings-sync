@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "withings-sync"
-version = "4.2.6-rc.2"
+version = "5.0.0a1"
 description = "A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road."
 authors = ["Steffen Vogel <post@steffenvogel.de>",
            "Masayuki Hamasaki",
