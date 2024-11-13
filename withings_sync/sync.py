@@ -503,8 +503,8 @@ def main():
     logging.debug("withings-sync script version %s", version("withings-sync"))
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
-    if sys.version_info < (3, 7):
-        print("Sorry, requires at least Python3.7 to avoid issues with SSL.")
+    if sys.version_info < (3, 12):
+        print("Sorry, requires at least Python3.12.")
         sys.exit(1)
 
     sync()
