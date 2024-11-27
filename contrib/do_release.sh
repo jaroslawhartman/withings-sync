@@ -4,11 +4,11 @@
 # (username=__token__, password=pypi-***)
 
 set -e
-# extract the version="x.y.z" from setup.py
-VER=$(sed -n -e 's/.*version="\(.*\)".*/\1/p' < setup.py)
+# extract the version="x.y.z" from pyproject.toml
+VER=$(sed -n -e 's/.*version = "\(.*\)".*/\1/p' < pyproject.toml)
 
 function tag_if_not_tagged {
-  TAG=v$1
+  TAG=v$VER
   if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null; then
     echo "tag ${TAG} already exists"
   else
@@ -19,13 +19,10 @@ function tag_if_not_tagged {
 }
 
 function publish_to_pypi() {
-  VERSION=$1
   echo "creating sdist.."
-  python3 setup.py sdist > /dev/null
-  ARTIFACT="dist/withings-sync-${VERSION}.tar.gz"
+  poetry build
   # Publish to pypi.org
-  twine check $ARTIFACT
-  twine upload $ARTIFACT
+  poetry publish
 }
 
 tag_if_not_tagged $VER
