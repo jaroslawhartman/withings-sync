@@ -5,6 +5,8 @@ import logging
 import os
 
 import garth
+# Temporary fix until Garth project merges https://github.com/matin/garth/issues/73
+garth.http.USER_AGENT = {"User-Agent": ("GCM-iOS-5.7.2.1")}
 
 log = logging.getLogger("garmin")
 
