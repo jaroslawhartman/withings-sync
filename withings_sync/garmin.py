@@ -5,6 +5,7 @@ import logging
 import os
 
 import garth
+
 # Temporary fix until Garth project merges https://github.com/matin/garth/issues/73
 garth.http.USER_AGENT = {"User-Agent": ("GCM-iOS-5.7.2.1")}
 
@@ -12,6 +13,7 @@ log = logging.getLogger("garmin")
 
 HOME = os.getenv("HOME", ".")
 GARMIN_SESSION = os.getenv('GARMIN_SESSION', os.path.join(HOME, ".garmin_session"))
+GARMIN_DOMAIN_CN = (os.getenv('GARMIN_DOMAIN_CN', "False").lower == 'true')
 
 
 class LoginSucceeded(Exception):
@@ -31,6 +33,8 @@ class GarminConnect:
 
     def __init__(self) -> None:
         self.client = garth.Client()
+        if GARMIN_DOMAIN_CN:
+            self.client.configure(domain='garmin.cn')
 
     def login(self, email=None, password=None):
         if os.path.exists(GARMIN_SESSION):

@@ -21,7 +21,7 @@ from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
 
 
-def load_variable(env_var, secrets_file):
+def load_variable(env_var, secrets_file, default_value=""):
     """Load a variable from an environment variable or from a secrets file"""
     # Try to read the value from the secrets file. Silently fail if the file
     # cannot be read and use an empty value
@@ -29,7 +29,7 @@ def load_variable(env_var, secrets_file):
         with open(secrets_file, encoding='utf-8') as secret:
             value = secret.read().strip("\n")
     except OSError:
-        value = ""
+        value = default_value
 
     # Load variable from environment if it exists, otherwise use the
     # value read from the secrets file.
@@ -38,6 +38,7 @@ def load_variable(env_var, secrets_file):
 
 GARMIN_USERNAME = load_variable('GARMIN_USERNAME', "/run/secrets/garmin_username")
 GARMIN_PASSWORD = load_variable('GARMIN_PASSWORD', "/run/secrets/garmin_password")
+GARMIN_DOMAIN_CN = load_variable('GARMIN_DOMAIN_CN', "/run/secrets/garmin_domain_cn", "False")
 TRAINERROAD_USERNAME = load_variable('TRAINERROAD_USERNAME', "/run/secrets/trainerroad_username")
 TRAINERROAD_PASSWORD = load_variable('TRAINERROAD_PASSWORD', "/run/secrets/trainerroad_password")
 
@@ -146,6 +147,15 @@ def get_args():
         "-v",
         action="store_true",
         help="Run verbosely."
+    )
+
+    parser.add_argument(
+        "--garmin-china",
+        "-gcn",
+        default=GARMIN_DOMAIN_CN,
+        type=bool,
+        action="store_true",
+        help="if set to true, use garmin.cn domain"
     )
 
     return parser.parse_args()
