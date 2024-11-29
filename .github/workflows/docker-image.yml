@@ -30,11 +30,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Update version file ⬆️
+      - name: Update version in setup.py ⬆️
         uses: brettdorrans/write-version-to-file@v1.1.0
         with:
-          filename: '.VERSION'
-          placeholder: '${VERSION}'
+          filename: 'setup.py'
+          placeholder: '1.0.0.dev1'
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
