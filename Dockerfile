@@ -17,7 +17,7 @@ ENV PATH="/home/withings-sync/.poetry/bin:${PATH}" \
 
 RUN pip install poetry
 
-COPY --chown=withings-sync:withings-sync pyproject.toml poetry.lock README.md .VERSION ./
+COPY --chown=withings-sync:withings-sync pyproject.toml poetry.lock README.md ./
 RUN poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
 
 COPY --chown=withings-sync:withings-sync withings_sync ./withings_sync/
