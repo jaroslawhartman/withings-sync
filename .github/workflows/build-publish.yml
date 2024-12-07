@@ -10,11 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@master
-    - name: Update version in setup.py ⬆️
+    - name: Checkout code 🛒
+      uses: actions/checkout@v4
+
+    - name: Update version in pyproject.toml ⬆️
       uses: brettdorrans/write-version-to-file@v1.1.0
       with:
-        filename: 'setup.py'
+        filename: 'pyproject.toml'
         placeholder: '1.0.0.dev1'
 
     - name: Set up Python 3.12 🐍
