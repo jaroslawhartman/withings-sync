@@ -13,11 +13,11 @@ jobs:
     - name: Checkout code 🛒
       uses: actions/checkout@v4
 
-    - name: Update version file ⬆️
+    - name: Update version in pyproject.toml ⬆️
       uses: brettdorrans/write-version-to-file@v1.1.0
       with:
-        filename: '.VERSION'
-        placeholder: '${VERSION}'
+        filename: 'pyproject.toml'
+        placeholder: '1.0.0.dev1'
 
     - name: Set up Python 3.12 🐍
       uses: actions/setup-python@v5
