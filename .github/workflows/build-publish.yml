@@ -6,11 +6,11 @@ on: push
 
 jobs:
   build-n-publish:
-    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
-    runs-on: ubuntu-latest
+    name: Build and publish Python 🐍 distributions 📦 to PyPI
+    runs-on: ubuntu-24.04
 
     steps:
-    - name: Checkout code 🛒
+    - name: Checkout repository 🛒
       uses: actions/checkout@v4
 
     - name: Update version in pyproject.toml ⬆️
