@@ -33,8 +33,7 @@ jobs:
         path: dist/
 
   publish-to-pypi:
-    name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
+    name: Publish Python 🐍 distribution 📦 to PyPI
     if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
     needs:
     - build
@@ -54,6 +53,27 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}  # LEAVING THIS HERE UNTIL TRUSTED PUBLISHING IS IN PLACE
+
+  publish-to-github-release:
+    name: Upload the Python 🐍 distribution to GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')  # only upload to GitHub Release on tag pushes
+    needs:
+    - build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Release
+      uses: fnkr/github-action-ghr@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GHR_PATH: dist/
+        GHR_REPLACE: true
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
