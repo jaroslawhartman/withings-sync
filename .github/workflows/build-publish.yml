@@ -8,29 +8,29 @@ jobs:
   build:
     name: Build distribution 📦
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository 🛒
       uses: actions/checkout@v4
-
     - name: Update version in pyproject.toml ⬆️
       uses: brettdorrans/write-version-to-file@v1.1.0
       with:
         filename: 'pyproject.toml'
         placeholder: '1.0.0.dev1'
-
     - name: Set up Python 3.12 🐍
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
-
     - name: Install and configure Poetry 📜
       uses: snok/install-poetry@v1
       with:
         virtualenvs-create: false
-
     - name: Build & Package project 👷
       run: poetry build
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
 
 #  publish-to-pypi:
 #    name: >-
