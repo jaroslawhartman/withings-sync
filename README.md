@@ -18,9 +18,11 @@ A tool for synchronisation of the Withings API to:
 - raw JSON output
 
 ### Table of Contents
-**[1. Installation Instructions](#1.-installation-instructions)**<br>
-**[2. Usage Instructions](#2.-usage-instructions)**<br>
-**[3. Providing credentials](#3.-providing-credentials)**<br>
+**[1. Installation Instructions](#1-installation-instructions)**<br>
+**[2. Usage Instructions](#2-usage-instructions)**<br>
+**[3. Providing credentials](#3-providing-credentials)**<br>
+**[4. Obtaining Withings Authorization](#4-obtaining-withings-authorization)**<br>
+**[5. Tips](#5-tips)**<br>
 
 ## 1. Installation Instructions
 <details>
@@ -161,7 +163,7 @@ options:
 ```
 
 ## 3. Providing credentials
-### Providing credentials via environment variables
+### 3.1 Providing credentials via environment variables
 
 You can use the following environment variables for providing the Garmin and/or Trainerroad credentials:
 
@@ -173,7 +175,7 @@ You can use the following environment variables for providing the Garmin and/or 
 The CLI also uses python-dotenv to populate the variables above. Therefore setting the environment variables
 has the same effect as placing the variables in a `.env` file in the working directory.
 
-### Providing credentials via secrets files
+### 3.2 Providing credentials via secrets files
 
 You can also populate the following 'secrets' files to provide the Garmin and/or Trainerroad credentials:
 
@@ -184,7 +186,7 @@ You can also populate the following 'secrets' files to provide the Garmin and/or
 
 Secrets are useful in an orchestrated container context — see the [Docker Swarm](https://docs.docker.com/engine/swarm/secrets/) or [Rancher](https://rancher.com/docs/rancher/v1.6/en/cattle/secrets/) docs for more information on how to securely inject secrets into a container.
 
-### Order of priority for credentials
+### 3.3 Order of priority for credentials
 
 In the case of credentials being available via multiple means (e.g. [environment variables](#providing-credentials-via-environment-variables) and [secrets files](#providing-credentials-via-secrets-files)), the order of resolution for determining which credentials to use is as follows, with later methods overriding credentials supplied by an earlier method:
 
@@ -192,9 +194,11 @@ In the case of credentials being available via multiple means (e.g. [environment
 2. Read environment variable(s), variables set explicitly take precedence over values from a `.env` file.
 3. Use command invocation argument(s)
 
-### Obtaining Withings Authorization Code
+## 4. Obtaining Withings Authorization
 
 When running for a very first time, you need to obtain Withings authorization:
+
+### 4.1 'normal' shell:
 
 ```bash
 $ withings-sync -f 2019-01-25 -v
@@ -213,31 +217,7 @@ You need to visit the URL listed by the script and then - copy Authentification 
 
 This is one-time activity and it will not be needed to repeat.
 
-
-## Tips
-
-### Garmin SSO errors
-
-Some users reported errors raised by the Garmin SSO login:
-
-```
-withings_sync.garmin.APIException: SSO error 401
-```
-
-or 
-
-```
-withings_sync.garmin.APIException: SSO error 403
-```
-
-These errors are raised if a user tries to login too frequently.
-E.g. by running the script every 10 minutes.
-
-**We recommend to run the script around 8-10 times per day (every 2-3 hours).**
-
-See also: https://github.com/jaroslawhartman/withings-sync/issues/31
-
-### Docker
+### 4.2 Docker
 
 ```
 $ docker pull ghcr.io/jaroslawhartman/withings-sync:latest
@@ -280,6 +260,30 @@ JaHa.WAW.PL
 Garmin Connect User Name: JaHa.WAW.PL
 Fit file uploaded to Garmin Connect
 ```
+
+## 5. Tips
+
+### Garmin SSO errors
+
+Some users reported errors raised by the Garmin SSO login:
+
+```
+withings_sync.garmin.APIException: SSO error 401
+```
+
+or
+
+```
+withings_sync.garmin.APIException: SSO error 403
+```
+
+These errors are raised if a user tries to login too frequently.
+E.g. by running the script every 10 minutes.
+
+**We recommend to run the script around 8-10 times per day (every 2-3 hours).**
+
+See also: https://github.com/jaroslawhartman/withings-sync/issues/31
+
 ### Garmin auth
 
 You can configure the location of the garmin session file with the variabe `GARMIN_SESSION`.
@@ -333,14 +337,14 @@ Example docker-compose:
       - "withings-sync:/root"
       - "/etc/localtime:/etc/localtime:ro"
     environment:
-      WITHINGS_APP: /root/withings_app.json
+      WITHINGS_APP: /home/withings-sync/withings_app.json
 (...)
 ```
 You can then add the app-config in `withings-sync/withings_app.json`
 
 </details>
 
-## Release
+## 6. Release
 
 Release works via the GitHub [Draft a new Release](https://github.com/jaroslawhartman/withings-sync/releases/new) 
 function.
@@ -357,12 +361,12 @@ Will be conducted automatically within the Github-Release cycle.
 This needs the permission on the [pypi-project](https://pypi.org/project/withings-sync/).
 The python packages are added to the GitHub releases by a GitHub Action.
 
-## References
+## 7. References
 
 * SSO authorization derived from https://github.com/cpfair/tapiriik
 * TrainerRoad API from https://github.com/stuwilkins/python-trainerroad
 
-## Credits / Authors
+## 8. Credits / Authors
 
 * Based on [withings-garmin](https://github.com/ikasamah/withings-garmin) by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
 * Based on [withings-garmin-v2](https://github.com/jaroslawhartman/withings-garmin-v2) by Jarek Hartman, improved Python 3 compatability, code-style and setuptools packaging, Kubernetes and Docker support. 
