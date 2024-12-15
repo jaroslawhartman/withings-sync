@@ -49,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ GitHub.event_name == 'release' }}  # only push on a new release
+          push: ${{ github.event_name == 'release' }}
           provenance: false
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
