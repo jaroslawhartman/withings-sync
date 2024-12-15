@@ -28,11 +28,10 @@ A tool for synchronisation of the Withings API to:
 </details>
 
 ### 1.2 Installation of withings-sync with docker compose (not using cron)
+> This method follows a default approach of utilizing a single container to run one job at a time, then exiting upon completion. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
 <details>
   <summary>Expand</summary>
 
-  > This method follows a default approach of utilizing a single container to run one job at a time, then exiting upon completion. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
-  
   - create the following file/directory structure:
   ```bash
   .                                          # STACK_PATH
@@ -72,10 +71,9 @@ A tool for synchronisation of the Withings API to:
 </details>
 
 ### 1.3 Installation of withings-sync with docker compose (using supercronic)
+> This method leverages the included supercronic package for scheduling jobs directly within the container. This eliminates the need for an external scheduler, allowing the container to manage job execution independently.
 <details>
   <summary>Expand</summary>
-
- > This method leverages the included supercronic package for scheduling jobs directly within the container. This eliminates the need for an external scheduler, allowing the container to manage job execution independently.
 
   - create the following file/directory structure:
   ```bash
