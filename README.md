@@ -18,13 +18,9 @@ A tool for synchronisation of the Withings API to:
 - raw JSON output
 
 ### Table of Contents
-**[1. Installation Instructions](#installation-instructions)**<br>
-**[2. Usage Instructions](#usage-instructions)**<br>
-**[3. Providing credentials](#troubleshooting)**<br>
-**[Compatibility](#compatibility)**<br>
-**[Notes and Miscellaneous](#notes-and-miscellaneous)**<br>
-**[Building the Extension Bundles](#building-the-extension-bundles)**<br>
-**[Next Steps, Credits, Feedback, License](#next-steps)**<br>
+**[1. Installation Instructions](#1.-installation-instructions)**<br>
+**[2. Usage Instructions](#2.-usage-instructions)**<br>
+**[3. Providing credentials](#3.-providing-credentials)**<br>
 
 ## 1. Installation Instructions
 <details>
@@ -244,7 +240,7 @@ See also: https://github.com/jaroslawhartman/withings-sync/issues/31
 ### Docker
 
 ```
-$ docker pull ghcr.io/jaroslawhartman/withings-sync:master
+$ docker pull ghcr.io/jaroslawhartman/withings-sync:latest
 ```
 
 First start to ensure the script can start successfully:
@@ -253,7 +249,7 @@ First start to ensure the script can start successfully:
 Obtaining Withings authorisation:
 
 ```
-$ docker run -v $HOME:/root --interactive --tty --name withings ghcr.io/jaroslawhartman/withings-sync:master --garmin-username=<username> --garmin-password=<password>
+$ docker run -v $HOME:/root --interactive --tty --name withings ghcr.io/jaroslawhartman/withings-sync:latest --garmin-username=<username> --garmin-password=<password>
 
 Can't read config file config/withings_user.json
 User interaction needed to get Authentification Code from Withings!
@@ -297,8 +293,10 @@ $ kubectl apply -f contrib/k8s-job.yaml
 ```
 
 ### For advanced users - registering own Withings application
+<details>
+  <summary>If you are not sure you need this, you most likely won't.</summary>
 
-The script has been registered as a Withings application and got assigned `Client ID` and `Consumer Secret`. If you wish to create your own application - feel free! 
+The script has been registered as a Withings application and got assigned `Client ID` and `Consumer Secret`. If you wish to create your own application - feel free!
 
 
 * First you need a Withings account. [Sign up here](https://account.withings.com/connectionuser/account_create).
@@ -340,36 +338,7 @@ Example docker-compose:
 ```
 You can then add the app-config in `withings-sync/withings_app.json`
 
-
-### Run a periodic docker-compose cronjob
-
-We take the official docker image and override the entrypoint to crond.
-
-If you have completed the initial setup (withings_user.json created and working), you can create the following config
-
-```
-version: "3.8"
-services:
-  withings-sync:
-    container_name: withings-sync
-    image: ghcr.io/jaroslawhartman/withings-sync:master
-    volumes:
-      - "${VOLUME_PATH}/withings-sync:/root" 
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - TZ=${TIME_ZONE}
-    entrypoint: "/root/entrypoint.sh"
-```
-
-The `entrypoint.sh` will then register the cronjob. For example:
-
-```
-#!/bin/sh
-echo "$(( $RANDOM % 59 +0 )) */3 * * * withings-sync --gu garmin-username --gp 'mypassword' -v | tee -a /root/withings-sync.log" > /etc/crontabs/root
-crond -f -l 6 -L /dev/stdout
-```
-
-This will run the job every 3 hours (at a random minute) and writing the output to console and the `/root/withings-sync.log`.
+</details>
 
 ## Release
 
@@ -379,15 +348,14 @@ The `version` key in `pyproject.toml` will be bumped automatically (Version will
 
 ### Docker Image
 
-An image is created magically by GitHub Action and published 
+Container images are created automagically by GitHub Action and published 
 to [ghcr](https://github.com/jaroslawhartman/withings-sync/pkgs/container/withings-sync).
 
-### Manual release: pypi
+### Pypi & GitHub
 
 Will be conducted automatically within the Github-Release cycle.
-You'll find a script to create and upload a release to pypi here `contrib/do_release.sh`.
-It requires [twine](https://pypi.org/project/twine/).
 This needs the permission on the [pypi-project](https://pypi.org/project/withings-sync/).
+The python packages are added to the GitHub releases by a GitHub Action.
 
 ## References
 
