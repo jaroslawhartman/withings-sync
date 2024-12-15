@@ -17,28 +17,23 @@ A tool for synchronisation of the Withings API to:
 - Trainer Road
 - raw JSON output
 
-### Table of Contents
-**[1. Installation Instructions](#1-installation-instructions)**<br>
-**[2. Usage Instructions](#2-usage-instructions)**<br>
-**[3. Providing credentials](#3-providing-credentials)**<br>
-**[4. Obtaining Withings Authorization](#4-obtaining-withings-authorization)**<br>
-**[5. Tips](#5-tips)**<br>
-
 ## 1. Installation Instructions
+### 1.1 Installation of withings-sync with pip
 <details>
-  <summary>Installation of withings-sync with pip</summary>
+  <summary>Expand</summary>
 
   ```bash
   $ pip install withings-sync
   ```
 </details>
 
+### 1.2 Installation of withings-sync with docker compose (not using cron)
 <details>
-  <summary>Installation of withings-sync with docker compose (not using cron)</summary>
+  <summary>Expand</summary>
 
   > This method follows a default approach of utilizing a single container to run one job at a time, then exiting upon completion. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
   
-  ### create the following file/directory structure:
+  - create the following file/directory structure:
   ```bash
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
@@ -48,7 +43,7 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
-  ### contents of an example .env file:
+  - contents of an example .env file:
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/youruser/withings-sync
@@ -56,7 +51,7 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
   
-  ### contents of an example docker-compose.yml file:
+  - contents of an example docker-compose.yml file:
   ```yaml
   services:
   withings-sync:
@@ -76,12 +71,13 @@ A tool for synchronisation of the Withings API to:
   ```
 </details>
 
+### 1.3 Installation of withings-sync with docker compose (using supercronic)
 <details>
-  <summary>Installation of withings-sync with docker compose (using supercronic)</summary>
+  <summary>Expand</summary>
 
  > This method leverages the included supercronic package for scheduling jobs directly within the container. This eliminates the need for an external scheduler, allowing the container to manage job execution independently.
 
-  ### create the following file/directory structure:
+  - create the following file/directory structure:
   ```bash
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
@@ -92,7 +88,7 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
-  ### contents of an example .env file:
+  - contents of an example .env file:
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/youruser/withings-sync
@@ -100,14 +96,14 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
 
-  ### contents of an example entrypoint.sh file:
+  - contents of an example entrypoint.sh file:
   ```bash
   #!/bin/sh
   echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --verbose --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
   supercronic /home/withings-sync/cronjob
   ```
   
-  ### contents of an example docker-compose.yml file:
+  - contents of an example docker-compose.yml file:
   ```yaml
   services:
   withings-sync:
