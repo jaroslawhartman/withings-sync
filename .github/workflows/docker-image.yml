@@ -2,18 +2,7 @@
 
 name: Publish Docker Image
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-on:
-  schedule:
-    - cron: '21 5 */5 * *'
-  push:
-    branches: [ master ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
+on: push
 
 env:
   REGISTRY: ghcr.io
@@ -60,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: ${{ GitHub.event_name == 'release' }}  # only push on a new release
           provenance: false
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}

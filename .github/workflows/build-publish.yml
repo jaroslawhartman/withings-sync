@@ -1,6 +1,6 @@
 ---
 
-name: Build and Publish Release via PyPi
+name: Build and Publish Release to PyPI & GitHub
 
 on: push
 
