@@ -1,3 +1,14 @@
+> [!CAUTION]
+> This fork of the withings-sync project introduces breaking changes that users need to be aware of before upgrading or using it.
+> These changes were made to enhance security and compatibility but may require modifications to your existing setup.
+>
+> - The container now runs without root privileges.
+> - Dependencies, virtual envs, packaging is now done by Poetry.
+> - This fork requires a recent version of Python, currently capped at >= python 3.12.
+>
+> Make sure to go over the updated readme and test these new changes thoroughly for your environment.
+> Chances are quite high you will have to make changes to make this work again. 
+
 # withings-sync
 
 A tool for synchronisation of the Withings API to:
@@ -6,42 +17,154 @@ A tool for synchronisation of the Withings API to:
 - Trainer Road
 - raw JSON output
 
-## Installation
+### Table of Contents
+**[1. Installation Instructions](#installation-instructions)**<br>
+**[2. Usage Instructions](#usage-instructions)**<br>
+**[3. Providing credentials](#troubleshooting)**<br>
+**[Compatibility](#compatibility)**<br>
+**[Notes and Miscellaneous](#notes-and-miscellaneous)**<br>
+**[Building the Extension Bundles](#building-the-extension-bundles)**<br>
+**[Next Steps, Credits, Feedback, License](#next-steps)**<br>
 
-```bash
-$ pip install withings-sync
+## 1. Installation Instructions
+<details>
+  <summary>Installation of withings-sync with pip</summary>
+
+  ```bash
+  $ pip install withings-sync
+  ```
+</details>
+
+<details>
+  <summary>Installation of withings-sync with docker compose (not using cron)</summary>
+
+  > This method follows a default approach of utilizing a single container to run one job at a time, then exiting upon completion. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
+  
+  ### create the following file/directory structure:
+  ```bash
+  .                                          # STACK_PATH
+  ./.env                                     # .env file containing your variables
+  ./docker-compose.yml                       # docker-compose file
+  ./config/                                  # config directory
+  ./config/withings-sync/                    # config directory for withings-sync
+  ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
+  ```
+
+  ### contents of an example .env file:
+  ```bash
+  TZ=Europe/Kyiv
+  STACK_PATH=/home/youruser/withings-sync
+  GARMIN_USERNAME="your.name@domain.ext"
+  GARMIN_PASSWORD="YourPasswordHere"
+  ```
+  
+  ### contents of an example docker-compose.yml file:
+  ```yaml
+  services:
+  withings-sync:
+    image: ghcr.io/jaroslawhartman/withings-sync:latest
+    container_name: withings-sync
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    environment:
+      - TZ=${TZ:?err}
+      - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
+      - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+      - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
+    restart: unless-stopped
+  ```
+</details>
+
+<details>
+  <summary>Installation of withings-sync with docker compose (using supercronic)</summary>
+
+ > This method leverages the included supercronic package for scheduling jobs directly within the container. This eliminates the need for an external scheduler, allowing the container to manage job execution independently.
+
+  ### create the following file/directory structure:
+  ```bash
+  .                                          # STACK_PATH
+  ./.env                                     # .env file containing your variables
+  ./docker-compose.yml                       # docker-compose file
+  ./config/                                  # config directory
+  ./config/withings-sync/                    # config directory for withings-sync
+  ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your 
+  ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
+  ```
+
+  ### contents of an example .env file:
+  ```bash
+  TZ=Europe/Kyiv
+  STACK_PATH=/home/youruser/withings-sync
+  GARMIN_USERNAME="your.name@domain.ext"
+  GARMIN_PASSWORD="YourPasswordHere"
+  ```
+
+  ### contents of an example entrypoint.sh file:
+  ```bash
+  #!/bin/sh
+  echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --verbose --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
+  supercronic /home/withings-sync/cronjob
+  ```
+  
+  ### contents of an example docker-compose.yml file:
+  ```yaml
+  services:
+  withings-sync:
+    image: ghcr.io/jaroslawhartman/withings-sync:latest
+    container_name: withings-sync
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    environment:
+      - TZ=${TZ:?err}
+      - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
+      - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+      - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
+      - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
+    entrypoint: "/home/withings-sync/entrypoint.sh"
+    restart: unless-stopped
+  ```
+</details>
+
+## 2. Usage Instructions
+
 ```
-
-## Usage
-
-```
-usage: withings-sync [-h] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE]
-                     [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload] [--verbose]
+usage: withings-sync [-h] [--version] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload]
+                     [--features BLOOD_PRESSURE [BLOOD_PRESSURE ...]] [--verbose]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
+  --version, -V         show program's version number and exit
   --garmin-username GARMIN_USERNAME, --gu GARMIN_USERNAME
-                        username to log in to Garmin Connect.
+                        Username to log in to Garmin Connect.
   --garmin-password GARMIN_PASSWORD, --gp GARMIN_PASSWORD
-                        password to log in to Garmin Connect.
+                        Password to log in to Garmin Connect.
   --trainerroad-username TRAINERROAD_USERNAME, --tu TRAINERROAD_USERNAME
-                        username to log in to TrainerRoad.
+                        Username to log in to TrainerRoad.
   --trainerroad-password TRAINERROAD_PASSWORD, --tp TRAINERROAD_PASSWORD
-                        password to log in to TrainerRoad.
+                        Password to log in to TrainerRoad.
   --fromdate DATE, -f DATE
+                        Date to start syncing from. Ex: 2023-12-20
   --todate DATE, -t DATE
+                        Date for the last sync. Ex: 2023-12-30
   --to-fit, -F          Write output file in FIT format.
   --to-json, -J         Write output file in JSON format.
   --output BASENAME, -o BASENAME
                         Write downloaded measurements to file.
-  --features            Enable Features
-                        BLOOD_PRESSURE = sync blood pressure
   --no-upload           Won't upload to Garmin Connect or TrainerRoad.
-  --verbose, -v         Run verbosely
+  --features BLOOD_PRESSURE [BLOOD_PRESSURE ...]
+                        Enable Features like BLOOD_PRESSURE.
+  --verbose, -v         Run verbosely.
 ```
 
+## 3. Providing credentials
 ### Providing credentials via environment variables
 
 You can use the following environment variables for providing the Garmin and/or Trainerroad credentials:
