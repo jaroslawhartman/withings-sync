@@ -19,20 +19,41 @@ A tool for synchronisation of the Withings API to:
 
 ## 1. Installation Instructions
 ### 1.1 Installation of withings-sync with pip
+> This method installs the package asuming you have a working python and pip installation.
 <details>
   <summary>Expand</summary>
 
+  1. installing the package:
   ```bash
   $ pip install withings-sync
   ```
+
+  2. obtaining Withings authorization:
+  When running for a very first time, you need to obtain Withings authorization:
+  ```bash
+  $ withings-sync -f 2019-01-25 -v
+  Can't read config file config/withings_user.json
+  User interaction needed to get Authentification Code from Withings!
+
+  Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+  (This is one-time activity)
+
+  https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
+
+  Token :
+  ```
+
+  You need to visit the URL listed by the script and then - copy Authentification Code back to the prompt.
+
+  This is one-time activity and it will not be needed to repeat.
 </details>
 
 ### 1.2 Installation of withings-sync with docker compose (not using cron)
 > This method follows a default approach of utilizing a single container to run one job at a time, then exiting upon completion. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
 <details>
-  <summary>Expand</summary>
+  <summary>Expand to show installation steps.</summary>
 
-  - create the following file/directory structure:
+  1. create the following file/directory structure:
   ```bash
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
@@ -42,7 +63,7 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
-  - contents of an example .env file:
+  2. contents of an example .env file:
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/youruser/withings-sync
@@ -50,7 +71,7 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
   
-  - contents of an example docker-compose.yml file:
+  3. contents of an example docker-compose.yml file:
   ```yaml
   services:
   withings-sync:
@@ -68,14 +89,53 @@ A tool for synchronisation of the Withings API to:
       - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
     restart: unless-stopped
   ```
+
+  4. obtaining Withings authorization:
+  ```bash
+  $ docker compose pull
+  ```
+
+  First start to ensure the script can start successfully:
+
+  ```bash
+  $ docker run -it withings-sync
+  2024-12-17 18:54:00,850 - withings - ERROR - Can't read config file /home/withings-sync/.withings_user.json
+  2024-12-17 18:54:00,850 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
+  2024-12-17 18:54:00,850 - withings - WARNING -
+  2024-12-17 18:54:00,850 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+  2024-12-17 18:54:00,851 - withings - WARNING - (This is one-time activity)
+  2024-12-17 18:54:00,851 - withings - WARNING -
+  2024-12-17 18:54:00,851 - withings - INFO - https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://jaroslawhartman.github.io/withings-sync/contrib/withings.html&
+  2024-12-17 18:54:00,851 - withings - INFO -
+  Token : <token>
+  Withings: Get Access Token
+  Withings: Refresh Access Token
+  Withings: Get Measurements
+     Measurements received
+  JaHa.WAW.PL
+  Garmin Connect User Name: JaHa.WAW.PL
+  Fit file uploaded to Garmin Connect
+  ```
+
+  And for subsequent runs:
+
+  ```
+  $ docker start -i withings
+  Withings: Refresh Access Token
+  Withings: Get Measurements
+     Measurements received
+  JaHa.WAW.PL
+  Garmin Connect User Name: JaHa.WAW.PL
+  Fit file uploaded to Garmin Connect
+  ```
 </details>
 
 ### 1.3 Installation of withings-sync with docker compose (using supercronic)
 > This method leverages the included supercronic package for scheduling jobs directly within the container. This eliminates the need for an external scheduler, allowing the container to manage job execution independently.
 <details>
-  <summary>Expand</summary>
+  <summary>Expand to show installation steps.</summary>
 
-  - create the following file/directory structure:
+  1. create the following file/directory structure:
   ```bash
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
@@ -86,7 +146,7 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
-  - contents of an example .env file:
+  2. contents of an example .env file:
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/youruser/withings-sync
@@ -94,14 +154,14 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
 
-  - contents of an example entrypoint.sh file:
+  3. contents of an example entrypoint.sh file:
   ```bash
   #!/bin/sh
   echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --verbose --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
   supercronic /home/withings-sync/cronjob
   ```
   
-  - contents of an example docker-compose.yml file:
+  4. contents of an example docker-compose.yml file:
   ```yaml
   services:
   withings-sync:
@@ -126,7 +186,9 @@ A tool for synchronisation of the Withings API to:
 ## 2. Usage Instructions
 
 ```
-usage: withings-sync [-h] [--version] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload]
+usage: withings-sync [-h] [--version] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] 
+                     [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] 
+		     [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload]
                      [--features BLOOD_PRESSURE [BLOOD_PRESSURE ...]] [--verbose]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
