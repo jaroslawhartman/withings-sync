@@ -171,7 +171,6 @@ A tool for synchronisation of the Withings API to:
   $ docker compose pull
   $ docker compose run -it --remove-orphans withings-sync
   ```
-
 </details>
 
 ### 1.3 Installation of withings-sync with docker compose (using supercronic)
@@ -286,6 +285,54 @@ A tool for synchronisation of the Withings API to:
   $ docker compose up -d --remove-orphans
   $ docker image prune -f
   ```
+</details>
+
+### 1.4 Installation of withings-sync with docker (not compose)
+> This method follows a default approach of utilizing a single container to run one job at a time, then exiting upon completion. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
+<details>
+  <summary>Expand to show installation steps.</summary>
+
+```bash
+$ docker pull ghcr.io/jaroslawhartman/withings-sync:latest
+```
+
+First start to ensure the script can start successfully:
+
+
+Obtaining Withings authorisation:
+
+```bash
+$ docker run -v .withings_user.json:/home/withings-sync/.withings_user.json -v .garmin_session:/home/withings-sync/.garmin_session --interactive --tty --name withings-sync ghcr.io/jaroslawhartman/withings-sync:latest --garmin-username=<username> --garmin-password=<password>
+
+Can't read config file config/withings_user.json
+User interaction needed to get Authentification Code from Withings!
+
+Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+(This is one-time activity)
+
+https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
+
+Token : <token>
+Withings: Get Access Token
+Withings: Refresh Access Token
+Withings: Get Measurements
+   Measurements received
+JaHa.WAW.PL
+Garmin Connect User Name: JaHa.WAW.PL
+Fit file uploaded to Garmin Connect
+```
+
+And for subsequent runs:
+
+```bash
+$ docker start -i withings-sync
+Withings: Refresh Access Token
+Withings: Get Measurements
+   Measurements received
+JaHa.WAW.PL
+Garmin Connect User Name: JaHa.WAW.PL
+Fit file uploaded to Garmin Connect
+```
 </details>
 
 ## 2. Usage Instructions
