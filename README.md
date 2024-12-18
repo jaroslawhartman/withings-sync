@@ -186,6 +186,7 @@ A tool for synchronisation of the Withings API to:
   ./config/                                  # config directory
   ./config/withings-sync/                    # config directory for withings-sync
   ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your 
+  ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
