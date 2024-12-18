@@ -32,7 +32,7 @@ A tool for synchronisation of the Withings API to:
   When running for a very first time, you need to obtain Withings authorization:
   ```bash
   $ withings-sync
-  2024-12-01 01:29:02,601 - withings - ERROR - Can't read config file /home/youruser/.withings_user.json
+  2024-12-01 01:29:02,601 - withings - ERROR - Can\'t read config file /home/youruser/.withings_user.json
   2024-12-01 01:29:02,602 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
   2024-12-01 01:29:02,603 - withings - WARNING -
   2024-12-01 01:29:02,603 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
@@ -51,7 +51,10 @@ A tool for synchronisation of the Withings API to:
   ```
   You need to visit the URL listed by the script and then - copy Authentification Code back to the prompt.
 
-  This is one-time activity and it will not be needed to repeat. Subsequent runs will use the saved access tokens in `~/.withings_user.json`
+  This is one-time activity and it will not be needed to repeat. 
+
+  3. running the application:
+  Subsequent runs will use the saved access tokens in `~/.withings_user.json`
   ```bash
   $ withings-sync
   2024-12-01 01:37:41,500 - withings - INFO - Refresh Access Token
@@ -108,27 +111,28 @@ A tool for synchronisation of the Withings API to:
   ```bash
   $ docker compose pull
   [+] Pulling 13/13
-  ✔ withings-sync Pulled                                                                                                                                                                                                                                                                                                                                                                                                              56.0s
-    ✔ cb8611c9fe51 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                       4.2s
-    ✔ 52e189a1282f Pull complete                                                                                                                                                                                                                                                                                                                                                                                                       6.4s
-    ✔ 95e68cb0cebc Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      19.0s
-    ✔ c3ba8bc06a4d Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      19.3s
-    ✔ fc2b9c85008a Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      21.6s
-    ✔ 0376fca350d9 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      21.7s
-    ✔ 4f4fb700ef54 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      21.9s
-    ✔ c749d618f51d Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      43.0s
-    ✔ 86d00088bd8d Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      43.2s
-    ✔ 98dec7b84387 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      52.8s
-    ✔ 8825309bd8c2 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      53.1s
-    ✔ 7747652082d6 Pull complete
+  ✔ withings-sync Pulled                                                           56.0s
+    ✔ cb8611c9fe51 Pull complete                                                    4.2s
+    ✔ 52e189a1282f Pull complete                                                    6.4s
+    ✔ 95e68cb0cebc Pull complete                                                   19.0s
+    ✔ c3ba8bc06a4d Pull complete                                                   19.3s
+    ✔ fc2b9c85008a Pull complete                                                   21.6s
+    ✔ 0376fca350d9 Pull complete                                                   21.7s
+    ✔ 4f4fb700ef54 Pull complete                                                   21.9s
+    ✔ c749d618f51d Pull complete                                                   43.0s
+    ✔ 86d00088bd8d Pull complete                                                   43.2s
+    ✔ 98dec7b84387 Pull complete                                                   52.8s
+    ✔ 8825309bd8c2 Pull complete                                                   53.1s
+    ✔ 7747652082d6 Pull complete						   53.3s
   ```
 
   First start to ensure the script can start successfully:
 
   ```bash
   $ docker compose run -it --remove-orphans --entrypoint "poetry run withings-sync" withings-sync
-  [+] Creating 1/0
-  2024-12-01 01:29:02,601 - withings - ERROR - Can't read config file /home/youruser/.withings_user.json
+  [+] Creating 1/1
+  ✔ Network stack_default  Created                                                  0.5s
+  2024-12-01 01:29:02,601 - withings - ERROR - Can\'t read config file /home/youruser/.withings_user.json
   2024-12-01 01:29:02,602 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
   2024-12-01 01:29:02,603 - withings - WARNING -
   2024-12-01 01:29:02,603 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
@@ -145,14 +149,29 @@ A tool for synchronisation of the Withings API to:
   2024-12-01 01:31:09,406 - withings - INFO - Get Measurements
   2024-12-01 01:31:09,856 - root - ERROR - No measurements to upload for date or period specified
   ```
+  You need to visit the URL listed by the script and then - copy Authentification Code back to the prompt.
 
-  And for subsequent runs:
+  This is one-time activity and it will not be needed to repeat.
+
+  5. running the container:
+  Subsequent runs will use the saved access tokens in `~/.withings_user.json`
 
   ```bash
-  $ docker compose up -d --remove-orphans
-  [+] Running 1/1
-  ✔ Container withings-sync                         Started
+  $ docker compose run -it --remove-orphans withings-sync                           0.5s
+  [+] Creating 1/1
+  ✔ Container stack-withings-sync-run-3f24bc7ec7f9  Removed
+  2024-12-01 01:37:41,500 - withings - INFO - Refresh Access Token
+  2024-12-01 01:37:41,954 - root - INFO - Fetching measurements from 2024-12-01 00:00 to 2024-12-01 23:59
+  2024-12-01 01:37:42,563 - withings - INFO - Get Measurements
+  2024-12-01 01:37:43,069 - root - ERROR - No measurements to upload for date or period specified
   ```
+
+  6. updating to a newer version:
+  ```bash
+  $ docker compose pull
+  $ docker compose run -it --remove-orphans withings-sync
+  ```
+
 </details>
 
 ### 1.3 Installation of withings-sync with docker compose (using supercronic)
@@ -205,6 +224,67 @@ A tool for synchronisation of the Withings API to:
       - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
     entrypoint: "sh /home/withings-sync/entrypoint.sh"
     restart: unless-stopped
+  ```
+
+  5. obtaining Withings authorization:
+  ```bash
+  $ docker compose pull
+  [+] Pulling 13/13
+  ✔ withings-sync Pulled                                                           56.0s
+    ✔ cb8611c9fe51 Pull complete                                                    4.2s
+    ✔ 52e189a1282f Pull complete                                                    6.4s
+    ✔ 95e68cb0cebc Pull complete                                                   19.0s
+    ✔ c3ba8bc06a4d Pull complete                                                   19.3s
+    ✔ fc2b9c85008a Pull complete                                                   21.6s
+    ✔ 0376fca350d9 Pull complete                                                   21.7s
+    ✔ 4f4fb700ef54 Pull complete                                                   21.9s
+    ✔ c749d618f51d Pull complete                                                   43.0s
+    ✔ 86d00088bd8d Pull complete                                                   43.2s
+    ✔ 98dec7b84387 Pull complete                                                   52.8s
+    ✔ 8825309bd8c2 Pull complete                                                   53.1s
+    ✔ 7747652082d6 Pull complete                                                   53.3s
+  ```
+
+  First start to ensure the container can start successfully:
+
+  ```bash
+  $ docker compose run -it --remove-orphans --entrypoint "poetry run withings-sync" withings-sync
+  [+] Creating 1/1
+  ✔ Network stack_default  Created                                                  0.5s
+  2024-12-01 01:29:02,601 - withings - ERROR - Can\'t read config file /home/youruser/.withings_user.json
+  2024-12-01 01:29:02,602 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
+  2024-12-01 01:29:02,603 - withings - WARNING -
+  2024-12-01 01:29:02,603 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+  2024-12-01 01:29:02,603 - withings - WARNING - (This is one-time activity)
+  2024-12-01 01:29:02,604 - withings - WARNING -
+  2024-12-01 01:29:02,604 - withings - INFO - https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://jaroslawhartman.github.io/withings-sync/contrib/withings.html&
+  2024-12-01 01:29:02,604 - withings - INFO -
+
+  Token : <PASTE TOKEN>
+
+  2024-12-01 01:31:07,832 - withings - INFO - Get Access Token
+  2024-12-01 01:31:08,313 - withings - INFO - Refresh Access Token
+  2024-12-01 01:31:08,771 - root - INFO - Fetching measurements from 2024-12-01 00:00 to 2024-12-01 23:59
+  2024-12-01 01:31:09,406 - withings - INFO - Get Measurements
+  2024-12-01 01:31:09,856 - root - ERROR - No measurements to upload for date or period specified
+  ```
+
+  6. running the container:
+  And for subsequent runs we start docker compose and let the container run in the background.
+  Subsequent runs will use the saved access tokens in `~/.withings_user.json`
+
+  ```bash
+  $ docker compose up -d --remove-orphans
+  [+] Running 1/1
+  ✔ Container withings-sync                         Started                         1.5s
+  ```
+
+  7. updating to a newer version:
+  ```bash
+  $ docker compose pull
+  $ docker compose down
+  $ docker compose up -d --remove-orphans
+  $ docker image prune -f
   ```
 </details>
 
