@@ -55,7 +55,7 @@ A tool for synchronisation of the Withings API to:
   ```bash
   $ withings-sync
   2024-12-01 01:37:41,500 - withings - INFO - Refresh Access Token
-  2024-12-01 01:37:41,954 - root - INFO - Fetching measurements from 2024-01-18 00:00 to 2024-01-18 23:59
+  2024-12-01 01:37:41,954 - root - INFO - Fetching measurements from 2024-12-01 00:00 to 2024-12-01 23:59
   2024-12-01 01:37:42,563 - withings - INFO - Get Measurements
   2024-12-01 01:37:43,069 - root - ERROR - No measurements to upload for date or period specified
   ```
@@ -73,6 +73,7 @@ A tool for synchronisation of the Withings API to:
   ./docker-compose.yml                       # docker-compose file
   ./config/                                  # config directory
   ./config/withings-sync/                    # config directory for withings-sync
+  ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
@@ -87,59 +88,70 @@ A tool for synchronisation of the Withings API to:
   3. contents of an example `docker-compose.yml` file:
   ```yaml
   services:
-  withings-sync:
-    image: ghcr.io/jaroslawhartman/withings-sync:latest
-    container_name: withings-sync
-    stdin_open: true # docker run -i
-    tty: true        # docker run -t
-    environment:
-      - TZ=${TZ:?err}
-      - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
-      - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
-      - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
-    restart: unless-stopped
+    withings-sync:
+      image: ghcr.io/jaroslawhartman/withings-sync:latest
+      container_name: withings-sync
+      stdin_open: true # docker run -i
+      tty: true        # docker run -t
+      environment:
+        - TZ=${TZ:?err}
+        - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
+        - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
+      volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+        - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
+      restart: unless-stopped
   ```
 
   4. obtaining Withings authorization:
   ```bash
   $ docker compose pull
+  [+] Pulling 13/13
+  ✔ withings-sync Pulled                                                                                                                                                                                                                                                                                                                                                                                                              56.0s
+    ✔ cb8611c9fe51 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                       4.2s
+    ✔ 52e189a1282f Pull complete                                                                                                                                                                                                                                                                                                                                                                                                       6.4s
+    ✔ 95e68cb0cebc Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      19.0s
+    ✔ c3ba8bc06a4d Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      19.3s
+    ✔ fc2b9c85008a Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      21.6s
+    ✔ 0376fca350d9 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      21.7s
+    ✔ 4f4fb700ef54 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      21.9s
+    ✔ c749d618f51d Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      43.0s
+    ✔ 86d00088bd8d Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      43.2s
+    ✔ 98dec7b84387 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      52.8s
+    ✔ 8825309bd8c2 Pull complete                                                                                                                                                                                                                                                                                                                                                                                                      53.1s
+    ✔ 7747652082d6 Pull complete
   ```
 
   First start to ensure the script can start successfully:
 
   ```bash
-  $ docker run -it withings-sync
-  2024-12-17 18:54:00,850 - withings - ERROR - Can't read config file /home/withings-sync/.withings_user.json
-  2024-12-17 18:54:00,850 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
-  2024-12-17 18:54:00,850 - withings - WARNING -
-  2024-12-17 18:54:00,850 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
-  2024-12-17 18:54:00,851 - withings - WARNING - (This is one-time activity)
-  2024-12-17 18:54:00,851 - withings - WARNING -
-  2024-12-17 18:54:00,851 - withings - INFO - https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://jaroslawhartman.github.io/withings-sync/contrib/withings.html&
-  2024-12-17 18:54:00,851 - withings - INFO -
-  Token : <token>
-  Withings: Get Access Token
-  Withings: Refresh Access Token
-  Withings: Get Measurements
-     Measurements received
-  JaHa.WAW.PL
-  Garmin Connect User Name: JaHa.WAW.PL
-  Fit file uploaded to Garmin Connect
+  $ docker compose run -it --remove-orphans --entrypoint "poetry run withings-sync" withings-sync
+  [+] Creating 1/0
+  2024-12-01 01:29:02,601 - withings - ERROR - Can't read config file /home/youruser/.withings_user.json
+  2024-12-01 01:29:02,602 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
+  2024-12-01 01:29:02,603 - withings - WARNING -
+  2024-12-01 01:29:02,603 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+  2024-12-01 01:29:02,603 - withings - WARNING - (This is one-time activity)
+  2024-12-01 01:29:02,604 - withings - WARNING -
+  2024-12-01 01:29:02,604 - withings - INFO - https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://jaroslawhartman.github.io/withings-sync/contrib/withings.html&
+  2024-12-01 01:29:02,604 - withings - INFO -
+
+  Token : <PASTE TOKEN>
+
+  2024-12-01 01:31:07,832 - withings - INFO - Get Access Token
+  2024-12-01 01:31:08,313 - withings - INFO - Refresh Access Token
+  2024-12-01 01:31:08,771 - root - INFO - Fetching measurements from 2024-12-01 00:00 to 2024-12-01 23:59
+  2024-12-01 01:31:09,406 - withings - INFO - Get Measurements
+  2024-12-01 01:31:09,856 - root - ERROR - No measurements to upload for date or period specified
   ```
 
   And for subsequent runs:
 
   ```bash
-  $ docker start -i withings
-  Withings: Refresh Access Token
-  Withings: Get Measurements
-     Measurements received
-  JaHa.WAW.PL
-  Garmin Connect User Name: JaHa.WAW.PL
-  Fit file uploaded to Garmin Connect
+  $ docker compose up -d --remove-orphans
+  [+] Running 1/1
+  ✔ Container withings-sync                         Started
   ```
 </details>
 
@@ -191,7 +203,7 @@ A tool for synchronisation of the Withings API to:
       - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
       - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
       - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
-    entrypoint: "/home/withings-sync/entrypoint.sh"
+    entrypoint: "sh /home/withings-sync/entrypoint.sh"
     restart: unless-stopped
   ```
 </details>
