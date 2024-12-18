@@ -19,9 +19,9 @@ A tool for synchronisation of the Withings API to:
 
 ## 1. Installation Instructions
 ### 1.1 Installation of withings-sync with pip
-> This method installs the package asuming you have a working python and pip installation.
+> This method installs the package asuming you have a working python and pip installation. It relies on an external scheduler (e.g., cron on the host operating system) to manage job execution.
 <details>
-  <summary>Expand</summary>
+  <summary>Expand to show installation steps.</summary>
 
   1. installing the package:
   ```bash
@@ -31,21 +31,34 @@ A tool for synchronisation of the Withings API to:
   2. obtaining Withings authorization:
   When running for a very first time, you need to obtain Withings authorization:
   ```bash
-  $ withings-sync -f 2019-01-25 -v
-  Can't read config file config/withings_user.json
-  User interaction needed to get Authentification Code from Withings!
+  $ withings-sync
+  2024-12-01 01:29:02,601 - withings - ERROR - Can't read config file /home/youruser/.withings_user.json
+  2024-12-01 01:29:02,602 - withings - WARNING - User interaction needed to get Authentification Code from Withings!
+  2024-12-01 01:29:02,603 - withings - WARNING -
+  2024-12-01 01:29:02,603 - withings - WARNING - Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
+  2024-12-01 01:29:02,603 - withings - WARNING - (This is one-time activity)
+  2024-12-01 01:29:02,604 - withings - WARNING -
+  2024-12-01 01:29:02,604 - withings - INFO - https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://jaroslawhartman.github.io/withings-sync/contrib/withings.html&
+  2024-12-01 01:29:02,604 - withings - INFO -
 
-  Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
-  (This is one-time activity)
+  Token : <PASTE TOKEN>
 
-  https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
-
-  Token :
+  2024-12-01 01:31:07,832 - withings - INFO - Get Access Token
+  2024-12-01 01:31:08,313 - withings - INFO - Refresh Access Token
+  2024-12-01 01:31:08,771 - root - INFO - Fetching measurements from 2024-12-18 00:00 to 2024-12-18 23:59
+  2024-12-01 01:31:09,406 - withings - INFO - Get Measurements
+  2024-12-01 01:31:09,856 - root - ERROR - No measurements to upload for date or period specified
   ```
-
   You need to visit the URL listed by the script and then - copy Authentification Code back to the prompt.
 
-  This is one-time activity and it will not be needed to repeat.
+  This is one-time activity and it will not be needed to repeat. Subsequent runs will use the saved access tokens in ~/.withings_user.json
+  ```bash
+  $ withings-sync
+  2024-12-01 01:37:41,500 - withings - INFO - Refresh Access Token
+  2024-12-01 01:37:41,954 - root - INFO - Fetching measurements from 2024-12-18 00:00 to 2024-12-18 23:59
+  2024-12-01 01:37:42,563 - withings - INFO - Get Measurements
+  2024-12-01 01:37:43,069 - root - ERROR - No measurements to upload for date or period specified
+  ```
 </details>
 
 ### 1.2 Installation of withings-sync with docker compose (not using cron)
@@ -66,7 +79,7 @@ A tool for synchronisation of the Withings API to:
   2. contents of an example .env file:
   ```bash
   TZ=Europe/Kyiv
-  STACK_PATH=/home/youruser/withings-sync
+  STACK_PATH=/home/your_user/your_stack_name
   GARMIN_USERNAME="your.name@domain.ext"
   GARMIN_PASSWORD="YourPasswordHere"
   ```
@@ -119,7 +132,7 @@ A tool for synchronisation of the Withings API to:
 
   And for subsequent runs:
 
-  ```
+  ```bash
   $ docker start -i withings
   Withings: Refresh Access Token
   Withings: Get Measurements
