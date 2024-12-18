@@ -123,7 +123,7 @@ A tool for synchronisation of the Withings API to:
     ✔ 86d00088bd8d Pull complete                                                   43.2s
     ✔ 98dec7b84387 Pull complete                                                   52.8s
     ✔ 8825309bd8c2 Pull complete                                                   53.1s
-    ✔ 7747652082d6 Pull complete						   53.3s
+    ✔ 7747652082d6 Pull complete                                                   53.3s
   ```
 
   First start to ensure the script can start successfully:
