@@ -402,76 +402,9 @@ In the case of credentials being available via multiple means (e.g. [environment
 2. Read environment variable(s), variables set explicitly take precedence over values from a `.env` file.
 3. Use command invocation argument(s)
 
-## 4. Obtaining Withings Authorization
+## 4. Tips
 
-When running for a very first time, you need to obtain Withings authorization:
-
-### 4.1 'normal' shell:
-
-```bash
-$ withings-sync -f 2019-01-25 -v
-Can't read config file config/withings_user.json
-User interaction needed to get Authentification Code from Withings!
-
-Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
-(This is one-time activity)
-
-https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
-
-Token :
-```
-
-You need to visit the URL listed by the script and then - copy Authentification Code back to the prompt.
-
-This is one-time activity and it will not be needed to repeat.
-
-### 4.2 Docker
-
-```
-$ docker pull ghcr.io/jaroslawhartman/withings-sync:latest
-```
-
-First start to ensure the script can start successfully:
-
-
-Obtaining Withings authorisation:
-
-```
-$ docker run -v $HOME:/root --interactive --tty --name withings ghcr.io/jaroslawhartman/withings-sync:latest --garmin-username=<username> --garmin-password=<password>
-
-Can't read config file config/withings_user.json
-User interaction needed to get Authentification Code from Withings!
-
-Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
-(This is one-time activity)
-
-https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
-
-Token : <token>
-Withings: Get Access Token
-Withings: Refresh Access Token
-Withings: Get Measurements
-   Measurements received
-JaHa.WAW.PL
-Garmin Connect User Name: JaHa.WAW.PL
-Fit file uploaded to Garmin Connect
-```
-
-And for subsequent runs:
-
-```
-$ docker start -i withings
-Withings: Refresh Access Token
-Withings: Get Measurements
-   Measurements received
-JaHa.WAW.PL
-Garmin Connect User Name: JaHa.WAW.PL
-Fit file uploaded to Garmin Connect
-```
-
-## 5. Tips
-
-### Garmin SSO errors
+### 4.1 Garmin SSO errors
 
 Some users reported errors raised by the Garmin SSO login:
 
@@ -492,11 +425,11 @@ E.g. by running the script every 10 minutes.
 
 See also: https://github.com/jaroslawhartman/withings-sync/issues/31
 
-### Garmin auth
+### 4.2 Garmin auth
 
 You can configure the location of the garmin session file with the variabe `GARMIN_SESSION`.
 
-### Run a periodic Kubernetes job
+### 4.3 Run a periodic Kubernetes job
 
 Edit the credentials in `contrib/k8s-job.yaml` and run:
 
@@ -504,7 +437,8 @@ Edit the credentials in `contrib/k8s-job.yaml` and run:
 $ kubectl apply -f contrib/k8s-job.yaml
 ```
 
-### For advanced users - registering own Withings application
+## 5 For advanced users - registering own Withings application
+> Instead of using the provided Withings application tokens you can register your own app with Withings and use that one instead. 
 <details>
   <summary>If you are not sure you need this, you most likely won't.</summary>
 
