@@ -45,17 +45,17 @@ A tool for synchronisation of the Withings API to:
 
   2024-12-01 01:31:07,832 - withings - INFO - Get Access Token
   2024-12-01 01:31:08,313 - withings - INFO - Refresh Access Token
-  2024-12-01 01:31:08,771 - root - INFO - Fetching measurements from 2024-12-18 00:00 to 2024-12-18 23:59
+  2024-12-01 01:31:08,771 - root - INFO - Fetching measurements from 2024-12-01 00:00 to 2024-12-01 23:59
   2024-12-01 01:31:09,406 - withings - INFO - Get Measurements
   2024-12-01 01:31:09,856 - root - ERROR - No measurements to upload for date or period specified
   ```
   You need to visit the URL listed by the script and then - copy Authentification Code back to the prompt.
 
-  This is one-time activity and it will not be needed to repeat. Subsequent runs will use the saved access tokens in ~/.withings_user.json
+  This is one-time activity and it will not be needed to repeat. Subsequent runs will use the saved access tokens in `~/.withings_user.json`
   ```bash
   $ withings-sync
   2024-12-01 01:37:41,500 - withings - INFO - Refresh Access Token
-  2024-12-01 01:37:41,954 - root - INFO - Fetching measurements from 2024-12-18 00:00 to 2024-12-18 23:59
+  2024-12-01 01:37:41,954 - root - INFO - Fetching measurements from 2024-01-18 00:00 to 2024-01-18 23:59
   2024-12-01 01:37:42,563 - withings - INFO - Get Measurements
   2024-12-01 01:37:43,069 - root - ERROR - No measurements to upload for date or period specified
   ```
@@ -76,7 +76,7 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
-  2. contents of an example .env file:
+  2. contents of an example `.env` file:
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/your_user/your_stack_name
@@ -84,7 +84,7 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
   
-  3. contents of an example docker-compose.yml file:
+  3. contents of an example `docker-compose.yml` file:
   ```yaml
   services:
   withings-sync:
@@ -159,7 +159,7 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
-  2. contents of an example .env file:
+  2. contents of an example `.env` file:
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/youruser/withings-sync
@@ -167,14 +167,14 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
 
-  3. contents of an example entrypoint.sh file:
+  3. contents of an example `entrypoint.sh` file:
   ```bash
   #!/bin/sh
   echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --verbose --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
   supercronic /home/withings-sync/cronjob
   ```
   
-  4. contents of an example docker-compose.yml file:
+  4. contents of an example `docker-compose.yml` file:
   ```yaml
   services:
   withings-sync:
