@@ -11,15 +11,15 @@ packages = [{include = "withings_sync"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-garth = "^0.4.46"
-requests = "^2.32.3"
-lxml = "^5.3.0"
-python-dotenv = "^1.0.1"
-importlib-resources = "^6.4.5"
+garth = ">=0.5.0"
+requests = ">=2.32.3"
+lxml = ">=5.3.0"
+python-dotenv = ">=1.0.1"
+importlib-resources = ">=6.4.5"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.10.0"
-pylint = "^3.3.1"
+black = ">=24.10.0"
+pylint = ">=3.3.1"
 
 [tool.poetry.scripts]
 withings-sync = "withings_sync.sync:main"
