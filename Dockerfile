@@ -1,12 +1,13 @@
 FROM python:3.12-alpine
 
-ENV PROJECT=withings-sync
-ENV PACKAGE=withings_sync
-ENV PROJECT_DIR=/home/$PROJECT
+ENV PROJECT="withings-sync" \
+    PACKAGE="withings_sync"
 
 RUN apk --no-cache add supercronic
 
 RUN adduser -D $PROJECT
+
+ENV PROJECT_DIR="/home/${PROJECT}"
 
 USER $PROJECT
 WORKDIR $PROJECT_DIR
