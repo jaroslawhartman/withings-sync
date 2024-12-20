@@ -77,7 +77,6 @@ A tool for synchronisation of the Withings API to:
   ./config/                                  # config directory
   ./config/withings-sync/                    # config directory for withings-sync
   ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
-  ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
   2. contents of an example `.env` file:
@@ -103,7 +102,6 @@ A tool for synchronisation of the Withings API to:
       volumes:
         - /etc/localtime:/etc/localtime:ro
         - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
-        - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
       restart: unless-stopped
   ```
 
@@ -187,7 +185,6 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/                    # config directory for withings-sync
   ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your 
   ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
-  ./config/withings-sync/.garmin_session/    # .garmin_session directory to store oauth tokens
   ```
 
   2. contents of an example `.env` file:
@@ -220,7 +217,6 @@ A tool for synchronisation of the Withings API to:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
-      - ${STACK_PATH:?err}/config/withings-sync/.garmin_session:/home/withings-sync/.garmin_session
       - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
     entrypoint: "sh /home/withings-sync/entrypoint.sh"
     restart: unless-stopped
@@ -303,7 +299,7 @@ First start to ensure the script can start successfully:
 Obtaining Withings authorisation:
 
 ```bash
-$ docker run -v .withings_user.json:/home/withings-sync/.withings_user.json -v .garmin_session:/home/withings-sync/.garmin_session --interactive --tty --name withings-sync ghcr.io/jaroslawhartman/withings-sync:latest --garmin-username=<username> --garmin-password=<password>
+$ docker run -v .withings_user.json:/home/withings-sync/.withings_user.json --interactive --tty --name withings-sync ghcr.io/jaroslawhartman/withings-sync:latest --garmin-username=<username> --garmin-password=<password>
 
 Can't read config file config/withings_user.json
 User interaction needed to get Authentification Code from Withings!
@@ -311,7 +307,7 @@ User interaction needed to get Authentification Code from Withings!
 Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
 (This is one-time activity)
 
-https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://wieloryb.uk.to/withings/withings.html&
+https://account.withings.com/oauth2_user/authorize2?response_type=code&client_id=183e03e1f363110b3551f96765c98c10e8f1aa647a37067a1cb64bbbaf491626&state=OK&scope=user.metrics&redirect_uri=https://jaroslawhartman.github.io/withings-sync/contrib/withings.html&
 
 Token : <token>
 Withings: Get Access Token
