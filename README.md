@@ -23,12 +23,12 @@ A tool for synchronisation of the Withings API to:
 <details>
   <summary>Expand to show installation steps.</summary>
 
-  1. installing the package:
+  <ins>1. installing the package:</ins>
   ```bash
   $ pip install withings-sync
   ```
 
-  2. obtaining Withings authorization:
+  <ins>2. obtaining Withings authorization:</ins>
   When running for a very first time, you need to obtain Withings authorization:
   ```bash
   $ withings-sync
@@ -53,7 +53,7 @@ A tool for synchronisation of the Withings API to:
 
   This is one-time activity and it will not be needed to repeat. 
 
-  3. running the application:
+  <ins>3. running the application:</ins>
   Subsequent runs will use the saved access tokens in `~/.withings_user.json`
   ```bash
   $ withings-sync
@@ -152,6 +152,7 @@ A tool for synchronisation of the Withings API to:
   This is one-time activity and it will not be needed to repeat.
 
   5. running the container:
+
   Subsequent runs will use the saved access tokens in `~/.withings_user.json`
 
   ```bash
@@ -269,6 +270,7 @@ A tool for synchronisation of the Withings API to:
   ```
 
   6. running the container:
+
   And for subsequent runs we start docker compose and let the container run in the background.
   Subsequent runs will use the saved access tokens in `~/.withings_user.json`
 
