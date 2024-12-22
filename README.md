@@ -24,11 +24,13 @@ A tool for synchronisation of the Withings API to:
   <summary>Expand to show installation steps.</summary>
 
   <ins>1. installing the package:</ins>
+
   ```bash
   $ pip install withings-sync
   ```
 
   <ins>2. obtaining Withings authorization:</ins>
+
   When running for a very first time, you need to obtain Withings authorization:
   ```bash
   $ withings-sync
@@ -54,6 +56,7 @@ A tool for synchronisation of the Withings API to:
   This is one-time activity and it will not be needed to repeat. 
 
   <ins>3. running the application:</ins>
+
   Subsequent runs will use the saved access tokens in `~/.withings_user.json`
   ```bash
   $ withings-sync
@@ -69,7 +72,8 @@ A tool for synchronisation of the Withings API to:
 <details>
   <summary>Expand to show installation steps.</summary>
 
-  1. create the following file/directory structure:
+  <ins>1. create the following file/directory structure:</ins>
+
   ```bash
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
@@ -79,15 +83,17 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ```
 
-  2. contents of an example `.env` file:
+  <ins>2. contents of an example `.env` file:</ins>
+
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/your_user/your_stack_name
   GARMIN_USERNAME="your.name@domain.ext"
   GARMIN_PASSWORD="YourPasswordHere"
   ```
-  
-  3. contents of an example `docker-compose.yml` file:
+ 
+  <ins>3. contents of an example `docker-compose.yml` file:</ins>
+ 
   ```yaml
   services:
     withings-sync:
@@ -105,7 +111,8 @@ A tool for synchronisation of the Withings API to:
       restart: unless-stopped
   ```
 
-  4. obtaining Withings authorization:
+  <ins>4. obtaining Withings authorization:</ins>
+ 
   ```bash
   $ docker compose pull
   [+] Pulling 13/13
@@ -151,7 +158,7 @@ A tool for synchronisation of the Withings API to:
 
   This is one-time activity and it will not be needed to repeat.
 
-  5. running the container:
+  <ins>5. running the container:</ins>
 
   Subsequent runs will use the saved access tokens in `~/.withings_user.json`
 
@@ -165,7 +172,8 @@ A tool for synchronisation of the Withings API to:
   2024-12-01 01:37:43,069 - root - ERROR - No measurements to upload for date or period specified
   ```
 
-  6. updating to a newer version:
+  <ins>6. updating to a newer version:</ins>
+ 
   ```bash
   $ docker compose pull
   $ docker compose run -it --remove-orphans withings-sync
@@ -177,7 +185,8 @@ A tool for synchronisation of the Withings API to:
 <details>
   <summary>Expand to show installation steps.</summary>
 
-  1. create the following file/directory structure:
+  <ins>1. create the following file/directory structure:</ins>
+ 
   > Make sure to create the directories (`mkdir`) & files (`touch`) upfront or docker will create them as root.
   ```bash
   .                                          # STACK_PATH
@@ -190,7 +199,8 @@ A tool for synchronisation of the Withings API to:
   ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ```
 
-  2. contents of an example `.env` file:
+  <ins>2. contents of an example `.env` file:</ins>
+ 
   ```bash
   TZ=Europe/Kyiv
   STACK_PATH=/home/youruser/withings-sync
@@ -198,14 +208,16 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
 
-  3. contents of an example `entrypoint.sh` file:
+  <ins>3. contents of an example `entrypoint.sh` file:</ins>
+ 
   ```bash
   #!/bin/sh
   echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --features BLOOD_PRESSURE | tee -a /home/withings-sync/withings-sync.log" > /home/withings-sync/cronjob
   supercronic /home/withings-sync/cronjob
   ```
-  
-  4. contents of an example `docker-compose.yml` file:
+ 
+  <ins>4. contents of an example `docker-compose.yml` file:</ins>
+ 
   ```yaml
   services:
   withings-sync:
@@ -226,7 +238,8 @@ A tool for synchronisation of the Withings API to:
     restart: unless-stopped
   ```
 
-  5. obtaining Withings authorization:
+  <ins>5. obtaining Withings authorization:</ins>
+ 
   ```bash
   $ docker compose pull
   [+] Pulling 13/13
@@ -269,7 +282,7 @@ A tool for synchronisation of the Withings API to:
   2024-12-01 01:31:09,856 - root - ERROR - No measurements to upload for date or period specified
   ```
 
-  6. running the container:
+  <ins>6. running the container:</ins>
 
   And for subsequent runs we start docker compose and let the container run in the background.
   Subsequent runs will use the saved access tokens in `~/.withings_user.json`
@@ -280,7 +293,8 @@ A tool for synchronisation of the Withings API to:
   ✔ Container withings-sync                         Started                         1.5s
   ```
 
-  7. updating to a newer version:
+  <ins>7. updating to a newer version:</ins>
+ 
   ```bash
   $ docker compose pull
   $ docker compose down
