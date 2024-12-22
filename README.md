@@ -177,13 +177,15 @@ A tool for synchronisation of the Withings API to:
   <summary>Expand to show installation steps.</summary>
 
   1. create the following file/directory structure:
+  > Make sure to create the directories (`mkdir`) & files (`touch`) upfront or docker will create them as root.
   ```bash
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
   ./docker-compose.yml                       # docker-compose file
   ./config/                                  # config directory
   ./config/withings-sync/                    # config directory for withings-sync
-  ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your 
+  ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your cmd & arguments
+  ./config/withings-sync/withings-sync.log   # withings-sync.log file containing the logs
   ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ```
 
@@ -198,7 +200,7 @@ A tool for synchronisation of the Withings API to:
   3. contents of an example `entrypoint.sh` file:
   ```bash
   #!/bin/sh
-  echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --verbose --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
+  echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --features BLOOD_PRESSURE | tee -a /home/withings-sync/withings-sync.log" > /home/withings-sync/cronjob
   supercronic /home/withings-sync/cronjob
   ```
   
@@ -216,8 +218,9 @@ A tool for synchronisation of the Withings API to:
       - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
       - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
+      - ${STACK_PATH:?err}/config/withings-sync/withings-sync.log:/home/withings-sync/withings-sync.log
+      - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
     entrypoint: "sh /home/withings-sync/entrypoint.sh"
     restart: unless-stopped
   ```
