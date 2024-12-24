@@ -195,7 +195,6 @@ A tool for synchronisation of the Withings API to:
   ./config/                                  # config directory
   ./config/withings-sync/                    # config directory for withings-sync
   ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your cmd & arguments
-  ./config/withings-sync/withings-sync.log   # withings-sync.log file containing the logs
   ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ```
 
@@ -212,8 +211,8 @@ A tool for synchronisation of the Withings API to:
  
   ```bash
   #!/bin/sh
-  echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --features BLOOD_PRESSURE | tee -a /home/withings-sync/withings-sync.log" > /home/withings-sync/cronjob
-  supercronic /home/withings-sync/cronjob
+  echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
+  supercronic -debug -passthrough-logs /home/withings-sync/cronjob
   ```
  
   <ins>4. contents of an example `docker-compose.yml` file:</ins>
@@ -232,7 +231,6 @@ A tool for synchronisation of the Withings API to:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
-      - ${STACK_PATH:?err}/config/withings-sync/withings-sync.log:/home/withings-sync/withings-sync.log
       - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
     entrypoint: "sh /home/withings-sync/entrypoint.sh"
     restart: unless-stopped
@@ -293,7 +291,34 @@ A tool for synchronisation of the Withings API to:
   ✔ Container withings-sync                         Started                         1.5s
   ```
 
-  <ins>7. updating to a newer version:</ins>
+  <ins>7. logging:</ins>
+
+  ```bash
+  $ docker compose logs withings-sync
+  withings-sync  | WARN[2024-12-24T09:23:55+01:00] process reaping disabled, not pid 1
+  withings-sync  | INFO[2024-12-24T09:23:55+01:00] read crontab: /home/withings-sync/cronjob
+  withings-sync  | DEBU[2024-12-24T09:23:55+01:00] try parse (7 fields): '53 */3 * * * poetry run'
+  withings-sync  | DEBU[2024-12-24T09:23:55+01:00] failed to parse (7 fields): '53 */3 * * * poetry run': failed: syntax error in day-of-week field: 'poetry'
+  withings-sync  | DEBU[2024-12-24T09:23:55+01:00] try parse (6 fields): '53 */3 * * * poetry'
+  withings-sync  | DEBU[2024-12-24T09:23:55+01:00] failed to parse (6 fields): '53 */3 * * * poetry': failed: syntax error in year field: 'poetry'
+  withings-sync  | DEBU[2024-12-24T09:23:55+01:00] try parse (5 fields): '53 */3 * * *'
+  withings-sync  | DEBU[2024-12-24T09:23:55+01:00] job will run next at 2024-12-24 09:53:00 +0100 CET  job.command="poetry run withings-sync --features BLOOD_PRESSURE" job.position=0 job.schedule="53 */3 * * *"
+  withings-sync  | INFO[2024-12-24T09:53:00+01:00] starting                      iteration=0 job.command="poetry run withings-sync --features BLOOD_PRESSURE" job.position=0 job.schedule="53 */3 * * *"
+  withings-sync  | 2024-12-24 09:53:29,177 - withings - INFO - Refresh Access Token
+  withings-sync  | 2024-12-24 09:53:29,380 - root - INFO - Fetching measurements from 2024-12-22 18:52 to 2024-12-24 23:59
+  withings-sync  | 2024-12-24 09:53:29,662 - withings - INFO - Get Measurements
+  withings-sync  | 2024-12-24 09:53:29,866 - root - INFO - 2024-12-24 08:08:57 This Withings metric contains no weight data or blood pressure.  Not syncing...
+  withings-sync  | 2024-12-24 09:53:29,868 - root - INFO - 2024-12-24 08:08:57 This Withings metric contains no weight data or blood pressure.  Not syncing...
+  withings-sync  | 2024-12-24 09:53:29,870 - root - INFO - 2024-12-24 08:08:57 This Withings metric contains no weight data or blood pressure.  Not syncing...
+  withings-sync  | 2024-12-24 09:53:29,878 - root - INFO - No blood pressure data to sync for FIT file
+  withings-sync  | 2024-12-24 09:53:29,880 - root - INFO - No TrainerRoad username or a new measurement - skipping sync
+  withings-sync  | 2024-12-24 09:53:33,665 - root - INFO - Fit file with weight information uploaded to Garmin Connect
+  withings-sync  | 2024-12-24 09:53:33,666 - withings - INFO - Saving Last Sync
+  withings-sync  | INFO[2024-12-24T09:53:34+01:00] job succeeded                 iteration=0 job.command="poetry run withings-sync --features BLOOD_PRESSURE" job.position=0 job.schedule="53 */3 * * *"
+  withings-sync  | DEBU[2024-12-24T09:53:34+01:00] job will run next at 2024-12-24 12:53:00 +0100 CET  job.command="poetry run withings-sync --features BLOOD_PRESSURE" job.position=0 job.schedule="53 */3 * * *"
+  ```
+
+  <ins>8. updating to a newer version:</ins>
  
   ```bash
   $ docker compose pull
