@@ -1,24 +1,24 @@
 """This module syncs measurement data from Withings to Garmin a/o TrainerRoad."""
+
 import argparse
 import time
 import sys
 import os
 import logging
 import json
-import dotenv
-
 from datetime import date, datetime
 from importlib.metadata import version
-
-# Load the environment variables from a .env (dotenv) file.
-# This is done prior to importing other modules such that all variables,
-# also the ones accessed in those modules, can be set in the dotenv file.
-dotenv.load_dotenv()
+import dotenv
 
 from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
+
+# Load the environment variables from a .env (dotenv) file.
+# This is done prior to importing other modules such that all variables,
+# also the ones accessed in those modules, can be set in the dotenv file.
+dotenv.load_dotenv()
 
 
 def load_variable(env_var, secrets_file):
@@ -388,11 +388,13 @@ def prepare_syncdata(height, groups):
 
 
 def groupdata_log_raw_data(groupdata):
+    """Logs raw data to debug"""
     for dataentry in groupdata["raw_data"]:
         logging.debug("%s", dataentry)
 
 
 def write_to_fitfile(filename, fit_data):
+    """Writes fit data to fit file"""
     logging.info("Writing fitfile to %s.", filename)
     try:
         with open(filename, "wb") as fitfile:
@@ -472,9 +474,7 @@ def sync():
             if sync_trainerroad(last_weight):
                 logging.info("TrainerRoad update done!")
         else:
-            logging.info(
-                "No TrainerRoad username or a new measurement " "- skipping sync"
-            )
+            logging.info("No TrainerRoad username or a new measurement - skipping sync")
 
         # Upload to Garmin Connect
         if ARGS.garmin_username and (
