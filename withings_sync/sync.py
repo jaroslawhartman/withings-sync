@@ -329,7 +329,7 @@ def prepare_syncdata(height, groups):
             group_data["percent_hydration"] = round(
                 group_data["hydration"] * 100.0 / group_data["weight"], 2
             )
-
+        logging.info("%s This Withings metric contains valid data. Syncing...", dt)
         logging.debug("%s Detected data: ", dt)
         groupdata_log_raw_data(group_data)
         if "weight" in group_data:
