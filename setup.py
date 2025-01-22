@@ -29,7 +29,7 @@ setup(
     install_requires=[
         "lxml==5.2.2",
         "requests==2.31.0",
-        "garth==0.4.46",
+        "garth>=0.4.46",
         "python-dotenv"],
     entry_points={
         "console_scripts": ["withings-sync=withings_sync.sync:main"],
