@@ -1,5 +1,5 @@
 > [!CAUTION]
-> This fork of the withings-sync project introduces breaking changes that users need to be aware of before upgrading or using it.
+> This Release introduces breaking changes that users need to be aware of before upgrading or using it.
 > These changes were made to enhance security and compatibility but may require modifications to your existing setup.
 >
 > - The container now runs without root privileges.
