@@ -28,10 +28,12 @@ def load_variable(env_var, secrets_var, secrets_file):
         return value
 
     try:
-        with open(os.getenv(secrets_var), encoding='utf-8') as secret:
-            value = secret.read().strip("\n")
-            if value:
-                return value
+        path = os.getenv(secrets_var)
+        if path:
+            with open(path, encoding='utf-8') as secret:
+                value = secret.read().strip("\n")
+                if value:
+                    return value
     except OSError:
         pass
 
