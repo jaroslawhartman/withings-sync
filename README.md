@@ -63,6 +63,13 @@ You can also populate the following 'secrets' files to provide the Garmin and/or
 - `/run/secrets/trainerroad_username`
 - `/run/secrets/trainerroad_password`
 
+Alternatively, you can specify secrets files via environment variables:
+
+- `GARMIN_USERNAME_FILE`
+- `GARMIN_PASSWORD_FILE`
+- `TRAINERROAD_USERNAME_FILE`
+- `TRAINERROAD_PASSWORD_FILE`
+
 Secrets are useful in an orchestrated container context — see the [Docker Swarm](https://docs.docker.com/engine/swarm/secrets/) or [Rancher](https://rancher.com/docs/rancher/v1.6/en/cattle/secrets/) docs for more information on how to securely inject secrets into a container.
 
 ### Order of priority for credentials
@@ -70,8 +77,9 @@ Secrets are useful in an orchestrated container context — see the [Docker Swar
 In the case of credentials being available via multiple means (e.g. [environment variables](#providing-credentials-via-environment-variables) and [secrets files](#providing-credentials-via-secrets-files)), the order of resolution for determining which credentials to use is as follows, with later methods overriding credentials supplied by an earlier method:
 
 1. Read secrets file(s)
-2. Read environment variable(s), variables set explicitly take precedence over values from a `.env` file.
-3. Use command invocation argument(s)
+2. Read secrets file(s) specified by environment variables
+3. Read environment variable(s), variables set explicitly take precedence over values from a `.env` file.
+4. Use command invocation argument(s)
 
 ### Obtaining Withings Authorization Code
 
