@@ -2,29 +2,20 @@ import requests
 import json
 import logging
 
-from lxml import etree
-from io import StringIO
-
 logger = logging.getLogger(__name__)
 
 
 class TrainerRoad:
-    _ftp = 'Ftp'
-    _weight = 'Weight'
+    _ftp = 'ftp'
+    _weight = 'weightKg'
     _units_metric = 'kmh'
     _units_imperial = 'mph'
-    _input_data_names = (_ftp, _weight, 'Marketing', 'DateOfBirth')
-    _select_data_names = ('TimeZoneId', 'IsPrivate',
-                          'Units', 'IsVirtualPowerEnabled',
-                          'GenderId', 'GenderCustomText', 'Locale')
     _numerical_verify = (_ftp, _weight)
-    _string_verify = _select_data_names + ('Marketing',)
     _login_url = 'https://www.trainerroad.com/app/login'
     _logout_url = 'https://www.trainerroad.com/app/logout'
-    _rider_url = 'https://www.trainerroad.com/app/profile/rider-information'
+    _profile_api_url = 'https://www.trainerroad.com/app/api/profile/rider-information'
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
     _workouts_url = 'https://api.trainerroad.com/api/careerworkouts'
-    _rvt = '__RequestVerificationToken'
 
     def __init__(self, username, password):
         self._username = username
@@ -33,8 +24,7 @@ class TrainerRoad:
 
     def connect(self):
         self._session = requests.Session()
-        self._session.auth = (self._username, self._password)
-
+        
         data = {'Username': self._username,
                 'Password': self._password}
 
@@ -42,7 +32,6 @@ class TrainerRoad:
                                allow_redirects=False)
 
         if r.status_code not in [200, 302]:
-            # There was an error
             raise RuntimeError("Error loging in to TrainerRoad (Code {})"
                                .format(r.status_code))
 
@@ -65,29 +54,20 @@ class TrainerRoad:
         self.disconnect()
 
 
-    def _parse_value(self, tree, name):
-        rtn = tree.xpath('//form//input[@name="{}"]/@value'.format(name))
-        if not rtn:
-            raise RuntimeError('Input {} not found in form'.format(name))
-        return rtn[0]
-
-    def _parse_name(self, tree, name):
-        rtn = tree.xpath('//form//select[@name="{}"]//option'
-                         '[@selected="selected"]/@value'.format(name))
-
-        if not rtn:
-            if name == 'GenderCustomText':
-                return ""
-            else:
-                raise RuntimeError('Input {} not found in form'.format(name))
-
-        return rtn[0]
 
     def _get(self, url):
         if self._session is None:
             raise RuntimeError('Not Connected')
 
-        r = self._session.get(url)
+        # Add browser-like headers for API calls (camelCase JSON format)
+        headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Referer': 'https://www.trainerroad.com/app/profile/rider-information',
+            'trainerroad-jsonformat': 'camel-case',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
+        }
+
+        r = self._session.get(url, headers=headers)
 
         if r.status_code != 200:
             raise RuntimeError("Error getting info from TrainerRoad (Code {})"
@@ -108,87 +88,92 @@ class TrainerRoad:
         return r
 
     def _read_profile(self):
-        r = self._get(self._rider_url)
-
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(r.text), parser)
-
-        token = self._parse_value(tree, self._rvt)
-
-        input_data = {}
-        for key in self._input_data_names:
-            input_data[key] = self._parse_value(tree, key)
-
-        select_data = {}
-        for key in self._select_data_names:
-            select_data[key] = self._parse_name(tree, key)
-
-        return (dict(**input_data, **select_data), token)
+        """Read profile data from TrainerRoad JSON API"""
+        r = self._get(self._profile_api_url)
+        
+        if r.status_code != 200:
+            raise RuntimeError("Error getting profile from TrainerRoad (Code {})"
+                               .format(r.status_code))
+        
+        profile_data = r.json()
+        logger.debug("Profile API response: {}".format(json.dumps(profile_data, indent=2)))
+        
+        return profile_data
 
     def _write_profile(self, new_values):
-        # Read values
-        data, token = self._read_profile()
+        """Write profile data to TrainerRoad JSON API"""
+        # Read current values
+        data = self._read_profile()
+        original_data = data.copy()
 
-        logger.info("Read profile values {}".format(data))
-        logger.debug("Token = {}".format(token))
+        logger.info("Current profile values: Weight={}, FTP={}".format(
+            data.get(self._weight), data.get(self._ftp)))
 
         # Update values with new_values
         for key, value in new_values.items():
-            if key not in data:
-                raise ValueError("Key \"{}\" is not in profile form"
-                                 .format(key))
-            if key == self._weight and data['Units'] == self._units_imperial:
+            if key == self._weight and data.get('Units') == self._units_imperial:
                 value = round(value/0.45359237, 1)
                 logger.debug("Converting Weight to lbs {}".format(value))
+            
+            data[key] = value
 
-            # ONLY if GenderId == 4 ("Prefer to self-describe")
-            # add GenderCustomText
-            if key == "GenderCustomText" and data["GenderId" ] != "4":
-                continue
+        logger.info("Updating profile: Weight={}, FTP={}".format(
+            data.get(self._weight), data.get(self._ftp)))
 
-            data[key] = str(value)
+        # Send PUT request with JSON data (exact browser headers)
+        headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json',
+            'Origin': 'https://www.trainerroad.com',
+            'Referer': 'https://www.trainerroad.com/app/profile/rider-information',
+            'trainerroad-jsonformat': 'camel-case',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
+        }
+        r = self._session.put(self._profile_api_url, json=data, headers=headers)
 
-        logger.info("New profile values {}".format(data))
+        logger.debug("PUT request status: {}, response: {}".format(r.status_code, r.text[:200]))
+        
+        if r.status_code not in [200, 204]:
+            raise RuntimeError("Error updating TrainerRoad profile (Code {})".format(r.status_code))
 
-        # Now post the form
-        token = {self._rvt: token}
-        self._post(self._rider_url, data=dict(**data, **token))
+        # Verify the changes
+        updated_data = self._read_profile()
+        logger.info("Profile updated successfully: Weight={}, FTP={}".format(
+            updated_data.get(self._weight), updated_data.get(self._ftp)))
 
-        # Now re-read to check
-        _data, token = self._read_profile()
-
-        logger.info("Read profile values (verification) {}".format(_data))
-
+        # Verify numerical fields
         for key in self._numerical_verify:
-            logger.debug('Numerically verifying key "{}" "{}" with "{}"'
-                         .format(key, data[key], _data[key]))
-            if float(data[key]) != float(_data[key]):
-                raise RuntimeError('Failed to verify numerical key {}'
-                                   .format(key))
-        for key in self._string_verify:
-            logger.debug('String verifying key "{}" "{}" with "{}"'
-                         .format(key, data[key], _data[key]))
-            if data[key] != _data[key]:
-                raise RuntimeError('Failed to verify string key {}'.format(key))
+            if key in new_values:
+                expected = float(new_values[key])
+                if key == self._weight and original_data.get('Units') == self._units_imperial:
+                    expected = round(expected/0.45359237, 1)
+                actual = float(updated_data.get(key, 0))
+                if abs(expected - actual) > 0.1:  # Allow small rounding differences
+                    raise RuntimeError('Failed to verify numerical key {}: expected {}, got {}'
+                                       .format(key, expected, actual))
 
         return
 
     @property
     def ftp(self):
-        values, token = self._read_profile()
-        return values[self._ftp]
+        """Get current FTP value from TrainerRoad"""
+        values = self._read_profile()
+        return values.get(self._ftp)
 
     @ftp.setter
     def ftp(self, value):
+        """Set FTP value in TrainerRoad"""
         self._write_profile({self._ftp: value})
 
     @property
     def weight(self):
-        values, token = self._read_profile()
-        return values[self._weight]
+        """Get current weight value from TrainerRoad"""
+        values = self._read_profile()
+        return values.get(self._weight)
 
     @weight.setter
     def weight(self, value):
+        """Set weight value in TrainerRoad"""
         self._write_profile({self._weight: value})
 
     def download_tcx(self, id):
