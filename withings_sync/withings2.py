@@ -4,7 +4,7 @@ import logging
 import json
 import os
 import time
-import pkg_resources
+import importlib_resources
 import requests
 
 log = logging.getLogger("withings")
@@ -14,9 +14,10 @@ AUTHORIZE_URL = "https://account.withings.com/oauth2_user/authorize2"
 TOKEN_URL = "https://wbsapi.withings.net/v2/oauth2"
 GETMEAS_URL = "https://wbsapi.withings.net/measure?action=getmeas"
 
+
 APP_CONFIG = os.environ.get(
     "WITHINGS_APP",
-    pkg_resources.resource_filename(__name__, "config/withings_app.json"),
+    importlib_resources.files(__name__) / "config/withings_app.json",
 )
 USER_CONFIG = os.environ.get("WITHINGS_USER", HOME + "/.withings_user.json")
 

@@ -1,24 +1,24 @@
 """This module syncs measurement data from Withings to Garmin a/o TrainerRoad."""
+
 import argparse
 import time
 import sys
 import os
 import logging
 import json
-import dotenv
-
 from datetime import date, datetime
 from importlib.metadata import version
-
-# Load the environment variables from a .env (dotenv) file.
-# This is done prior to importing other modules such that all variables,
-# also the ones accessed in those modules, can be set in the dotenv file.
-dotenv.load_dotenv()
+import dotenv
 
 from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
+
+# Load the environment variables from a .env (dotenv) file.
+# This is done prior to importing other modules such that all variables,
+# also the ones accessed in those modules, can be set in the dotenv file.
+dotenv.load_dotenv()
 
 
 def load_variable(env_var, secrets_file):
@@ -26,7 +26,7 @@ def load_variable(env_var, secrets_file):
     # Try to read the value from the secrets file. Silently fail if the file
     # cannot be read and use an empty value
     try:
-        with open(secrets_file, encoding='utf-8') as secret:
+        with open(secrets_file, encoding="utf-8") as secret:
             value = secret.read().strip("\n")
     except OSError:
         value = ""
@@ -36,11 +36,14 @@ def load_variable(env_var, secrets_file):
     return os.getenv(env_var, value)
 
 
-GARMIN_USERNAME = load_variable('GARMIN_USERNAME', "/run/secrets/garmin_username")
-GARMIN_PASSWORD = load_variable('GARMIN_PASSWORD', "/run/secrets/garmin_password")
-TRAINERROAD_USERNAME = load_variable('TRAINERROAD_USERNAME', "/run/secrets/trainerroad_username")
-TRAINERROAD_PASSWORD = load_variable('TRAINERROAD_PASSWORD', "/run/secrets/trainerroad_password")
-
+GARMIN_USERNAME = load_variable("GARMIN_USERNAME", "/run/secrets/garmin_username")
+GARMIN_PASSWORD = load_variable("GARMIN_PASSWORD", "/run/secrets/garmin_password")
+TRAINERROAD_USERNAME = load_variable(
+    "TRAINERROAD_USERNAME", "/run/secrets/trainerroad_username"
+)
+TRAINERROAD_PASSWORD = load_variable(
+    "TRAINERROAD_PASSWORD", "/run/secrets/trainerroad_password"
+)
 
 
 def get_args():
@@ -56,6 +59,9 @@ def get_args():
     def date_parser(date_string):
         return datetime.strptime(date_string, "%Y-%m-%d")
 
+    parser.add_argument(
+        "--version", "-V", action="version", version=version("withings-sync")
+    )
     parser.add_argument(
         "--garmin-username",
         "--gu",
@@ -92,14 +98,16 @@ def get_args():
     )
 
     parser.add_argument(
-        "--fromdate", "-f",
+        "--fromdate",
+        "-f",
         type=date_parser,
         metavar="DATE",
         help="Date to start syncing from. Ex: 2023-12-20",
     )
 
     parser.add_argument(
-        "--todate", "-t",
+        "--todate",
+        "-t",
         type=date_parser,
         default=date.today(),
         metavar="DATE",
@@ -107,7 +115,8 @@ def get_args():
     )
 
     parser.add_argument(
-        "--to-fit", "-F",
+        "--to-fit",
+        "-F",
         action="store_true",
         help="Write output file in FIT format.",
     )
@@ -135,18 +144,13 @@ def get_args():
 
     parser.add_argument(
         "--features",
-        nargs='+',
+        nargs="+",
         default=[],
         metavar="BLOOD_PRESSURE",
-        help="Enable Features like BLOOD_PRESSURE."
+        help="Enable Features like BLOOD_PRESSURE.",
     )
 
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Run verbosely."
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Run verbosely.")
 
     return parser.parse_args()
 
@@ -176,7 +180,9 @@ def generate_fitdata(syncdata):
     logging.debug("Generating fit data...")
 
     weight_measurements = list(filter(lambda x: (x["type"] == "weight"), syncdata))
-    blood_pressure_measurements = list(filter(lambda x: (x["type"] == "blood_pressure"), syncdata))
+    blood_pressure_measurements = list(
+        filter(lambda x: (x["type"] == "blood_pressure"), syncdata)
+    )
 
     fit_weight = None
     fit_blood_pressure = None
@@ -238,7 +244,10 @@ def generate_jsondata(syncdata):
         if "bmi" in record:
             json_data[sdt]["BMI"] = {"Value": record["bmi"], "Unit": "kg/m^2"}
         if "percent_hydration" in record:
-            json_data[sdt]["Percent_Hydration"] = {"Value": record["percent_hydration"], "Unit": "%"}
+            json_data[sdt]["Percent_Hydration"] = {
+                "Value": record["percent_hydration"],
+                "Unit": "%",
+            }
     logging.debug("Json data generated...")
     return json_data
 
@@ -288,21 +297,24 @@ def prepare_syncdata(height, groups):
                 "systolic_blood_pressure": group.get_systolic_blood_pressure(),
                 "heart_pulse": group.get_heart_pulse(),
                 "raw_data": group.get_raw_data(),
-                "type": "blood_pressure"
+                "type": "blood_pressure",
             }
 
         # execute the code below, if this is not a whitelisted entry like weight and blood pressure
         if "weight" not in group_data and not (
-                "diastolic_blood_pressure" in group_data and "BLOOD_PRESSURE" in ARGS.features):
+            "diastolic_blood_pressure" in group_data
+            and "BLOOD_PRESSURE" in ARGS.features
+        ):
             collected_metrics = "weight data"
             if "BLOOD_PRESSURE" in ARGS.features:
                 collected_metrics += " or blood pressure"
             elif "diastolic_blood_pressure" in group_data:
                 collected_metrics += ", but blood pressure (to enable sync set --features BLOOD_PRESSURE)"
 
-
             logging.info(
-                "%s This Withings metric contains no %s.  Not syncing...", dt, collected_metrics
+                "%s This Withings metric contains no %s.  Not syncing...",
+                dt,
+                collected_metrics,
             )
             groupdata_log_raw_data(group_data)
             # for now, remove the entry as we're handling only weight and feature enabled data
@@ -317,7 +329,7 @@ def prepare_syncdata(height, groups):
             group_data["percent_hydration"] = round(
                 group_data["hydration"] * 100.0 / group_data["weight"], 2
             )
-
+        logging.info("%s This Withings metric contains valid data. Syncing...", dt)
         logging.debug("%s Detected data: ", dt)
         groupdata_log_raw_data(group_data)
         if "weight" in group_data:
@@ -376,11 +388,13 @@ def prepare_syncdata(height, groups):
 
 
 def groupdata_log_raw_data(groupdata):
+    """Logs raw data to debug"""
     for dataentry in groupdata["raw_data"]:
         logging.debug("%s", dataentry)
 
 
 def write_to_fitfile(filename, fit_data):
+    """Writes fit data to fit file"""
     logging.info("Writing fitfile to %s.", filename)
     try:
         with open(filename, "wb") as fitfile:
@@ -396,7 +410,9 @@ def write_to_file_when_needed(fit_data_weigth, fit_data_blood_pressure, json_dat
             if fit_data_weigth is not None:
                 write_to_fitfile(ARGS.output + ".weight.fit", fit_data_weigth)
             if fit_data_blood_pressure is not None:
-                write_to_fitfile(ARGS.output + ".blood_pressure.fit", fit_data_blood_pressure)
+                write_to_fitfile(
+                    ARGS.output + ".blood_pressure.fit", fit_data_blood_pressure
+                )
 
         if ARGS.to_json:
             filename = ARGS.output + ".json"
@@ -448,7 +464,9 @@ def sync():
         # Upload to Trainer Road
         if ARGS.trainerroad_username and last_weight_exists:
             # sort and get last weight
-            last_weight_measurement = sorted(only_weight_entries, key=lambda x: x["date_time"])[-1]
+            last_weight_measurement = sorted(
+                only_weight_entries, key=lambda x: x["date_time"]
+            )[-1]
             last_weight = last_weight_measurement["weight"]
             logging.info("Trainerroad username set -- attempting to sync")
             logging.info(" Last weight %s", last_weight)
@@ -456,7 +474,7 @@ def sync():
             if sync_trainerroad(last_weight):
                 logging.info("TrainerRoad update done!")
         else:
-            logging.info("No TrainerRoad username or a new measurement " "- skipping sync")
+            logging.info("No TrainerRoad username or a new measurement - skipping sync")
 
         # Upload to Garmin Connect
         if ARGS.garmin_username and (
@@ -503,9 +521,8 @@ def main():
     logging.debug("withings-sync script version %s", version("withings-sync"))
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
-    if sys.version_info < (3, 7):
-        print("Sorry, requires at least Python3.7 to avoid issues with SSL.")
+    if sys.version_info < (3, 12):
+        print("Sorry, requires at least Python3.12.")
         sys.exit(1)
 
     sync()
-
