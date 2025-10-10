@@ -12,10 +12,10 @@ jobs:
     - name: Checkout repository 🛒
       uses: actions/checkout@v4
     - name: Update version in pyproject.toml ⬆️
-      uses: brettdorrans/write-version-to-file@v1.1.0
-      with:
-        filename: 'pyproject.toml'
-        placeholder: '1.0.0.dev1'
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        sed -i "s/version = \"1.0.0.dev1\"/version = \"$VERSION\"/" pyproject.toml
     - name: Set up Python 3.12 🐍
       uses: actions/setup-python@v5
       with:
