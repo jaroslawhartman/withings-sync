@@ -152,6 +152,17 @@ def get_args():
 
     parser.add_argument("--verbose", "-v", action="store_true", help="Run verbosely.")
 
+    parser.add_argument(
+        "--dump-raw",
+        "-R",
+        action="store_true",
+        help=(
+            "Dump the raw Withings API JSON for the selected date range to file. "
+            "If --output is provided, the file will be BASENAME.withings_raw.json. "
+            "Otherwise, a default filename with the date range will be used."
+        ),
+    )
+
     return parser.parse_args()
 
 
@@ -301,9 +312,9 @@ def prepare_syncdata(height, groups):
             }
 
         # execute the code below, if this is not a whitelisted entry like weight and blood pressure
-        if "weight" not in group_data and not (
-            "diastolic_blood_pressure" in group_data
-            and "BLOOD_PRESSURE" in ARGS.features
+        if group_data["type"] == "None" or (
+            group_data["type"] == "blood_pressure"
+            and "BLOOD_PRESSURE" not in ARGS.features
         ):
             collected_metrics = "weight data"
             if "BLOOD_PRESSURE" in ARGS.features:
@@ -317,8 +328,9 @@ def prepare_syncdata(height, groups):
                 collected_metrics,
             )
             groupdata_log_raw_data(group_data)
-            # for now, remove the entry as we're handling only weight and feature enabled data
-            del sync_dict[dt]
+            # Do not delete existing data for this timestamp; there may be valid
+            # weight or blood pressure measurements in other groups with the same timestamp.
+            # Simply skip this non-whitelisted group.
             continue
 
         if height and "weight" in group_data:
@@ -366,12 +378,39 @@ def prepare_syncdata(height, groups):
             )
 
         # join groups with same timestamp
+        # Merge without letting a later non-weight/bp group override an existing valid record
+        existing = sync_dict[dt]
+        # merge raw_data lists for richer JSON/debug output
+        if "raw_data" in group_data:
+            existing.setdefault("raw_data", [])
+            existing["raw_data"].extend(group_data["raw_data"])
+
+        # decide resulting type: prefer weight when present
+        if "type" not in existing or existing["type"] == "None":
+            existing["type"] = group_data["type"]
+        elif existing["type"] == "weight" and group_data["type"] != "weight":
+            # keep weight; do not downgrade to another type
+            pass
+        elif existing["type"] != "weight":
+            # allow switching from non-weight to the new type (e.g., blood_pressure)
+            existing["type"] = group_data["type"]
+
+        # merge scalar fields; keep existing non-None values
         for k, v in group_data.items():
-            sync_dict[dt][k] = v
+            if k in ("type", "raw_data"):
+                continue
+            if v is not None:
+                existing[k] = v
 
     last_measurement_type = None
 
-    for group_data in sync_dict.values():
+    # Iterate in chronological order for determinism
+    for dt in sorted(sync_dict.keys()):
+        group_data = sync_dict[dt]
+        # Skip empty or non-whitelisted groups (those that never collected a valid type)
+        if not group_data or "type" not in group_data or group_data["type"] == "None":
+            logging.debug("skipping data with timestamp: %s", group_data.date_time)
+            continue
         syncdata.append(group_data)
         logging.debug("Processed data: ")
         for k, v in group_data.items():
@@ -391,6 +430,29 @@ def groupdata_log_raw_data(groupdata):
     """Logs raw data to debug"""
     for dataentry in groupdata["raw_data"]:
         logging.debug("%s", dataentry)
+        # Detailed structure to help map unknown fields
+        try:
+            logging.debug(
+                "  -> type_id=%s label=%s unit_str=%s unit_exp=%s raw_value=%s human_value=%s",
+                getattr(dataentry, "type", None),
+                getattr(dataentry, "type_s", None),
+                getattr(dataentry, "unit_s", None),
+                getattr(dataentry, "unit", None),
+                getattr(dataentry, "value", None),
+                round(dataentry.get_value(), 6) if hasattr(dataentry, "get_value") else None,
+            )
+        except Exception as e:
+            logging.debug("  -> failed to print detailed entry: %s", e)
+
+
+def write_withings_raw_json(filename, raw_json):
+    """Write raw Withings JSON to file for debugging/mapping purposes"""
+    logging.info("Writing Withings raw JSON to %s.", filename)
+    try:
+        with open(filename, "w", encoding="utf-8") as jf:
+            json.dump(raw_json, jf, indent=2, default=str)
+    except OSError:
+        logging.error("Unable to open output jsonfile! %s", filename)
 
 
 def write_to_fitfile(filename, fit_data):
@@ -451,6 +513,17 @@ def sync():
         return -1
 
     last_measurement_type, last_date_time, syncdata = prepare_syncdata(height, groups)
+
+    # dump raw Withings JSON to a file
+    if ARGS.dump_raw and hasattr(withings, "last_measurements_json"):
+        if ARGS.output:
+            raw_filename = ARGS.output + ".withings_raw.json"
+        else:
+            # Create a default filename with date range
+            start_s = time.strftime("%Y%m%d", time.localtime(startdate))
+            end_s = time.strftime("%Y%m%d", time.localtime(enddate))
+            raw_filename = f"withings_raw_{start_s}_{end_s}.json"
+        write_withings_raw_json(raw_filename, withings.last_measurements_json)
 
     fit_data_weight, fit_data_blood_pressure = generate_fitdata(syncdata)
     json_data = generate_jsondata(syncdata)
