@@ -204,15 +204,15 @@ def generate_fitdata(syncdata):
         fit_weight.write_file_creator()
 
         for record in weight_measurements:
-            fit_weight.write_device_info(timestamp=record["date_time"])
+            fit_weight.write_device_info(timestamp=record.get("date_time"))
             fit_weight.write_weight_scale(
-                timestamp=record["date_time"],
-                weight=record["weight"],
-                percent_fat=record["fat_ratio"],
-                percent_hydration=record["percent_hydration"],
-                bone_mass=record["bone_mass"],
-                muscle_mass=record["muscle_mass"],
-                bmi=record["bmi"],
+                timestamp=record.get("date_time"),
+                weight=record.get("weight"),
+                percent_fat=record.get("fat_ratio"),
+                percent_hydration=record.get("percent_hydration"),
+                bone_mass=record.get("bone_mass"),
+                muscle_mass=record.get("muscle_mass"),
+                bmi=record.get("bmi"),
             )
 
         fit_weight.finish()
@@ -225,12 +225,12 @@ def generate_fitdata(syncdata):
         fit_blood_pressure.write_file_creator()
 
         for record in blood_pressure_measurements:
-            fit_blood_pressure.write_device_info(timestamp=record["date_time"])
+            fit_blood_pressure.write_device_info(timestamp=record.get("date_time"))
             fit_blood_pressure.write_blood_pressure(
-                timestamp=record["date_time"],
-                diastolic_blood_pressure=record["diastolic_blood_pressure"],
-                systolic_blood_pressure=record["systolic_blood_pressure"],
-                heart_rate=record["heart_pulse"],
+                timestamp=record.get("date_time"),
+                diastolic_blood_pressure=record.get("diastolic_blood_pressure"),
+                systolic_blood_pressure=record.get("systolic_blood_pressure"),
+                heart_rate=record.get("heart_pulse"),
             )
 
         fit_blood_pressure.finish()
@@ -409,7 +409,11 @@ def prepare_syncdata(height, groups):
         group_data = sync_dict[dt]
         # Skip empty or non-whitelisted groups (those that never collected a valid type)
         if not group_data or "type" not in group_data or group_data["type"] == "None":
-            logging.debug("skipping data with timestamp: %s", group_data.date_time)
+            logging.debug("skipping data with timestamp: %s, type: %s", dt, group_data.get("type") if group_data else "empty")
+            if group_data:
+                # Log the group_data as JSON (excluding raw_data objects)
+                debug_data = {k: v for k, v in group_data.items() if k != "raw_data"}
+                logging.debug("skipped record details: %s", json.dumps(debug_data, indent=2, default=str))
             continue
         syncdata.append(group_data)
         logging.debug("Processed data: ")
