@@ -409,6 +409,9 @@ options:
   --features BLOOD_PRESSURE [BLOOD_PRESSURE ...]
                         Enable Features like BLOOD_PRESSURE.
   --verbose, -v         Run verbosely.
+  --dump-raw, -R        Dump the raw Withings API JSON for the selected date range to a file. 
+                        If --output is provided, the file will be named BASENAME.withings_raw.json. 
+                        Otherwise, a default filename with the date range will be used.
 ```
 
 ## 3. Providing credentials
