@@ -475,7 +475,7 @@ You can configure the location of the garmin session file with the variabe `GARM
 
 ### 4.3 Run a periodic Kubernetes job
 
-1. Populate the secret definition in `k8s-job.yaml` or create the secret using kubectl in the command line.
+1. Create the secret using kubectl in the command line.
 ```
 export GARMIN_USERNAME="user@username.com"
 export GARMIN_PASSWORD="superPassword"
