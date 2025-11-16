@@ -1,0 +1,18 @@
+# PVC for storing Withings OAuth tokens.  Different
+# storage methods have different minimum sizes.
+#
+# If you don't have a default storage class, you must
+# specify it
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: withings-oauth-cache
+spec:
+  accessModes:
+  - ReadWriteOnce
+  # uncomment, and define if needed
+  # storageClassName: class
+  resources:
+    requests:
+      storage: 1Mi
+  volumeMode: Filesystem
