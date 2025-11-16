@@ -505,14 +505,14 @@ From _within_ the bootstrap pod:
 ```
 poetry run withings-sync --fromdate=<RECORDED_DATE>
 ```
-It is important that this run includes a date that has a record, as a record is required for the program to attempt an upload to garmin, and hence create the oAuth session files for garmin.
-The command above will allow entering the withins, token and the MFA code for garmin. 
+It is important that this run includes a date that has a record, as a record is required for the program to attempt an upload to garmin in order to create the session files for garmin.
+The command above will allow entering the withings token and the MFA code for garmin. 
 After successful auth, move the credentials into the PVC
 ```
 mv .withings_user.json /data
 mv .garmin_session /data
 ```
-5. Create the cron job. The command in the cron job always symlinks to the credentials in the PVC, hence future authentication updates will be persisted.
+5. Create the cron job. The command in the cron job always symlinks to the credentials in the PVC. Hence, future authentication updates will be persisted.
 ```
 kubectl apply -f k8s-job.yaml
 ```
