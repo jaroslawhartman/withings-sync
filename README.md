@@ -475,10 +475,46 @@ You can configure the location of the garmin session file with the variabe `GARM
 
 ### 4.3 Run a periodic Kubernetes job
 
-Edit the credentials in `contrib/k8s-job.yaml` and run:
+1. Populate the secret definition in `k8s-job.yaml` or create the secret using kubectl in the command line.
+```
+export GARMIN_USERNAME="user@username.com"
+export GARMIN_PASSWORD="superPassword"
+export TRAINERROAD_USERNAME: "name@name.com"
+export TRAINERROAD_PASSWORD: "superPassword"
+kubectl create secret generic withings-secret --from-literal=GARMIN_USERNAME=$GARMIN_USERNAME --from-literal=GARMIN_PASSWORD=$GARMIN_PASSWORD
+--from-literal=TRAINERROAD_USERNAME=$TRAINERROAD_USERNAME --from-literal=TRAINERROAD_PASSWORD=$TRAINERROAD_PASSWORD
+```
 
-```bash
-$ kubectl apply -f contrib/k8s-job.yaml
+2. Create the PVC.
+```
+kubectl apply -f k8s-pvc.yaml
+```
+
+3. Run the bootstrap pod, which attaches to the PVC for storing credentials. 
+```
+kubectl apply -f k8s-bootstrap.yaml
+```
+The bootstrap pod stays on indefinitely to allow time for you to exec in, and 
+generate the credentials.
+
+4. Exec into the bootstrap pod, generate credentials and store them in the PVC.
+```
+kubectl exec -it bootstrap-withings-sync -- sh
+```
+From _within_ the bootstrap pod:
+```
+poetry run withings-sync --fromdate=<RECORDED_DATE>
+```
+It is important that this run includes a date that has a record, as a record is required for the program to attempt an upload to garmin, and hence create the oAuth session files for garmin.
+The command above will allow entering the withins, token and the MFA code for garmin. 
+After successful auth, move the credentials into the PVC
+```
+mv .withings_user.json /data
+mv .garmin_session /data
+```
+5. Create the cron job. The command in the cron job always symlinks to the credentials in the PVC, hence future authentication updates will be persisted.
+```
+kubectl apply -f k8s-job.yaml
 ```
 
 ## 5 For advanced users - registering own Withings application
