@@ -34,9 +34,12 @@ class GarminConnect:
 
     def login(self, email=None, password=None):
         if os.path.exists(GARMIN_SESSION):
-            self.client.load(GARMIN_SESSION)
-            if hasattr(self.client, "username"):
-                return
+            try:
+                self.client.load(GARMIN_SESSION)
+                if hasattr(self.client, "username"):
+                    return
+            except FileNotFoundError:
+                pass
 
         try:
             self.client.login(email, password)
