@@ -211,7 +211,7 @@ A tool for synchronisation of the Withings API to:
  
   ```bash
   #!/bin/sh
-  echo "$(( $RANDOM % 59 +0 )) */3 * * * poetry run withings-sync --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
+  echo "$(( $RANDOM % 59 +0 )) */3 * * * * * poetry run withings-sync --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
   supercronic -debug -passthrough-logs /home/withings-sync/cronjob
   ```
  
