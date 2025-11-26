@@ -150,7 +150,9 @@ def get_args():
         help="Enable Features like BLOOD_PRESSURE.",
     )
 
-    parser.add_argument("--verbose", "-v", action="store_true", help="Run verbosely.")
+    log_level_group = parser.add_mutually_exclusive_group()
+    log_level_group.add_argument("--verbose", "-v", action="store_true", help="Run verbosely.")
+    log_level_group.add_argument("--silent", "-s", action="store_true", help="Run silently (suppress INFO messages).")
 
     parser.add_argument(
         "--dump-raw",
@@ -590,8 +592,15 @@ ARGS = get_args()
 
 def main():
     """Main"""
+    if ARGS.verbose:
+        log_level = logging.DEBUG
+    elif ARGS.silent:
+        log_level = logging.WARNING
+    else:
+        log_level = logging.INFO
+
     logging.basicConfig(
-        level=logging.DEBUG if ARGS.verbose else logging.INFO,
+        level=log_level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         stream=sys.stdout,
     )
