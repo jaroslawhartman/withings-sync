@@ -355,11 +355,9 @@ A tool for synchronisation of the Withings API to:
   $ docker image prune -f
   ```
 
-  <ins>9. persisting Garmin session files (optional):</ins>
+  <ins>9. persisting Garmin session files (optional/MFA):</ins>
 
-  For the Docker version: The Garmin session (oauth1_token.json/oauth2_token.json) is not exposed outside of the docker container so the MFA garmin login isn't persisted. Suggest exposing/writing these files outside the container via a docker-compose.yml change and the creation of a garmin_session directory in the root withings-sync directory.
-
-  **Potential solution:**
+  For the Docker version: persist the Garmin session (oauth1_token.json/oauth2_token.json) outside of the docker container so the MFA garmin login is persisted.
   
   1. Create `garmin_session` directory in withings-sync:
   ```bash
@@ -369,14 +367,10 @@ A tool for synchronisation of the Withings API to:
   2. Add environment variable and volume in docker-compose.yml:
   ```yaml
   environment:
-    - TZ=${TZ:?err}
-    - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
-    - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
+    ...
     - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session
   volumes:
-    - /etc/localtime:/etc/localtime:ro
-    - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
-    - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+    ...
     - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
   ```
 
