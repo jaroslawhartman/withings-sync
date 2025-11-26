@@ -196,14 +196,14 @@ A tool for synchronisation of the Withings API to:
     - TZ=${TZ:?err}
     - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
     - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
-    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session/
+    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session
   volumes:
     - /etc/localtime:/etc/localtime:ro
     - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
     - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
   ```
 
-  **Note:** Using an extra directory level (`garmin_session/.garmin_session/`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` subdirectory automatically.
+  **Note:** Using an extra directory level (`garmin_session/.garmin_session`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` directory automatically.
 
   This will ensure that Garmin session files persist across container restarts and you won't need to re-authenticate with MFA each time the container is recreated.
 </details>
@@ -372,7 +372,7 @@ A tool for synchronisation of the Withings API to:
     - TZ=${TZ:?err}
     - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
     - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
-    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session/
+    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session
   volumes:
     - /etc/localtime:/etc/localtime:ro
     - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
@@ -380,7 +380,7 @@ A tool for synchronisation of the Withings API to:
     - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
   ```
 
-  **Note:** Using an extra directory level (`garmin_session/.garmin_session/`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` subdirectory automatically.
+  **Note:** Using an extra directory level (`garmin_session/.garmin_session`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` directory automatically.
 
   This will ensure that Garmin session files persist across container restarts and you won't need to re-authenticate with MFA each time the container is recreated.
 </details>

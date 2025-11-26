@@ -35,12 +35,6 @@ class GarminConnect:
         if GarminConnect.invalid_garmin_session_config():
             raise APIException("GARMIN_SESSION environment variable cannot be empty")
         
-        if GarminConnect.garmin_session_is_directory():
-            raise APIException(
-                f"GARMIN_SESSION points to a directory ({GARMIN_SESSION}) but must point to a file path. "
-                f"For Docker usage, ensure you mount the .garmin_session FILE, not the containing directory."
-            )
-        
         if os.path.exists(GARMIN_SESSION):
             try:
                 log.debug("Loading existing Garmin session")
@@ -88,7 +82,7 @@ class GarminConnect:
                 log.debug("Session directory created/verified")
             
             self.client.dump(GARMIN_SESSION)
-            log.info(f"Successfully saved Garmin session to {session_dir}")
+            log.info(f"Successfully saved Garmin session to {GARMIN_SESSION}")
             
         except Exception as ex:
             raise APIException(
@@ -98,10 +92,6 @@ class GarminConnect:
 
     def looks_like_valid_session(self) -> bool:
         return hasattr(self.client, "username") and self.client.username
-
-    @staticmethod
-    def garmin_session_is_directory() -> bool:
-        return os.path.isdir(GARMIN_SESSION)
 
     @staticmethod
     def invalid_garmin_session_config() -> bool:
