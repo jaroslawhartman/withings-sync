@@ -178,6 +178,34 @@ A tool for synchronisation of the Withings API to:
   $ docker compose pull
   $ docker compose run -it --remove-orphans withings-sync
   ```
+
+  <ins>7. persisting Garmin session files (optional):</ins>
+
+  For the Docker version: The Garmin session (oauth1_token.json/oauth2_token.json) is not exposed outside of the docker container so the MFA garmin login isn't persisted. Suggest exposing/writing these files outside the container via a docker-compose.yml change and the creation of a garmin_session directory in the root withings-sync directory.
+
+  **Potential solution:**
+  
+  1. Create `garmin_session` directory in withings-sync:
+  ```bash
+  mkdir -p garmin_session
+  ```
+
+  2. Add environment variable and volume in docker-compose.yml:
+  ```yaml
+  environment:
+    - TZ=${TZ:?err}
+    - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
+    - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
+    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session/
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+    - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
+  ```
+
+  **Note:** Using an extra directory level (`garmin_session/.garmin_session/`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` subdirectory automatically.
+
+  This will ensure that Garmin session files persist across container restarts and you won't need to re-authenticate with MFA each time the container is recreated.
 </details>
 
 ### 1.3 Installation of withings-sync with docker compose (using supercronic)
@@ -326,6 +354,35 @@ A tool for synchronisation of the Withings API to:
   $ docker compose up -d --remove-orphans
   $ docker image prune -f
   ```
+
+  <ins>9. persisting Garmin session files (optional):</ins>
+
+  For the Docker version: The Garmin session (oauth1_token.json/oauth2_token.json) is not exposed outside of the docker container so the MFA garmin login isn't persisted. Suggest exposing/writing these files outside the container via a docker-compose.yml change and the creation of a garmin_session directory in the root withings-sync directory.
+
+  **Potential solution:**
+  
+  1. Create `garmin_session` directory in withings-sync:
+  ```bash
+  mkdir -p garmin_session
+  ```
+
+  2. Add environment variable and volume in docker-compose.yml:
+  ```yaml
+  environment:
+    - TZ=${TZ:?err}
+    - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
+    - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
+    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session/
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
+    - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+    - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
+  ```
+
+  **Note:** Using an extra directory level (`garmin_session/.garmin_session/`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` subdirectory automatically.
+
+  This will ensure that Garmin session files persist across container restarts and you won't need to re-authenticate with MFA each time the container is recreated.
 </details>
 
 ### 1.4 Installation of withings-sync with docker (not compose)
