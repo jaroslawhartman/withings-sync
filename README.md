@@ -430,10 +430,8 @@ Fit file uploaded to Garmin Connect
 ## 2. Usage Instructions
 
 ```
-usage: withings-sync [-h] [--version] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] 
-                     [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] 
-		     [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json] [--output BASENAME] [--no-upload]
-                     [--features BLOOD_PRESSURE [BLOOD_PRESSURE ...]] [--verbose]
+usage: withings-sync [-h] [--version] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json]
+                     [--output BASENAME] [--no-upload] [--features BLOOD_PRESSURE [BLOOD_PRESSURE ...]] [--verbose | --silent] [--dump-raw]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
@@ -460,9 +458,8 @@ options:
   --features BLOOD_PRESSURE [BLOOD_PRESSURE ...]
                         Enable Features like BLOOD_PRESSURE.
   --verbose, -v         Run verbosely.
-  --dump-raw, -R        Dump the raw Withings API JSON for the selected date range to a file. 
-                        If --output is provided, the file will be named BASENAME.withings_raw.json. 
-                        Otherwise, a default filename with the date range will be used.
+  --silent, -s          Run silently (suppress INFO messages).
+  --dump-raw, -R        Dump the raw Withings API JSON for the selected date range to file. If --output is provided, the file will be BASENAME.withings_raw.json. Otherwise, a default filename with the date range will be used.
 ```
 
 ## 3. Providing credentials
