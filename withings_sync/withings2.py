@@ -113,8 +113,8 @@ class WithingsOAuth2:
         for key, value in params.items():
             url = url + key + "=" + value + "&"
 
-        log.info(url)
-        log.info("")
+        log.warning(url)
+        log.warning("")
 
         authentification_code = input("Token : ")
 
