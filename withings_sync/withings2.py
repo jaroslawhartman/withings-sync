@@ -56,12 +56,26 @@ class WithingsOAuth2:
 
     app_config = user_config = None
 
-    def __init__(self):
+    def __init__(self, config_folder=None):
         app_cfg = WithingsConfig(APP_CONFIG)
         self.app_config = app_cfg.config
 
-        self.user_cfg = WithingsConfig(USER_CONFIG)
+        # Determine user config file path
+        if config_folder:
+            user_config_path = os.path.join(config_folder, ".withings_user.json")
+            # Always use the new path when config_folder is specified
+            # The directory will be created when needed
+        else:
+            user_config_path = USER_CONFIG
+        
+        self.user_cfg = WithingsConfig(user_config_path)
         self.user_config = self.user_cfg.config
+        
+        if config_folder and not os.path.exists(user_config_path):
+            legacy_path = HOME + "/.withings_user.json"
+            if os.path.exists(legacy_path):
+                log.info(f"Using new config folder: {user_config_path}")
+                log.info(f"If you want to use existing credentials, copy from: {legacy_path}")
 
         if not self.user_config.get("access_token"):
             if not self.user_config.get("authentification_code"):
@@ -194,8 +208,8 @@ class WithingsOAuth2:
 class WithingsAccount:
     """This class gets measurements from Withings"""
 
-    def __init__(self):
-        self.withings = WithingsOAuth2()
+    def __init__(self, config_folder=None):
+        self.withings = WithingsOAuth2(config_folder=config_folder)
 
     def get_lastsync(self):
         """get last sync timestamp"""

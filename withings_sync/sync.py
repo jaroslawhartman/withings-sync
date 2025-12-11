@@ -165,12 +165,20 @@ def get_args():
         ),
     )
 
+    parser.add_argument(
+        "--config-folder",
+        "-c",
+        type=str,
+        metavar="CONFIG_FOLDER",
+        help="Path to config folder for session files (if not specified, uses legacy paths in home directory)",
+    )
+
     return parser.parse_args()
 
 
-def sync_garmin(fit_file):
+def sync_garmin(fit_file, config_folder=None):
     """Sync generated fit file to Garmin Connect"""
-    garmin = GarminConnect()
+    garmin = GarminConnect(config_folder=config_folder)
     garmin.login(ARGS.garmin_username, ARGS.garmin_password)
     return garmin.upload_file(fit_file)
 
@@ -494,9 +502,15 @@ def write_to_file_when_needed(fit_data_weigth, fit_data_blood_pressure, json_dat
 
 def sync():
     """Sync measurements from Withings to Garmin a/o TrainerRoad"""
+    # Prepare config folder
+    config_folder = None
+    if ARGS.config_folder:
+        config_folder = os.path.abspath(os.path.expanduser(ARGS.config_folder))
+        # Create directory if it doesn't exist
+        os.makedirs(config_folder, exist_ok=True)
 
     # Withings API
-    withings = WithingsAccount()
+    withings = WithingsAccount(config_folder=config_folder)
 
     if not ARGS.fromdate:
         startdate = withings.get_lastsync()
@@ -563,13 +577,13 @@ def sync():
             gar_wg_state = None
             gar_bp_state = None
             if fit_data_weight is not None:
-                gar_wg_state = sync_garmin(fit_data_weight)
+                gar_wg_state = sync_garmin(fit_data_weight, config_folder)
                 if gar_wg_state:
                     logging.info(
                         "Fit file with weight information uploaded to Garmin Connect"
                     )
             if fit_data_blood_pressure is not None:
-                gar_bp_state = sync_garmin(fit_data_blood_pressure)
+                gar_bp_state = sync_garmin(fit_data_blood_pressure, config_folder)
                 if gar_bp_state:
                     logging.info(
                         "Fit file with blood pressure information uploaded to Garmin Connect"
