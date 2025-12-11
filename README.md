@@ -431,7 +431,7 @@ Fit file uploaded to Garmin Connect
 
 ```
 usage: withings-sync [-h] [--version] [--garmin-username GARMIN_USERNAME] [--garmin-password GARMIN_PASSWORD] [--trainerroad-username TRAINERROAD_USERNAME] [--trainerroad-password TRAINERROAD_PASSWORD] [--fromdate DATE] [--todate DATE] [--to-fit] [--to-json]
-                     [--output BASENAME] [--no-upload] [--features BLOOD_PRESSURE [BLOOD_PRESSURE ...]] [--verbose | --silent] [--dump-raw]
+                     [--output BASENAME] [--no-upload] [--features BLOOD_PRESSURE [BLOOD_PRESSURE ...]] [--verbose | --silent] [--dump-raw] [--config-folder PATH]
 
 A tool for synchronisation of Withings (ex. Nokia Health Body) to Garmin Connect and Trainer Road or to provide a json string.
 
@@ -460,6 +460,8 @@ options:
   --verbose, -v         Run verbosely.
   --silent, -s          Run silently (suppress INFO messages).
   --dump-raw, -R        Dump the raw Withings API JSON for the selected date range to file. If --output is provided, the file will be BASENAME.withings_raw.json. Otherwise, a default filename with the date range will be used.
+  --config-folder PATH, -c PATH
+                        Path to config folder for session files (if not specified, uses legacy paths in home directory).
 ```
 
 ## 3. Providing credentials
@@ -521,7 +523,30 @@ See also: https://github.com/jaroslawhartman/withings-sync/issues/31
 
 You can configure the location of the garmin session file with the variabe `GARMIN_SESSION`.
 
-### 4.3 Run a periodic Kubernetes job
+Note: If you specify both `--config-folder` and the `GARMIN_SESSION` environment variable, the `--config-folder` option takes precedence.
+
+### 4.3 Config folder
+
+By default, withings-sync stores session files in your home directory:
+- `~/.withings_user.json` for Withings authentication
+- `~/.garmin_session` for Garmin authentication
+
+You can use the `--config-folder` or `-c` argument to store all session files in a custom folder:
+
+```bash
+# Store session files in ~/.withings-sync
+withings-sync --config-folder ~/.withings-sync
+
+# Store session files in a custom location
+withings-sync --config-folder /path/to/my/config
+```
+
+When using a custom config folder:
+- The folder will be created automatically if it doesn't exist
+- If you have existing session files in the legacy locations, the script will show you where to copy them from
+- This is useful for Docker installations or for keeping your home directory clean
+
+### 4.4 Run a periodic Kubernetes job
 
 1. Create the secret using kubectl in the command line.
 ```
