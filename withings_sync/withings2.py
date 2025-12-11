@@ -57,7 +57,19 @@ class WithingsOAuth2:
     app_config = user_config = None
 
     def __init__(self, config_folder=None):
-        app_cfg = WithingsConfig(APP_CONFIG)
+        # Determine app config file path with fallback chain
+        if config_folder:
+            app_config_path = os.path.join(config_folder, "withings_app.json")
+            if os.path.exists(app_config_path):
+                log.info(f"Using app config from: {app_config_path}")
+            else:
+                log.warning(f"App config not found at {app_config_path}, falling back to WITHINGS_APP env var or default")
+                app_config_path = os.environ.get("WITHINGS_APP", APP_CONFIG)
+        else:
+            app_config_path = os.environ.get("WITHINGS_APP", APP_CONFIG)
+        
+        log.info(f"Loading app config from: {app_config_path}")
+        app_cfg = WithingsConfig(app_config_path)
         self.app_config = app_cfg.config
 
         # Determine user config file path
