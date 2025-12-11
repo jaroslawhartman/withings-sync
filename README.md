@@ -78,9 +78,7 @@ A tool for synchronisation of the Withings API to:
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
   ./docker-compose.yml                       # docker-compose file
-  ./config/                                  # config directory
-  ./config/withings-sync/                    # config directory for withings-sync
-  ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
+  ./config/withings-sync/                    # config directory for withings-sync (will be created automatically)
   ```
 
   <ins>2. contents of an example `.env` file:</ins>
@@ -92,7 +90,7 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
  
-  <ins>3. contents of an example `docker-compose.yml` file:</ins>
+  <ins>3. contents of an example `docker-compose.yml` file (simplified with --config-folder):</ins>
  
   ```yaml
   services:
@@ -107,9 +105,15 @@ A tool for synchronisation of the Withings API to:
         - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
       volumes:
         - /etc/localtime:/etc/localtime:ro
-        - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
+        - ${STACK_PATH:?err}/config/withings-sync:/config
+      command: ["--config-folder", "/config"]
       restart: unless-stopped
   ```
+
+  **Note**: Using `--config-folder` simplifies the setup by:
+  - Storing both Withings and Garmin session files in one directory
+  - No need to mount individual files
+  - Easier backup and migration of configuration
 
   <ins>4. obtaining Withings authorization:</ins>
  
@@ -179,33 +183,7 @@ A tool for synchronisation of the Withings API to:
   $ docker compose run -it --remove-orphans withings-sync
   ```
 
-  <ins>7. persisting Garmin session files (optional):</ins>
-
-  For the Docker version: The Garmin session (oauth1_token.json/oauth2_token.json) is not exposed outside of the docker container so the MFA garmin login isn't persisted. Suggest exposing/writing these files outside the container via a docker-compose.yml change and the creation of a garmin_session directory in the root withings-sync directory.
-
-  **Potential solution:**
-  
-  1. Create `garmin_session` directory in withings-sync:
-  ```bash
-  mkdir -p garmin_session
-  ```
-
-  2. Add environment variable and volume in docker-compose.yml:
-  ```yaml
-  environment:
-    - TZ=${TZ:?err}
-    - GARMIN_USERNAME=${GARMIN_USERNAME:?err}
-    - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
-    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session
-  volumes:
-    - /etc/localtime:/etc/localtime:ro
-    - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
-    - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
-  ```
-
-  **Note:** Using an extra directory level (`garmin_session/.garmin_session`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` directory automatically.
-
-  This will ensure that Garmin session files persist across container restarts and you won't need to re-authenticate with MFA each time the container is recreated.
+  This will ensure that both Withings and Garmin session files persist across container restarts in the `/config` directory.
 </details>
 
 ### 1.3 Installation of withings-sync with docker compose (using supercronic)
@@ -220,10 +198,8 @@ A tool for synchronisation of the Withings API to:
   .                                          # STACK_PATH
   ./.env                                     # .env file containing your variables
   ./docker-compose.yml                       # docker-compose file
-  ./config/                                  # config directory
-  ./config/withings-sync/                    # config directory for withings-sync
+  ./config/withings-sync/                    # config directory for withings-sync (will be created automatically)
   ./config/withings-sync/entrypoint.sh       # entrypoint.sh file containing your cmd & arguments
-  ./config/withings-sync/.withings_user.json # .withings_user.json file to store access tokens
   ```
 
   <ins>2. contents of an example `.env` file:</ins>
@@ -235,15 +211,15 @@ A tool for synchronisation of the Withings API to:
   GARMIN_PASSWORD="YourPasswordHere"
   ```
 
-  <ins>3. contents of an example `entrypoint.sh` file:</ins>
+  <ins>3. contents of an example `entrypoint.sh` file (updated for --config-folder):</ins>
  
   ```bash
   #!/bin/sh
-  echo "$(( $RANDOM % 59 +0 )) */3 * * * * * poetry run withings-sync --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
+  echo "$(( $RANDOM % 59 +0 )) */3 * * * * * poetry run withings-sync --config-folder /config --features BLOOD_PRESSURE" > /home/withings-sync/cronjob
   supercronic -debug -passthrough-logs /home/withings-sync/cronjob
   ```
  
-  <ins>4. contents of an example `docker-compose.yml` file:</ins>
+  <ins>4. contents of an example `docker-compose.yml` file (simplified with --config-folder):</ins>
  
   ```yaml
   services:
@@ -258,11 +234,13 @@ A tool for synchronisation of the Withings API to:
       - GARMIN_PASSWORD=${GARMIN_PASSWORD:?err}
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ${STACK_PATH:?err}/config/withings-sync:/config
       - ${STACK_PATH:?err}/config/withings-sync/entrypoint.sh:/home/withings-sync/entrypoint.sh
-      - ${STACK_PATH:?err}/config/withings-sync/.withings_user.json:/home/withings-sync/.withings_user.json
     entrypoint: "sh /home/withings-sync/entrypoint.sh"
     restart: unless-stopped
   ```
+
+  **Note**: Using `--config-folder` simplifies the setup by storing both Withings and Garmin session files in the `/config` directory, eliminating the need for multiple volume mounts.
 
   <ins>5. obtaining Withings authorization:</ins>
  
@@ -355,28 +333,7 @@ A tool for synchronisation of the Withings API to:
   $ docker image prune -f
   ```
 
-  <ins>9. persisting Garmin session files (optional/MFA):</ins>
-
-  For the Docker version: persist the Garmin session (oauth1_token.json/oauth2_token.json) outside of the docker container so the MFA garmin login is persisted.
-  
-  1. Create `garmin_session` directory in withings-sync:
-  ```bash
-  mkdir -p garmin_session
-  ```
-
-  2. Add environment variable and volume in docker-compose.yml:
-  ```yaml
-  environment:
-    ...
-    - GARMIN_SESSION=/home/withings-sync/garmin_session/.garmin_session
-  volumes:
-    ...
-    - ${STACK_PATH:?err}/garmin_session/:/home/withings-sync/garmin_session/
-  ```
-
-  **Note:** Using an extra directory level (`garmin_session/.garmin_session`) prevents a FileNotFoundError that occurs when the `.garmin_session` directory exists but doesn't contain the expected OAuth files. This allows withings-sync to create the `.garmin_session` directory automatically.
-
-  This will ensure that Garmin session files persist across container restarts and you won't need to re-authenticate with MFA each time the container is recreated.
+  This will ensure that both Withings and Garmin session files persist across container restarts in the `/config` directory.
 </details>
 
 ### 1.4 Installation of withings-sync with docker (not compose)
@@ -388,15 +345,18 @@ A tool for synchronisation of the Withings API to:
 $ docker pull ghcr.io/jaroslawhartman/withings-sync:latest
 ```
 
-First start to ensure the script can start successfully:
-
+First start to ensure the script can start successfully (using --config-folder for simplified session management):
 
 Obtaining Withings authorisation:
 
 ```bash
-$ docker run -v .withings_user.json:/home/withings-sync/.withings_user.json --interactive --tty --name withings-sync ghcr.io/jaroslawhartman/withings-sync:latest --garmin-username=<username> --garmin-password=<password>
+# Create a local config directory
+mkdir -p ./config
 
-Can't read config file config/withings_user.json
+# Run with config folder mounted
+$ docker run -v ./config:/config --interactive --tty --name withings-sync ghcr.io/jaroslawhartman/withings-sync:latest --config-folder /config --garmin-username=<username> --garmin-password=<password>
+
+Can't read config file /config/.withings_user.json
 User interaction needed to get Authentification Code from Withings!
 
 Open the following URL in your web browser and copy back the token. You will have *30 seconds* before the token expires. HURRY UP!
@@ -414,7 +374,7 @@ Garmin Connect User Name: JaHa.WAW.PL
 Fit file uploaded to Garmin Connect
 ```
 
-And for subsequent runs:
+And for subsequent runs (both session files persist in ./config):
 
 ```bash
 $ docker start -i withings-sync
@@ -425,6 +385,8 @@ JaHa.WAW.PL
 Garmin Connect User Name: JaHa.WAW.PL
 Fit file uploaded to Garmin Connect
 ```
+
+**Note**: Using `--config-folder /config` stores both Withings and Garmin session files in the mounted directory, making them persist across container restarts.
 </details>
 
 ## 2. Usage Instructions
@@ -576,19 +538,24 @@ kubectl exec -it bootstrap-withings-sync -- sh
 ```
 From _within_ the bootstrap pod:
 ```
-poetry run withings-sync --fromdate=<RECORDED_DATE>
+# Create a config directory in the PVC
+mkdir -p /data/config
+
+# Run with config folder to store all session files
+poetry run withings-sync --config-folder /data/config --fromdate=<RECORDED_DATE>
 ```
 It is important that this run includes a date that has a record, as a record is required for the program to attempt an upload to garmin in order to create the session files for garmin.
 The command above will allow entering the withings token and the MFA code for garmin. 
-After successful auth, move the credentials into the PVC
-```
-mv .withings_user.json /data
-mv .garmin_session /data
-```
-5. Create the cron job. The command in the cron job always symlinks to the credentials in the PVC. Hence, future authentication updates will be persisted.
+After successful auth, the credentials will be automatically stored in `/data/config/`:
+- `/data/config/.withings_user.json`
+- `/data/config/.garmin_session`
+
+5. Create the cron job. Update the cron job command to use the config folder:
 ```
 kubectl apply -f k8s-job.yaml
 ```
+
+Note: Update your k8s-job.yaml to include `--config-folder /data/config` in the container command.
 
 ## 5 For advanced users - registering own Withings application
 > Instead of using the provided Withings application tokens you can register your own app with Withings and use that one instead. 
