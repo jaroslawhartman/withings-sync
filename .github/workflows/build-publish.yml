@@ -74,12 +74,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-  # TODO: #231 TestPyPI publishing needs to be configured
-  # Error: Trusted publishing exchange failure - invalid-publisher
-  # Requires setting up trusted publisher on TestPyPI
   publish-to-testpypi:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
-    if: false  # Disabled until TestPyPI trusted publishing is configured
     needs:
     - build
     runs-on: ubuntu-latest
