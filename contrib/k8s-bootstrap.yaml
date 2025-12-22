@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bootstrap-withings-sync
+  labels:
+    app.kubernetes.io/name: bootstrap-withings-sync
+spec:
+  restartPolicy: Never
+  securityContext:
+    fsGroup: 1000
+  initContainers:
+    - name: prep-pvc
+      image: busybox:1.36
+      command:
+        - sh
+        - -lc
+        - |
+          set -eux
+          chown -R 1000:1000 /data
+          chmod 755 /data
+          ls -la /data
+
+      volumeMounts:
+        - name: creds
+          mountPath: /data
+
+  containers:
+    - name: bootstrap-withings-sync
+      image: ghcr.io/jaroslawhartman/withings-sync:latest
+      command: ["sh","-lc","sleep infinity"]
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+      envFrom:
+        - secretRef:
+            name: withings-secret
+      resources:
+        requests:
+          cpu: "200m"
+          memory: "512Mi"
+        limits:
+          cpu: "200m"
+          memory: "512Mi"
+      volumeMounts:
+        - name: creds
+          mountPath: /data
+
+  volumes:
+    - name: creds
+      persistentVolumeClaim:
+        claimName: withings-oauth-cache
