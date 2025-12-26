@@ -138,7 +138,7 @@ A tool for synchronisation of the Withings API to:
   First start to ensure the script can start successfully:
 
   ```bash
-  $ docker compose run -it --remove-orphans --entrypoint "poetry run withings-sync" withings-sync
+  $ docker compose run -it --remove-orphans --entrypoint "poetry run withings-sync --config-folder /config" withings-sync
   [+] Creating 1/1
   ✔ Network stack_default  Created                                                  0.5s
   2024-12-01 01:29:02,601 - withings - ERROR - Can\'t read config file /home/youruser/.withings_user.json
