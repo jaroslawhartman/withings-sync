@@ -525,6 +525,7 @@ def sync():
     )
 
     height = withings.get_height()
+    time.sleep(1)  # avoid hitting rate limits
     groups = withings.get_measurements(startdate=startdate, enddate=enddate)
 
     # Only upload if there are measurement returned
