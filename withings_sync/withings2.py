@@ -211,6 +211,7 @@ class WithingsOAuth2:
                 "If it's regarding an invalid code, try to start the"
                 " script again to obtain a new link."
             )
+            return
 
         self.user_config["access_token"] = body.get("access_token")
         self.user_config["refresh_token"] = body.get("refresh_token")
