@@ -514,7 +514,14 @@ def sync():
     withings = WithingsAccount(config_folder=config_folder)
 
     if not ARGS.fromdate:
-        startdate = withings.get_lastsync()
+        if ARGS.trainerroad_username and ARGS.garmin_username:
+            startdate = min(withings.get_lastsync(), withings.get_lastsync_tr())
+        elif ARGS.garmin_username:
+            startdate = withings.get_lastsync()
+        elif ARGS.trainerroad_username:
+            startdate = withings.get_lastsync_tr()
+        else:
+            startdate = withings.get_lastsync()
     else:
         startdate = int(time.mktime(ARGS.fromdate.timetuple()))
 
@@ -567,6 +574,8 @@ def sync():
             logging.info(" Measured %s", last_date_time)
             if sync_trainerroad(last_weight):
                 logging.info("TrainerRoad update done!")
+                if not ARGS.fromdate:
+                    withings.set_lastsync_tr()
         else:
             logging.info("No TrainerRoad username or a new measurement - skipping sync")
 
