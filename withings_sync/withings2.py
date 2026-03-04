@@ -235,6 +235,18 @@ class WithingsAccount:
         log.info("Saving Last Sync")
         self.withings.update_config()
 
+    def get_lastsync_tr(self):
+        """get last TrainerRoad sync timestamp"""
+        if not self.withings.user_config.get("last_sync_tr"):
+            return int(time.mktime(date.today().timetuple()))
+        return self.withings.user_config["last_sync_tr"]
+
+    def set_lastsync_tr(self):
+        """set last TrainerRoad sync timestamp"""
+        self.withings.user_config["last_sync_tr"] = int(time.time())
+        log.info("Saving Last TR Sync")
+        self.withings.update_config()
+
     def get_measurements(self, startdate, enddate):
         """get Withings measurements"""
         log.info("Get Measurements")
