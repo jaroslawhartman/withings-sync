@@ -17,7 +17,7 @@ GETMEAS_URL = "https://wbsapi.withings.net/measure?action=getmeas"
 
 APP_CONFIG = os.environ.get(
     "WITHINGS_APP",
-    importlib.resources.files(__name__) / "config/withings_app.json",
+    importlib.resources.files(__package__) / "config/withings_app.json",
 )
 USER_CONFIG = os.environ.get("WITHINGS_USER", HOME + "/.withings_user.json")
 
