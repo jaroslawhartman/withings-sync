@@ -630,8 +630,8 @@ def main():
     logging.debug("withings-sync script version %s", version("withings-sync"))
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
-    if sys.version_info < (3, 12):
-        print("Sorry, requires at least Python3.12.")
+    if sys.version_info < (3, 11):
+        print("Sorry, requires at least Python3.11.")
         sys.exit(1)
 
     sync()

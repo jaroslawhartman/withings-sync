@@ -4,7 +4,7 @@ import logging
 import json
 import os
 import time
-import importlib_resources
+import importlib.resources
 import requests
 
 log = logging.getLogger("withings")
@@ -17,7 +17,7 @@ GETMEAS_URL = "https://wbsapi.withings.net/measure?action=getmeas"
 
 APP_CONFIG = os.environ.get(
     "WITHINGS_APP",
-    importlib_resources.files(__name__) / "config/withings_app.json",
+    importlib.resources.files(__name__) / "config/withings_app.json",
 )
 USER_CONFIG = os.environ.get("WITHINGS_USER", HOME + "/.withings_user.json")
 
