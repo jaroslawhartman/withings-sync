@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Withings → Garmin Sync</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+  <div class="max-w-xl mx-auto py-10 px-4 space-y-5">
+
+    <!-- Header -->
+    <div class="text-center pb-2">
+      <h1 class="text-2xl font-bold text-gray-900">Withings → Garmin Sync</h1>
+      <p class="text-sm text-gray-500 mt-1">Sync your Withings weight data to Garmin Connect</p>
+    </div>
+
+    <!-- Status row -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-white rounded-xl border shadow-sm p-4">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span id="garmin-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span>
+          <span class="font-semibold text-sm text-gray-700">Garmin Connect</span>
+        </div>
+        <p id="garmin-status" class="text-xs text-gray-400 pl-4">Not configured</p>
+      </div>
+      <div class="bg-white rounded-xl border shadow-sm p-4">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span id="withings-dot" class="w-2.5 h-2.5 rounded-full bg-gray-300 flex-shrink-0"></span>
+          <span class="font-semibold text-sm text-gray-700">Withings</span>
+        </div>
+        <p id="withings-status" class="text-xs text-gray-400 pl-4">Not authorized</p>
+      </div>
+    </div>
+
+    <!-- Garmin Credentials -->
+    <div class="bg-white rounded-xl border shadow-sm p-6">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Garmin Credentials</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Email / Username</label>
+          <input id="garmin-username" type="email" autocomplete="off"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="your@email.com" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Password</label>
+          <input id="garmin-password" type="password" autocomplete="new-password"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="••••••••" />
+        </div>
+        <button onclick="saveCredentials()"
+          class="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors">
+          Save Credentials
+        </button>
+        <p id="credentials-msg" class="text-xs text-center hidden"></p>
+      </div>
+    </div>
+
+    <!-- Withings Authorization -->
+    <div class="bg-white rounded-xl border shadow-sm p-6">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Withings Authorization</h2>
+
+      <!-- Connected state -->
+      <div id="withings-connected" class="hidden">
+        <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+          <span class="text-sm text-green-700 font-medium">Connected to Withings</span>
+          <button onclick="disconnectWithings()"
+            class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+            Disconnect
+          </button>
+        </div>
+      </div>
+
+      <!-- Not connected state -->
+      <div id="withings-not-connected">
+        <p class="text-sm text-gray-500 mb-4">
+          Click below to open the Withings authorization page. After you approve access, you'll see a page with a
+          short code — copy it and paste it here.
+        </p>
+        <button onclick="openWithingsAuth()"
+          class="w-full bg-orange-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-orange-600 active:bg-orange-700 transition-colors mb-4">
+          Authorize with Withings
+        </button>
+
+        <div id="token-section" class="hidden space-y-2">
+          <label class="block text-xs font-medium text-gray-600">Paste the code from the Withings page</label>
+          <div class="flex gap-2">
+            <input id="withings-token" type="text"
+              class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              placeholder="e.g. 2b1ac3a3f6c3ade5..." />
+            <button onclick="exchangeToken()"
+              class="bg-orange-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-orange-600 transition-colors">
+              Connect
+            </button>
+          </div>
+          <p id="withings-msg" class="text-xs hidden"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sync -->
+    <div class="bg-white rounded-xl border shadow-sm p-6">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">Sync</h2>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">From date <span class="text-gray-400">(optional)</span></label>
+          <input id="from-date" type="date"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">To date <span class="text-gray-400">(optional)</span></label>
+          <input id="to-date" type="date"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+        </div>
+      </div>
+
+      <button id="sync-btn" onclick="startSync()"
+        class="w-full bg-green-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-green-700 active:bg-green-800 transition-colors">
+        Sync Now
+      </button>
+
+      <p id="last-sync" class="text-xs text-gray-400 text-center mt-3 hidden"></p>
+
+      <!-- Log output -->
+      <div id="sync-log"
+        class="hidden mt-4 bg-gray-900 rounded-lg p-4 font-mono text-xs overflow-y-auto max-h-72 space-y-0.5">
+      </div>
+    </div>
+
+  </div><!-- end container -->
+
+  <script>
+    let syncSource = null;
+
+    async function loadStatus() {
+      const resp = await fetch('/api/status');
+      const d = await resp.json();
+
+      // Garmin
+      const gDot = document.getElementById('garmin-dot');
+      const gStatus = document.getElementById('garmin-status');
+      if (d.garmin_configured) {
+        gDot.className = 'w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0';
+        gStatus.textContent = d.garmin_username;
+        document.getElementById('garmin-username').value = d.garmin_username;
+      } else {
+        gDot.className = 'w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0';
+        gStatus.textContent = 'Not configured';
+      }
+
+      // Withings
+      const wDot = document.getElementById('withings-dot');
+      const wStatus = document.getElementById('withings-status');
+      if (d.withings_authed) {
+        wDot.className = 'w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0';
+        wStatus.textContent = 'Connected';
+        document.getElementById('withings-connected').classList.remove('hidden');
+        document.getElementById('withings-not-connected').classList.add('hidden');
+      } else {
+        wDot.className = 'w-2.5 h-2.5 rounded-full bg-red-400 flex-shrink-0';
+        wStatus.textContent = 'Not authorized';
+        document.getElementById('withings-connected').classList.add('hidden');
+        document.getElementById('withings-not-connected').classList.remove('hidden');
+      }
+
+      // Last sync
+      const lastEl = document.getElementById('last-sync');
+      if (d.last_sync) {
+        lastEl.textContent = 'Last sync: ' + new Date(d.last_sync * 1000).toLocaleString();
+        lastEl.classList.remove('hidden');
+      } else {
+        lastEl.classList.add('hidden');
+      }
+    }
+
+    async function saveCredentials() {
+      const username = document.getElementById('garmin-username').value.trim();
+      const password = document.getElementById('garmin-password').value.trim();
+      const msg = document.getElementById('credentials-msg');
+
+      if (!username || !password) {
+        showMsg(msg, 'Please enter both username and password.', false);
+        return;
+      }
+
+      const resp = await fetch('/api/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const d = await resp.json();
+      if (d.success) {
+        showMsg(msg, 'Credentials saved.', true);
+        loadStatus();
+      } else {
+        showMsg(msg, d.error || 'Failed to save credentials.', false);
+      }
+    }
+
+    async function openWithingsAuth() {
+      const resp = await fetch('/api/withings/auth-url');
+      const d = await resp.json();
+      window.open(d.url, '_blank');
+      document.getElementById('token-section').classList.remove('hidden');
+      document.getElementById('withings-token').focus();
+    }
+
+    async function exchangeToken() {
+      const code = document.getElementById('withings-token').value.trim();
+      const msg = document.getElementById('withings-msg');
+
+      if (!code) {
+        showMsg(msg, 'Please paste the authorization code.', false);
+        return;
+      }
+
+      const resp = await fetch('/api/withings/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const d = await resp.json();
+      if (d.success) {
+        showMsg(msg, 'Withings connected successfully!', true);
+        setTimeout(loadStatus, 500);
+      } else {
+        showMsg(msg, d.error || 'Failed to connect to Withings.', false);
+      }
+    }
+
+    async function disconnectWithings() {
+      if (!confirm('Disconnect from Withings? You will need to re-authorize to sync again.')) return;
+      await fetch('/api/withings/disconnect', { method: 'POST' });
+      loadStatus();
+    }
+
+    function startSync() {
+      const fromDate = document.getElementById('from-date').value;
+      const toDate = document.getElementById('to-date').value;
+      const log = document.getElementById('sync-log');
+      const btn = document.getElementById('sync-btn');
+
+      log.classList.remove('hidden');
+      log.innerHTML = '';
+      btn.disabled = true;
+      btn.textContent = 'Syncing…';
+      btn.className = btn.className.replace('bg-green-600 hover:bg-green-700 active:bg-green-800', 'bg-gray-400 cursor-not-allowed');
+
+      let url = '/api/sync/stream';
+      const params = [];
+      if (fromDate) params.push('fromdate=' + fromDate);
+      if (toDate) params.push('todate=' + toDate);
+      if (params.length) url += '?' + params.join('&');
+
+      if (syncSource) syncSource.close();
+      syncSource = new EventSource(url);
+
+      syncSource.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+
+        if (msg.type === 'done' || msg.type === 'error') {
+          syncSource.close();
+          btn.disabled = false;
+          btn.textContent = 'Sync Now';
+          btn.className = btn.className.replace('bg-gray-400 cursor-not-allowed', 'bg-green-600 hover:bg-green-700 active:bg-green-800');
+
+          if (msg.type === 'done') {
+            const ok = msg.success;
+            appendLog(log, ok ? '✓ ' + msg.message : '✗ ' + msg.message, ok ? 'text-green-400' : 'text-red-400');
+            if (ok) loadStatus();
+          } else {
+            appendLog(log, '✗ ' + msg.message, 'text-red-400');
+          }
+          return;
+        }
+
+        if (msg.type === 'log') {
+          let color = 'text-gray-300';
+          if (msg.message.includes('ERROR')) color = 'text-red-400';
+          else if (msg.message.includes('WARNING')) color = 'text-yellow-300';
+          else if (msg.message.includes('INFO')) color = 'text-blue-300';
+          appendLog(log, msg.message, color);
+        }
+      };
+
+      syncSource.onerror = () => {
+        syncSource.close();
+        btn.disabled = false;
+        btn.textContent = 'Sync Now';
+        btn.className = btn.className.replace('bg-gray-400 cursor-not-allowed', 'bg-green-600 hover:bg-green-700 active:bg-green-800');
+        appendLog(log, 'Connection lost.', 'text-red-400');
+      };
+    }
+
+    function appendLog(container, text, colorClass) {
+      const line = document.createElement('div');
+      line.className = colorClass;
+      line.textContent = text;
+      container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showMsg(el, text, success) {
+      el.classList.remove('hidden', 'text-green-600', 'text-red-600');
+      el.classList.add(success ? 'text-green-600' : 'text-red-600');
+      el.textContent = text;
+      setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    loadStatus();
+  </script>
+</body>
+</html>
