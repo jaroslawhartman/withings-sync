@@ -1,13 +1,10 @@
-> [!CAUTION]
-> This Release introduces breaking changes that users need to be aware of before upgrading or using it.
-> These changes were made to enhance security and compatibility but may require modifications to your existing setup.
+> [!NOTE]
+> This is a personal fork of [jaroslawhartman/withings-sync](https://github.com/jaroslawhartman/withings-sync) with minor corrections for personal use. For the original project, please refer to the upstream repository linked above.
+
+> [!IMPORTANT]
+> **Bug fix: outdated `USER_AGENT` guard removed**
 >
-> - The container now runs without root privileges.
-> - Dependencies, virtual envs, packaging is now done by Poetry.
-> - This fork requires a recent version of Python, currently capped at >= python 3.12.
->
-> Make sure to go over the updated readme and test these new changes thoroughly for your environment.
-> Chances are quite high you will have to make changes to make this work again. 
+> An outdated `USER_AGENT` override in `garmin.py` was setting the Garmin client identifier to `GCM-iOS-5.7.2.1`, which downgraded garth's own (newer) value and caused Garmin to reject upload requests. The original workaround was for [garth issue #73](https://github.com/matin/garth/issues/73), which has since been resolved in `garth >= 0.7.1`. The override has been removed and the minimum required garth version has been bumped accordingly.
 
 # withings-sync
 
@@ -630,5 +627,6 @@ The python packages are added to the GitHub releases by a GitHub Action.
 
 ## 8. Credits / Authors
 
+* This personal fork is based on [jaroslawhartman/withings-sync](https://github.com/jaroslawhartman/withings-sync) by Jarek Hartman. All credit for the original work goes to the upstream project and its contributors.
 * Based on [withings-garmin](https://github.com/ikasamah/withings-garmin) by Masayuki Hamasaki, improved to support SSO authorization in Garmin Connect 2.
-* Based on [withings-garmin-v2](https://github.com/jaroslawhartman/withings-garmin-v2) by Jarek Hartman, improved Python 3 compatability, code-style and setuptools packaging, Kubernetes and Docker support. 
+* Based on [withings-garmin-v2](https://github.com/jaroslawhartman/withings-garmin-v2) by Jarek Hartman, improved Python 3 compatability, code-style and setuptools packaging, Kubernetes and Docker support.
