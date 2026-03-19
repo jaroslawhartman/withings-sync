@@ -20,7 +20,7 @@ classifiers = ["Topic :: Utilities",
 
 [tool.poetry.dependencies]
 python = "^3.12"
-garth = ">=0.5.0"
+garth = ">=0.7.11"
 requests = ">=2.32.3"
 lxml = ">=5.3.0"
 python-dotenv = ">=1.0.1"
