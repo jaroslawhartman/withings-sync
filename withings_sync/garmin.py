@@ -39,16 +39,18 @@ class GarminConnect:
         else:
             self.session_path = GARMIN_SESSION
 
-        # Log helpful message if using new config folder and file doesn't exist
-        if config_folder and not os.path.exists(self.session_path):
+        # Log helpful message if using new config folder and no tokenstore exists yet
+        tokenstore_path = self._normalize_tokenstore_path()
+        if config_folder and not os.path.exists(tokenstore_path):
             home = os.getenv("HOME", ".")
             legacy_path = os.path.abspath(
                 os.path.expanduser(os.path.join(home, ".garmin_session"))
             )
             if os.path.exists(legacy_path):
-                log.info(f"Using new config folder: {self.session_path}")
                 log.info(
-                    f"If you want to use existing session, copy from: {legacy_path}"
+                    "Existing garth session files cannot be reused directly. "
+                    "After one fresh login, new Garmin tokens will be stored at: %s",
+                    tokenstore_path,
                 )
 
     def _normalize_tokenstore_path(self) -> str:

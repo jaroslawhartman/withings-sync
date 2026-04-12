@@ -483,15 +483,17 @@ See also: https://github.com/jaroslawhartman/withings-sync/issues/31
 
 ### 4.2 Garmin auth
 
-You can configure the location of the garmin session file with the variabe `GARMIN_SESSION`.
+You can configure the location of the Garmin token file with the `GARMIN_SESSION` environment variable. If the path ends in `.json`, it is used directly as the token file. Otherwise, the runtime normalizes it to `<path>.json` to avoid conflicts with legacy session files.
 
 Note: If you specify both `--config-folder` and the `GARMIN_SESSION` environment variable, the `--config-folder` option takes precedence.
+
+**Upgrading from garth-based versions:** Garmin authentication has been migrated from the deprecated `garth` library to `python-garminconnect`. Old `.garmin_session` files created by garth cannot be reused directly. One fresh login is required after upgrading — after that, saved tokens are reused automatically and `GARMIN_PASSWORD` may be omitted on subsequent runs.
 
 ### 4.3 Config folder
 
 By default, withings-sync stores session files in your home directory:
 - `~/.withings_user.json` for Withings authentication
-- `~/.garmin_session` for Garmin authentication
+- `~/.garmin_session.json` for Garmin authentication tokens
 
 You can use the `--config-folder` or `-c` argument to store all session files in a custom folder:
 
@@ -548,7 +550,7 @@ It is important that this run includes a date that has a record, as a record is 
 The command above will allow entering the withings token and the MFA code for garmin. 
 After successful auth, the credentials will be automatically stored in `/data/config/`:
 - `/data/config/.withings_user.json`
-- `/data/config/.garmin_session`
+- `/data/config/.garmin_session.json`
 
 5. Create the cron job. Update the cron job command to use the config folder:
 ```
