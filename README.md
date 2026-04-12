@@ -507,7 +507,8 @@ withings-sync --config-folder /path/to/my/config
 
 When using a custom config folder:
 - The folder will be created automatically if it doesn't exist
-- If you have existing session files in the legacy locations, the script will show you where to copy them from
+- If you have existing Withings session files in the legacy locations, the script will show you where to copy them from
+- Garmin auth has changed with the move from `garth` to `python-garminconnect`; old `.garmin_session` files cannot be reused directly and one fresh login is required to create the new tokenstore
 - This is useful for Docker installations or for keeping your home directory clean
 
 ### 4.4 Run a periodic Kubernetes job
@@ -552,12 +553,10 @@ After successful auth, the credentials will be automatically stored in `/data/co
 - `/data/config/.withings_user.json`
 - `/data/config/.garmin_session.json`
 
-5. Create the cron job. Update the cron job command to use the config folder:
+5. Create the cron job. The shipped manifest already uses `--config-folder /data/config`:
 ```
 kubectl apply -f k8s-job.yaml
 ```
-
-Note: Update your k8s-job.yaml to include `--config-folder /data/config` in the container command.
 
 ## 5 For advanced users - registering own Withings application
 > Instead of using the provided Withings application tokens you can register your own app with Withings and use that one instead. 
