@@ -32,10 +32,7 @@ spec:
                 - -c
                 - |
                   set -eux
-                  ln -sf /data/.withings_user.json /home/withings-sync/.withings_user.json
-                  ln -sf /data/.garmin_session.json /home/withings-sync/.garmin_session.json
-                  ls -la /home/withings-sync/
-                  poetry run withings-sync --features BLOOD_PRESSURE
+                  poetry run withings-sync --config-folder /data/config --features BLOOD_PRESSURE
               
               envFrom:
                 - secretRef:
