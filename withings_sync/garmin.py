@@ -1,17 +1,19 @@
 """This module handles the Garmin connectivity."""
 
-import io
 import logging
 import os
+import tempfile
 
-import garth
-# Temporary fix until Garth project merges https://github.com/matin/garth/issues/73
-garth.http.USER_AGENT = {"User-Agent": ("GCM-iOS-5.7.2.1")}
+from garminconnect import Garmin
 
 log = logging.getLogger("garmin")
 
 HOME = os.getenv("HOME", ".")
-GARMIN_SESSION = os.path.abspath(os.path.expanduser(os.getenv('GARMIN_SESSION', os.path.join(HOME, ".garmin_session"))))
+GARMIN_SESSION = os.path.abspath(
+    os.path.expanduser(
+        os.getenv("GARMIN_SESSION", os.path.join(HOME, ".garmin_session"))
+    )
+)
 
 
 class LoginFailed(Exception):
@@ -26,93 +28,81 @@ class GarminConnect:
     """Main GarminConnect class."""
 
     def __init__(self, config_folder=None) -> None:
-        self.client = garth.Client()
+        self.client = None
         self.config_folder = config_folder
-        
+
         if config_folder:
             self.session_path = os.path.join(config_folder, ".garmin_session")
         else:
             self.session_path = GARMIN_SESSION
-        
+
         # Log helpful message if using new config folder and file doesn't exist
         if config_folder and not os.path.exists(self.session_path):
             home = os.getenv("HOME", ".")
-            legacy_path = os.path.abspath(os.path.expanduser(os.path.join(home, ".garmin_session")))
+            legacy_path = os.path.abspath(
+                os.path.expanduser(os.path.join(home, ".garmin_session"))
+            )
             if os.path.exists(legacy_path):
                 log.info(f"Using new config folder: {self.session_path}")
-                log.info(f"If you want to use existing session, copy from: {legacy_path}")
+                log.info(
+                    f"If you want to use existing session, copy from: {legacy_path}"
+                )
 
     def login(self, email=None, password=None):
-        """Login to Garmin Connect with session persistence and MFA support."""
-        log.debug("Attempting Garmin login")
-        
-        if GarminConnect.invalid_garmin_session_config(self):
-            raise APIException("invalid garmin session path config")
-        
-        if os.path.exists(self.session_path):
-            try:
-                log.debug("Loading existing Garmin session")
-                self.client.load(self.session_path)
-                if self.looks_like_valid_session():
-                    log.info(f"Successfully loaded Garmin session for user: {self.client.username}")
-                    return
-                else:
-                    log.warning("Session file exists but appears invalid or expired")
-            except Exception as ex:
-                log.warning(f"Failed to load Garmin session: {ex}")
-        
-        # Fallback to credential authentication
+        """Login to Garmin Connect."""
         if not email or not password:
             raise APIException(
                 "No valid session found and no credentials provided. "
-                "For MFA accounts:"
+                "For MFA accounts: "
                 "1) Authenticate once using Garmin Connect mobile app or web interface, "
-                "2) Locate the .garmin_session file in your home directory, "
-                "3) Copy this file to the location specified by GARMIN_SESSION environment variable."
+                "2) Locate the session/token file in your config directory, "
+                "3) Ensure the file is accessible at the path specified by "
+                "GARMIN_SESSION environment variable."
             )
-        
-        # Check write permissions BEFORE attempting authentication
+
+        # Ensure parent directory exists before attempting login/token save
         session_dir = os.path.dirname(self.session_path)
+        if session_dir:
+            os.makedirs(session_dir, exist_ok=True)
+
+        # Check write permissions — garminconnect silently suppresses token
+        # save failures, so without this warning the user would re-authenticate
+        # on every run without knowing why
         if session_dir and not os.access(session_dir, os.W_OK):
-            log.warning(f"Cannot write to session directory: {session_dir}")
-        
+            log.warning(
+                f"Cannot write to session directory: {session_dir}. "
+                f"Session tokens will not be persisted between runs."
+            )
+
         try:
-            log.info("Attempting Garmin authentication with credentials")
-            self.client.login(email, password)
+            self.client = Garmin(email, password)
+            self.client.login(self.session_path)
             log.info("Garmin authentication successful")
-            
         except Exception as ex:
             raise APIException(
                 f"Authentication failure: {ex}. "
-                f"For MFA accounts, credential-based login may not work. "
-                f"Use the session file method described in the error message above."
-            )
-        
-        # Save session separately to handle dump failures distinctly
-        try:
-            # Ensure parent directory exists before dumping session
-            if session_dir:
-                os.makedirs(session_dir, exist_ok=True)
-                log.debug("Session directory created/verified")
-            
-            self.client.dump(self.session_path)
-            log.info(f"Successfully saved Garmin session to {self.session_path}")
-            
-        except Exception as ex:
-            raise APIException(
-                f"Session save failed: {ex}. Authentication succeeded but session could not be persisted. "
-                f"Check GARMIN_SESSION path, permissions, and available disk space."
+                f"Ensure your credentials are correct. "
+                f"For MFA accounts, you may need to authenticate interactively first."
             )
 
-    def looks_like_valid_session(self) -> bool:
-        return hasattr(self.client, "username") and self.client.username
-
-    def invalid_garmin_session_config(self) -> bool:
-        return not self.session_path
+        # Verify token was actually persisted — garminconnect uses
+        # contextlib.suppress(Exception) on dump(), so a silent failure
+        # means every future run hits Garmin SSO again
+        if not os.path.exists(self.session_path):
+            log.warning(
+                f"Garmin session token was not saved to {self.session_path}. "
+                f"Check path permissions. Without a saved session, "
+                f"credentials will be required on every run."
+            )
 
     def upload_file(self, ffile):
         """Upload fit file to Garmin Connect."""
-        fit_file = io.BytesIO(ffile.getvalue())
-        fit_file.name = "withings.fit"
-        self.client.upload(fit_file)
+        # python-garminconnect only accepts file paths, not file-like objects
+        with tempfile.NamedTemporaryFile(suffix=".fit", delete=False) as tmp:
+            tmp.write(ffile.getvalue())
+            tmp_path = tmp.name
+        try:
+            self.client.upload_activity(tmp_path)
+        finally:
+            os.unlink(tmp_path)
         return True
