@@ -558,6 +558,12 @@ After successful auth, the credentials will be automatically stored in `/data/co
 kubectl apply -f k8s-job.yaml
 ```
 
+**Upgrading an existing Kubernetes deployment:** If you were previously using the old symlink-based manifest (with files at `/data/.withings_user.json`), move your Withings config into the new location before applying the updated manifest:
+```
+kubectl exec -it bootstrap-withings-sync -- sh -c 'mkdir -p /data/config && cp /data/.withings_user.json /data/config/'
+```
+A fresh Garmin login is required after upgrading (old garth session files are not reusable).
+
 ## 5 For advanced users - registering own Withings application
 > Instead of using the provided Withings application tokens you can register your own app with Withings and use that one instead. 
 <details>
