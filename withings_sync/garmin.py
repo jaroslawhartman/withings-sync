@@ -116,7 +116,7 @@ class GarminConnect:
             )
 
         try:
-            self.client = Garmin(email, password)
+            self.client = Garmin(email, password, prompt_mfa=lambda: input("MFA code: "))
             self.client.login(tokenstore_path)
             log.info("Garmin authentication successful")
         except Exception as ex:
