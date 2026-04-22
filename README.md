@@ -1,13 +1,6 @@
 > [!CAUTION]
 > This Release introduces breaking changes that users need to be aware of before upgrading or using it.
-> These changes were made to enhance security and compatibility but may require modifications to your existing setup.
->
-> - The container now runs without root privileges.
-> - Dependencies, virtual envs, packaging is now done by Poetry.
-> - This fork requires a recent version of Python, currently capped at >= python 3.12.
->
-> Make sure to go over the updated readme and test these new changes thoroughly for your environment.
-> Chances are quite high you will have to make changes to make this work again. 
+> The underlying garth library is deprecated and replaced, so it needs a full login cycle again.
 
 # withings-sync
 
