@@ -1,13 +1,6 @@
 > [!CAUTION]
 > This Release introduces breaking changes that users need to be aware of before upgrading or using it.
-> These changes were made to enhance security and compatibility but may require modifications to your existing setup.
->
-> - The container now runs without root privileges.
-> - Dependencies, virtual envs, packaging is now done by Poetry.
-> - This fork requires a recent version of Python, currently capped at >= python 3.12.
->
-> Make sure to go over the updated readme and test these new changes thoroughly for your environment.
-> Chances are quite high you will have to make changes to make this work again. 
+> The underlying garth library is deprecated and replaced, so it needs a full login cycle again.
 
 # withings-sync
 
@@ -483,15 +476,17 @@ See also: https://github.com/jaroslawhartman/withings-sync/issues/31
 
 ### 4.2 Garmin auth
 
-You can configure the location of the garmin session file with the variabe `GARMIN_SESSION`.
+You can configure the location of the Garmin token file with the `GARMIN_SESSION` environment variable. If the path ends in `.json`, it is used directly as the token file. Otherwise, the runtime normalizes it to `<path>.json` to avoid conflicts with legacy session files.
 
 Note: If you specify both `--config-folder` and the `GARMIN_SESSION` environment variable, the `--config-folder` option takes precedence.
+
+**Upgrading from garth-based versions:** Garmin authentication has been migrated from the deprecated `garth` library to `python-garminconnect`. Old `.garmin_session` files created by garth cannot be reused directly. One fresh login is required after upgrading — after that, saved tokens are reused automatically and `GARMIN_PASSWORD` may be omitted on subsequent runs.
 
 ### 4.3 Config folder
 
 By default, withings-sync stores session files in your home directory:
 - `~/.withings_user.json` for Withings authentication
-- `~/.garmin_session` for Garmin authentication
+- `~/.garmin_session.json` for Garmin authentication tokens
 
 You can use the `--config-folder` or `-c` argument to store all session files in a custom folder:
 
@@ -505,7 +500,8 @@ withings-sync --config-folder /path/to/my/config
 
 When using a custom config folder:
 - The folder will be created automatically if it doesn't exist
-- If you have existing session files in the legacy locations, the script will show you where to copy them from
+- If you have existing Withings session files in the legacy locations, the script will show you where to copy them from
+- Garmin auth has changed with the move from `garth` to `python-garminconnect`; old `.garmin_session` files cannot be reused directly and one fresh login is required to create the new tokenstore
 - This is useful for Docker installations or for keeping your home directory clean
 
 ### 4.4 Run a periodic Kubernetes job
@@ -548,14 +544,18 @@ It is important that this run includes a date that has a record, as a record is 
 The command above will allow entering the withings token and the MFA code for garmin. 
 After successful auth, the credentials will be automatically stored in `/data/config/`:
 - `/data/config/.withings_user.json`
-- `/data/config/.garmin_session`
+- `/data/config/.garmin_session.json`
 
-5. Create the cron job. Update the cron job command to use the config folder:
+5. Create the cron job. The shipped manifest already uses `--config-folder /data/config`:
 ```
 kubectl apply -f k8s-job.yaml
 ```
 
-Note: Update your k8s-job.yaml to include `--config-folder /data/config` in the container command.
+**Upgrading an existing Kubernetes deployment:** If you were previously using the old symlink-based manifest (with files at `/data/.withings_user.json`), move your Withings config into the new location before applying the updated manifest:
+```
+kubectl exec -it bootstrap-withings-sync -- sh -c 'mkdir -p /data/config && cp /data/.withings_user.json /data/config/'
+```
+A fresh Garmin login is required after upgrading (old garth session files are not reusable).
 
 ## 5 For advanced users - registering own Withings application
 > Instead of using the provided Withings application tokens you can register your own app with Withings and use that one instead. 

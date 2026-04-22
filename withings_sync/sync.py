@@ -176,10 +176,11 @@ def get_args():
     return parser.parse_args()
 
 
-def sync_garmin(fit_file, config_folder=None):
+def sync_garmin(fit_file, garmin=None, config_folder=None):
     """Sync generated fit file to Garmin Connect"""
-    garmin = GarminConnect(config_folder=config_folder)
-    garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+    if garmin is None:
+        garmin = GarminConnect(config_folder=config_folder)
+        garmin.login(ARGS.garmin_username, ARGS.garmin_password)
     return garmin.upload_file(fit_file)
 
 
@@ -583,16 +584,21 @@ def sync():
             fit_data_weight is not None or fit_data_blood_pressure is not None
         ):
             logging.debug("attempting to upload fit file...")
+
+            # Create and authenticate a single Garmin instance for all uploads
+            garmin = GarminConnect(config_folder=config_folder)
+            garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+
             gar_wg_state = None
             gar_bp_state = None
             if fit_data_weight is not None:
-                gar_wg_state = sync_garmin(fit_data_weight, config_folder)
+                gar_wg_state = sync_garmin(fit_data_weight, garmin=garmin)
                 if gar_wg_state:
                     logging.info(
                         "Fit file with weight information uploaded to Garmin Connect"
                     )
             if fit_data_blood_pressure is not None:
-                gar_bp_state = sync_garmin(fit_data_blood_pressure, config_folder)
+                gar_bp_state = sync_garmin(fit_data_blood_pressure, garmin=garmin)
                 if gar_bp_state:
                     logging.info(
                         "Fit file with blood pressure information uploaded to Garmin Connect"
