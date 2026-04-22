@@ -2,6 +2,7 @@
 
 import logging
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -75,6 +76,23 @@ class GarminConnect:
         # to avoid collision with old garth session files
         return f"{path}.json"
 
+    def _prompt_mfa(self) -> str:
+        """Prompt the user for their Garmin MFA code.
+
+        Called by python-garminconnect when MFA is required during credential
+        login. Fails fast in non-interactive environments (e.g. k8s cron,
+        Docker without a TTY) instead of blocking on input() with no way for
+        the user to respond.
+        """
+        if not sys.stdin.isatty():
+            raise APIException(
+                "Garmin requires an MFA code but no interactive terminal is "
+                "available. Run withings-sync interactively once so tokens can be "
+                "saved to the tokenstore; subsequent runs will reuse the tokens "
+                "without prompting."
+            )
+        return input("MFA code: ")
+
     def _token_artifact_path(self, tokenstore_path: str) -> str:
         """Determine where garminconnect will actually write the token file.
 
@@ -116,9 +134,11 @@ class GarminConnect:
             )
 
         try:
-            self.client = Garmin(email, password, prompt_mfa=lambda: input("MFA code: "))
+            self.client = Garmin(email, password, prompt_mfa=self._prompt_mfa)
             self.client.login(tokenstore_path)
             log.info("Garmin authentication successful")
+        except APIException:
+            raise
         except Exception as ex:
             if not email or not password:
                 raise APIException(
