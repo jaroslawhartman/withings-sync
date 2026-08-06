@@ -4,6 +4,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# TrainerRoad's WAF blocks requests carrying the default python-requests
+# User-Agent (returns 429 regardless of credentials). Set once on the
+# session so every request in a connect()...disconnect() cycle looks
+# consistently browser-like, rather than only patching individual calls.
+_BROWSER_HEADERS = {
+    'User-Agent': ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/140.0.0.0 Safari/537.36'),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+}
+
 
 class TrainerRoad:
     _ftp = 'ftp'
@@ -24,16 +36,19 @@ class TrainerRoad:
 
     def connect(self):
         self._session = requests.Session()
-        
+        self._session.headers.update(_BROWSER_HEADERS)
+
         data = {'Username': self._username,
                 'Password': self._password}
 
         r = self._session.post(self._login_url, data=data,
+                               headers={'Origin': 'https://www.trainerroad.com',
+                                        'Referer': self._login_url},
                                allow_redirects=False)
 
         if r.status_code not in [200, 302]:
-            raise RuntimeError("Error loging in to TrainerRoad (Code {})"
-                               .format(r.status_code))
+            raise RuntimeError("Error loging in to TrainerRoad (Code {}, Retry-After {})"
+                               .format(r.status_code, r.headers.get('Retry-After')))
 
         logger.info('Logged into TrainerRoad as "{}"'.format(self._username))
 
@@ -59,12 +74,12 @@ class TrainerRoad:
         if self._session is None:
             raise RuntimeError('Not Connected')
 
-        # Add browser-like headers for API calls (camelCase JSON format)
+        # Endpoint-specific headers; browser UA/Accept-Language already set
+        # on the session by connect().
         headers = {
             'Accept': 'application/json, text/plain, */*',
             'Referer': 'https://www.trainerroad.com/app/profile/rider-information',
             'trainerroad-jsonformat': 'camel-case',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
         }
 
         r = self._session.get(url, headers=headers)
@@ -120,14 +135,14 @@ class TrainerRoad:
         logger.info("Updating profile: Weight={}, FTP={}".format(
             data.get(self._weight), data.get(self._ftp)))
 
-        # Send PUT request with JSON data (exact browser headers)
+        # Endpoint-specific headers; browser UA/Accept-Language already set
+        # on the session by connect().
         headers = {
             'Accept': 'application/json, text/plain, */*',
             'Content-Type': 'application/json',
             'Origin': 'https://www.trainerroad.com',
             'Referer': 'https://www.trainerroad.com/app/profile/rider-information',
             'trainerroad-jsonformat': 'camel-case',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
         }
         r = self._session.put(self._profile_api_url, json=data, headers=headers)
 
