@@ -146,6 +146,50 @@ class WithingsOAuth2:
 
         return authentification_code
 
+    def _request_token(self, params):
+        """POST an OAuth2 token request (grant_type authorization_code or
+        refresh_token) and return the parsed "body" dict on success.
+
+        Raises WithingsException instead of returning on any API-level
+        error (non-zero "status" -- Withings signals errors this way even
+        on a 200 OK response), a non-2xx HTTP status, or an unparsable
+        response.
+
+        This guarantees callers never receive a value here unless Withings
+        actually confirmed success. Previously, both get_accesstoken() and
+        refresh_accesstoken() computed `body = resp.get("body")` up front
+        and used it to (re)assign access_token/refresh_token/userid even
+        when status was non-zero -- at best a no-op, but if `body` was
+        `None` (as in a plain error response) this raised an unhandled
+        AttributeError deep inside a in-progress token refresh
+        (https://github.com/jaroslawhartman/withings-sync/issues/41), and
+        if `body` was present but empty, it silently overwrote a caller's
+        still-valid tokens with None -- which the unconditional
+        self.user_cfg.write() in __init__ then persisted to disk,
+        permanently destroying a session that was only ever transiently
+        unavailable.
+        """
+        try:
+            req = requests.post(TOKEN_URL, params, timeout=30)
+            req.raise_for_status()
+            resp = req.json()
+        except (requests.RequestException, ValueError) as err:
+            raise WithingsException(f"Withings token request failed: {err}") from err
+
+        status = resp.get("status")
+        if status != 0:
+            raise WithingsException(
+                f"Withings token request rejected (status {status}): "
+                f"{resp.get('error', 'no error message provided')}. See "
+                "http://developer.withings.com/api-reference#section/Response-status "
+                "for what this status means. If the stored refresh token is the "
+                "cause (e.g. it was already used/rotated elsewhere), a fresh "
+                "interactive authorization is required -- delete the stored "
+                "user config and re-run interactively."
+            )
+
+        return resp.get("body") or {}
+
     def get_accesstoken(self):
         """get Withings access token"""
         log.info("Get Access Token")
@@ -159,24 +203,7 @@ class WithingsOAuth2:
             "redirect_uri": self.app_config["callback_url"],
         }
 
-        req = requests.post(TOKEN_URL, params)
-        resp = req.json()
-
-        status = resp.get("status")
-        body = resp.get("body")
-
-        if status != 0:
-            log.error("Received error code: %d", status)
-            log.error(
-                "Check here for an interpretation of this error: "
-                "http://developer.withings.com/api-reference#section/Response-status"
-            )
-            log.error("")
-            log.error(
-                "If it's regarding an invalid code, try to start the"
-                " script again to obtain a new link."
-            )
-            raise
+        body = self._request_token(params)
 
         self.user_config["access_token"] = body.get("access_token")
         self.user_config["refresh_token"] = body.get("refresh_token")
@@ -194,23 +221,7 @@ class WithingsOAuth2:
             "refresh_token": self.user_config["refresh_token"],
         }
 
-        req = requests.post(TOKEN_URL, params)
-        resp = req.json()
-
-        status = resp.get("status")
-        body = resp.get("body")
-
-        if status != 0:
-            log.error("Received error code: %d", status)
-            log.error(
-                "Check here for an interpretation of this error: "
-                "http://developer.withings.com/api-reference#section/Response-status"
-            )
-            log.error("")
-            log.error(
-                "If it's regarding an invalid code, try to start the"
-                " script again to obtain a new link."
-            )
+        body = self._request_token(params)
 
         self.user_config["access_token"] = body.get("access_token")
         self.user_config["refresh_token"] = body.get("refresh_token")
