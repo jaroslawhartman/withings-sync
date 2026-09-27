@@ -417,6 +417,10 @@ options:
   --dump-raw, -R        Dump the raw Withings API JSON for the selected date range to file. If --output is provided, the file will be BASENAME.withings_raw.json. Otherwise, a default filename with the date range will be used.
   --config-folder PATH, -c PATH
                         Path to config folder for session files (if not specified, uses legacy paths in home directory).
+  --webhook-url WEBHOOK_URL
+                        URL of a generic webhook endpoint to POST raw measurements to (e.g. Google Apps Script, Home Assistant, Zapier, or custom server).
+  --webhook-secret WEBHOOK_SECRET
+                        Secret token or password for webhook authentication.
 ```
 
 ## 3. Providing credentials
@@ -428,6 +432,8 @@ You can use the following environment variables for providing the Garmin and/or 
 - `GARMIN_PASSWORD`
 - `TRAINERROAD_USERNAME`
 - `TRAINERROAD_PASSWORD`
+- `WEBHOOK_URL`
+- `WEBHOOK_SECRET`
 
 The CLI also uses python-dotenv to populate the variables above. Therefore setting the environment variables
 has the same effect as placing the variables in a `.env` file in the working directory.
@@ -440,6 +446,8 @@ You can also populate the following 'secrets' files to provide the Garmin and/or
 - `/run/secrets/garmin_password`
 - `/run/secrets/trainerroad_username`
 - `/run/secrets/trainerroad_password`
+- `/run/secrets/webhook_url`
+- `/run/secrets/webhook_secret`
 
 Secrets are useful in an orchestrated container context — see the [Docker Swarm](https://docs.docker.com/engine/swarm/secrets/) or [Rancher](https://rancher.com/docs/rancher/v1.6/en/cattle/secrets/) docs for more information on how to securely inject secrets into a container.
 
@@ -556,6 +564,49 @@ kubectl apply -f k8s-job.yaml
 kubectl exec -it bootstrap-withings-sync -- sh -c 'mkdir -p /data/config && cp /data/.withings_user.json /data/config/'
 ```
 A fresh Garmin login is required after upgrading (old garth session files are not reusable).
+
+### 4.5 Export raw measurements to Webhook (Google Drive, Home Assistant, etc.)
+
+With modern smart scales such as the **Withings Body Scan**, Withings provides rich biometrics including segmental body composition (segmental fat and muscle mass for torso, arms, legs), nerve health scores (electrodermal activity / EDA), vascular age, and ECG metrics. These metrics are not supported by Garmin Connect or the standard FIT file format.
+
+You can use the `--webhook-url` (or `WEBHOOK_URL` environment variable) and optional `--webhook-secret` (or `WEBHOOK_SECRET` environment variable) to securely forward the complete raw Withings API JSON response to any webhook endpoint upon each sync.
+
+Supported endpoints include:
+- **Google Apps Script (GAS)**: Save raw JSON directly into Google Drive without storing sensitive health data in CI/CD runners or local disks. (See [Google Drive Recipe](docs/recipes/google_drive_gas.md))
+- **Home Assistant**: Trigger automations or store segmental biometrics in custom sensors.
+- **Custom backend**: Node.js, FastAPI, Flask, Zapier, etc.
+
+#### CLI Usage:
+```bash
+withings-sync --webhook-url "https://script.google.com/macros/s/.../exec" --webhook-secret "your_secret_token"
+```
+
+#### Docker Usage:
+```yaml
+environment:
+  - WEBHOOK_URL=https://script.google.com/macros/s/.../exec
+  - WEBHOOK_SECRET=your_secret_token
+```
+
+The payload sent to the webhook is an HTTP POST with `Content-Type: application/json` and `X-Webhook-Secret: <secret>` header:
+```json
+{
+  "source": "withings-sync",
+  "filename": "withings_raw_2026-09-27.json",
+  "startdate": 1758900000,
+  "enddate": 1758986399,
+  "secret": "your_secret_token",
+  "data": {
+    "status": 0,
+    "body": {
+      "updatetime": 1758986400,
+      "timezone": "Europe/Berlin",
+      "measuregrps": [...]
+    }
+  }
+}
+```
+HTTP 302 redirects (such as Google Apps Script web apps) are followed automatically.
 
 ## 5 For advanced users - registering own Withings application
 > Instead of using the provided Withings application tokens you can register your own app with Withings and use that one instead. 

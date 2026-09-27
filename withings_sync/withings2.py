@@ -265,6 +265,7 @@ class WithingsAccount:
 
         if measurements.get("status") == 0:
             log.debug("Measurements received")
+            self.last_measurements_json = measurements
             return [
                 WithingsMeasureGroup(g)
                 for g in measurements.get("body").get("measuregrps")
