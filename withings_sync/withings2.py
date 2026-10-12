@@ -26,6 +26,63 @@ class WithingsException(Exception):
     """Pass WithingsExceptions"""
 
 
+RATE_LIMIT_STATUSES = (601,)
+
+
+def _api_request(url, params, max_retries=3):
+    """POST to the Withings API, retrying on rate limits and transient failures.
+
+    Returns the parsed JSON when the API reports status 0. Raises
+    WithingsException for any unrecoverable HTTP or API error.
+    """
+    if max_retries < 1:
+        raise ValueError("max_retries must be at least 1")
+
+    retry_delay = 1.0
+    for attempt in range(max_retries):
+        delay = retry_delay
+        cause = None
+        try:
+            req = requests.post(url, params, timeout=30)
+            req.raise_for_status()
+            resp = req.json()
+        except (requests.RequestException, ValueError) as err:
+            cause = err
+            error = f"Withings request failed: {err}"
+            if isinstance(err, requests.HTTPError):
+                http_status = (
+                    err.response.status_code if err.response is not None else None
+                )
+                if http_status not in (408, 429, 500, 502, 503, 504):
+                    raise WithingsException(error) from err
+        else:
+            status = resp.get("status")
+            if status == 0:
+                return resp
+
+            error = (
+                f"Withings API error (status {status}): "
+                f"{resp.get('error', 'unknown error')} "
+                "(see https://developer.withings.com/api-reference#section/Response-status)"
+            )
+            if status not in RATE_LIMIT_STATUSES:
+                raise WithingsException(error)
+
+            body = resp.get("body") or {}
+            wait = body.get("wait_seconds")
+            if isinstance(wait, (int, float)) and 0 <= wait < float("inf"):
+                delay = wait
+
+        if attempt == max_retries - 1:
+            raise WithingsException(
+                f"{error}; exhausted {max_retries} attempts"
+            ) from cause
+
+        log.warning("%s; retrying in %.1fs", error, delay)
+        time.sleep(delay)
+        retry_delay *= 2
+
+
 class WithingsConfig:
     """This class takes care of the Withings config file"""
 
@@ -270,17 +327,14 @@ class WithingsAccount:
             "enddate": enddate,
         }
 
-        req = requests.post(GETMEAS_URL, params)
+        measurements = _api_request(GETMEAS_URL, params)
+        self.last_measurements_json = measurements
 
-        measurements = req.json()
-
-        if measurements.get("status") == 0:
-            log.debug("Measurements received")
-            return [
-                WithingsMeasureGroup(g)
-                for g in measurements.get("body").get("measuregrps")
-            ]
-        return None
+        log.debug("Measurements received")
+        return [
+            WithingsMeasureGroup(g)
+            for g in measurements.get("body", {}).get("measuregrps", [])
+        ]
 
     def get_height(self):
         """get height from Withings"""
@@ -296,23 +350,24 @@ class WithingsAccount:
             "category": 1,
         }
 
-        req = requests.post(GETMEAS_URL, params)
+        try:
+            measurements = _api_request(GETMEAS_URL, params)
+        except WithingsException as err:
+            log.warning("Could not fetch height: %s", err)
+            return None
 
-        measurements = req.json()
+        log.debug("Height received")
 
-        if measurements.get("status") == 0:
-            log.debug("Height received")
-
-            # there could be multiple height records. use the latest one
-            for record in measurements.get("body").get("measuregrps"):
-                height_group = WithingsMeasureGroup(record)
-                if height is not None:
-                    if height_timestamp is not None:
-                        if height_group.get_datetime() > height_timestamp:
-                            height = height_group.get_height()
-                else:
-                    height = height_group.get_height()
-                    height_timestamp = height_group.get_datetime()
+        # there could be multiple height records. use the latest one
+        for record in measurements.get("body", {}).get("measuregrps", []):
+            height_group = WithingsMeasureGroup(record)
+            if height is not None:
+                if height_timestamp is not None:
+                    if height_group.get_datetime() > height_timestamp:
+                        height = height_group.get_height()
+            else:
+                height = height_group.get_height()
+                height_timestamp = height_group.get_datetime()
 
         return height
 
