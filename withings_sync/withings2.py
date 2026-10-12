@@ -4,7 +4,7 @@ import logging
 import json
 import os
 import time
-import importlib_resources
+import importlib.resources
 import requests
 
 log = logging.getLogger("withings")
@@ -17,7 +17,7 @@ GETMEAS_URL = "https://wbsapi.withings.net/measure?action=getmeas"
 
 APP_CONFIG = os.environ.get(
     "WITHINGS_APP",
-    importlib_resources.files(__name__) / "config/withings_app.json",
+    importlib.resources.files(__package__) / "config/withings_app.json",
 )
 USER_CONFIG = os.environ.get("WITHINGS_USER", HOME + "/.withings_user.json")
 
@@ -233,6 +233,18 @@ class WithingsAccount:
         """set last sync timestamp"""
         self.withings.user_config["last_sync"] = int(time.time())
         log.info("Saving Last Sync")
+        self.withings.update_config()
+
+    def get_lastsync_tr(self):
+        """get last TrainerRoad sync timestamp"""
+        if not self.withings.user_config.get("last_sync_tr"):
+            return int(time.mktime(date.today().timetuple()))
+        return self.withings.user_config["last_sync_tr"]
+
+    def set_lastsync_tr(self):
+        """set last TrainerRoad sync timestamp"""
+        self.withings.user_config["last_sync_tr"] = int(time.time())
+        log.info("Saving Last TR Sync")
         self.withings.update_config()
 
     def get_measurements(self, startdate, enddate):

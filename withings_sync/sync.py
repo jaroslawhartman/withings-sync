@@ -182,10 +182,11 @@ def get_args():
     return parser.parse_args()
 
 
-def sync_garmin(fit_file, config_folder=None):
+def sync_garmin(fit_file, garmin=None, config_folder=None):
     """Sync generated fit file to Garmin Connect"""
-    garmin = GarminConnect(config_folder=config_folder)
-    garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+    if garmin is None:
+        garmin = GarminConnect(config_folder=config_folder)
+        garmin.login(ARGS.garmin_username, ARGS.garmin_password)
     return garmin.upload_file(fit_file)
 
 
@@ -519,7 +520,14 @@ def sync():
     withings = WithingsAccount(config_folder=config_folder)
 
     if not ARGS.fromdate:
-        startdate = withings.get_lastsync()
+        if ARGS.trainerroad_username and ARGS.garmin_username:
+            startdate = min(withings.get_lastsync(), withings.get_lastsync_tr())
+        elif ARGS.garmin_username:
+            startdate = withings.get_lastsync()
+        elif ARGS.trainerroad_username:
+            startdate = withings.get_lastsync_tr()
+        else:
+            startdate = withings.get_lastsync()
     else:
         startdate = int(time.mktime(ARGS.fromdate.timetuple()))
 
@@ -572,6 +580,8 @@ def sync():
             logging.info(" Measured %s", last_date_time)
             if sync_trainerroad(last_weight):
                 logging.info("TrainerRoad update done!")
+                if not ARGS.fromdate:
+                    withings.set_lastsync_tr()
         else:
             logging.info("No TrainerRoad username or a new measurement - skipping sync")
 
@@ -580,16 +590,21 @@ def sync():
             fit_data_weight is not None or fit_data_blood_pressure is not None
         ):
             logging.debug("attempting to upload fit file...")
+
+            # Create and authenticate a single Garmin instance for all uploads
+            garmin = GarminConnect(config_folder=config_folder)
+            garmin.login(ARGS.garmin_username, ARGS.garmin_password)
+
             gar_wg_state = None
             gar_bp_state = None
             if fit_data_weight is not None:
-                gar_wg_state = sync_garmin(fit_data_weight, config_folder)
+                gar_wg_state = sync_garmin(fit_data_weight, garmin=garmin)
                 if gar_wg_state:
                     logging.info(
                         "Fit file with weight information uploaded to Garmin Connect"
                     )
             if fit_data_blood_pressure is not None:
-                gar_bp_state = sync_garmin(fit_data_blood_pressure, config_folder)
+                gar_bp_state = sync_garmin(fit_data_blood_pressure, garmin=garmin)
                 if gar_bp_state:
                     logging.info(
                         "Fit file with blood pressure information uploaded to Garmin Connect"
@@ -627,8 +642,8 @@ def main():
     logging.debug("withings-sync script version %s", version("withings-sync"))
     logging.debug("Script invoked with the following arguments: %s", ARGS)
 
-    if sys.version_info < (3, 12):
-        print("Sorry, requires at least Python3.12.")
+    if sys.version_info < (3, 11):
+        print("Sorry, requires at least Python3.11.")
         sys.exit(1)
 
     sync()
