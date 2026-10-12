@@ -35,45 +35,52 @@ def _api_request(url, params, max_retries=3):
     Returns the parsed JSON when the API reports status 0. Raises
     WithingsException for any unrecoverable HTTP or API error.
     """
+    if max_retries < 1:
+        raise ValueError("max_retries must be at least 1")
+
     retry_delay = 1.0
     for attempt in range(max_retries):
+        delay = retry_delay
+        cause = None
         try:
             req = requests.post(url, params, timeout=30)
             req.raise_for_status()
             resp = req.json()
         except (requests.RequestException, ValueError) as err:
-            log.warning(
-                "Withings request failed (%s); retrying in %.1fs", err, retry_delay
+            cause = err
+            error = f"Withings request failed: {err}"
+            if isinstance(err, requests.HTTPError):
+                http_status = (
+                    err.response.status_code if err.response is not None else None
+                )
+                if http_status not in (408, 429, 500, 502, 503, 504):
+                    raise WithingsException(error) from err
+        else:
+            status = resp.get("status")
+            if status == 0:
+                return resp
+
+            error = (
+                f"Withings API error (status {status}): "
+                f"{resp.get('error', 'unknown error')} "
+                "(see https://developer.withings.com/api-reference#section/Response-status)"
             )
-            time.sleep(retry_delay)
-            retry_delay *= 2
-            continue
+            if status not in RATE_LIMIT_STATUSES:
+                raise WithingsException(error)
 
-        status = resp.get("status")
-        if status == 0:
-            return resp
+            body = resp.get("body") or {}
+            wait = body.get("wait_seconds")
+            if isinstance(wait, (int, float)) and 0 <= wait < float("inf"):
+                delay = wait
 
-        body = resp.get("body") or {}
-        wait = body.get("wait_seconds")
-        if status in RATE_LIMIT_STATUSES and wait:
-            log.warning(
-                "Withings rate limited (status %s); waiting %s seconds",
-                status,
-                wait,
-            )
-            time.sleep(wait)
-            retry_delay *= 2
-            continue
+        if attempt == max_retries - 1:
+            raise WithingsException(
+                f"{error}; exhausted {max_retries} attempts"
+            ) from cause
 
-        raise WithingsException(
-            f"Withings API error (status {status}): "
-            f"{resp.get('error', 'unknown error')} "
-            "(see http://developer.withings.com/api-reference#section/Response-status)"
-        )
-
-    raise WithingsException(
-        f"Withings API still rate limited after {max_retries} attempts"
-    )
+        log.warning("%s; retrying in %.1fs", error, delay)
+        time.sleep(delay)
+        retry_delay *= 2
 
 
 class WithingsConfig:
