@@ -204,27 +204,12 @@ class WithingsOAuth2:
         return authentification_code
 
     def _request_token(self, params):
-        """POST an OAuth2 token request (grant_type authorization_code or
-        refresh_token) and return the parsed "body" dict on success.
+        """Request and validate OAuth tokens before callers update saved state.
 
-        Raises WithingsException instead of returning on any API-level
-        error (non-zero "status" -- Withings signals errors this way even
-        on a 200 OK response), a non-2xx HTTP status, or an unparsable
-        response.
-
-        This guarantees callers never receive a value here unless Withings
-        actually confirmed success. Previously, both get_accesstoken() and
-        refresh_accesstoken() computed `body = resp.get("body")` up front
-        and used it to (re)assign access_token/refresh_token/userid even
-        when status was non-zero -- at best a no-op, but if `body` was
-        `None` (as in a plain error response) this raised an unhandled
-        AttributeError deep inside a in-progress token refresh
-        (https://github.com/jaroslawhartman/withings-sync/issues/41), and
-        if `body` was present but empty, it silently overwrote a caller's
-        still-valid tokens with None -- which the unconditional
-        self.user_cfg.write() in __init__ then persisted to disk,
-        permanently destroying a session that was only ever transiently
-        unavailable.
+        Withings reports API errors through a non-zero JSON status, even
+        with HTTP 200. Successful responses must contain both tokens and a
+        user ID. Reject incomplete responses rather than overwriting saved
+        credentials with None. Do not retry requests that may rotate tokens.
         """
         try:
             req = requests.post(TOKEN_URL, params, timeout=30)
@@ -233,11 +218,20 @@ class WithingsOAuth2:
         except (requests.RequestException, ValueError) as err:
             raise WithingsException(f"Withings token request failed: {err}") from err
 
+        if not isinstance(resp, dict):
+            raise WithingsException("Withings token response must be a JSON object")
+
         status = resp.get("status")
+        body = resp.get("body")
         if status != 0:
+            error = resp.get("error")
+            if not isinstance(error, str) or not error:
+                error = body.get("error") if isinstance(body, dict) else None
+            if not isinstance(error, str) or not error:
+                error = "no error message provided"
             raise WithingsException(
                 f"Withings token request rejected (status {status}): "
-                f"{resp.get('error', 'no error message provided')}. See "
+                f"{error}. See "
                 "http://developer.withings.com/api-reference#section/Response-status "
                 "for what this status means. If the stored refresh token is the "
                 "cause (e.g. it was already used/rotated elsewhere), a fresh "
@@ -245,7 +239,19 @@ class WithingsOAuth2:
                 "user config and re-run interactively."
             )
 
-        return resp.get("body") or {}
+        if not isinstance(body, dict):
+            raise WithingsException(
+                "Withings token response body must be a JSON object"
+            )
+        for field in ("access_token", "refresh_token"):
+            if not isinstance(body.get(field), str) or not body[field]:
+                raise WithingsException(
+                    f"Withings token response requires a non-empty {field} string"
+                )
+        if body.get("userid") is None:
+            raise WithingsException("Withings token response requires a userid")
+
+        return body
 
     def get_accesstoken(self):
         """get Withings access token"""
@@ -262,9 +268,12 @@ class WithingsOAuth2:
 
         body = self._request_token(params)
 
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config.update(
+            {
+                field: body[field]
+                for field in ("access_token", "refresh_token", "userid")
+            }
+        )
 
     def refresh_accesstoken(self):
         """refresh Withings access token"""
@@ -280,9 +289,12 @@ class WithingsOAuth2:
 
         body = self._request_token(params)
 
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config.update(
+            {
+                field: body[field]
+                for field in ("access_token", "refresh_token", "userid")
+            }
+        )
 
 
 class WithingsAccount:
