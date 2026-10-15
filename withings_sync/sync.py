@@ -21,29 +21,35 @@ from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
 dotenv.load_dotenv()
 
 
-def load_variable(env_var, secrets_file):
+def load_variable(env_var, secrets_var, secrets_file):
     """Load a variable from an environment variable or from a secrets file"""
-    # Try to read the value from the secrets file. Silently fail if the file
-    # cannot be read and use an empty value
+    value = os.getenv(env_var, "")
+    if value:
+        return value
+
+    try:
+        path = os.getenv(secrets_var)
+        if path:
+            with open(path, encoding='utf-8') as secret:
+                value = secret.read().strip("\n")
+                if value:
+                    return value
+    except OSError:
+        pass
+
     try:
         with open(secrets_file, encoding="utf-8") as secret:
             value = secret.read().strip("\n")
     except OSError:
-        value = ""
+        pass
 
-    # Load variable from environment if it exists, otherwise use the
-    # value read from the secrets file.
-    return os.getenv(env_var, value)
+    return value
 
+GARMIN_USERNAME = load_variable('GARMIN_USERNAME', 'GARMIN_USERNAME_FILE', "/run/secrets/garmin_username")
+GARMIN_PASSWORD = load_variable('GARMIN_PASSWORD', 'GARMIN_PASSWORD_FILE', "/run/secrets/garmin_password")
+TRAINERROAD_USERNAME = load_variable('TRAINERROAD_USERNAME', 'TRAINERROAD_USERNAME_FILE', "/run/secrets/trainerroad_username")
+TRAINERROAD_PASSWORD = load_variable('TRAINERROAD_PASSWORD', 'TRAINERROAD_PASSWORD_FILE', "/run/secrets/trainerroad_password")
 
-GARMIN_USERNAME = load_variable("GARMIN_USERNAME", "/run/secrets/garmin_username")
-GARMIN_PASSWORD = load_variable("GARMIN_PASSWORD", "/run/secrets/garmin_password")
-TRAINERROAD_USERNAME = load_variable(
-    "TRAINERROAD_USERNAME", "/run/secrets/trainerroad_username"
-)
-TRAINERROAD_PASSWORD = load_variable(
-    "TRAINERROAD_PASSWORD", "/run/secrets/trainerroad_password"
-)
 
 
 def get_args():
