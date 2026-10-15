@@ -203,6 +203,56 @@ class WithingsOAuth2:
 
         return authentification_code
 
+    def _request_token(self, params):
+        """Request and validate OAuth tokens before callers update saved state.
+
+        Withings reports API errors through a non-zero JSON status, even
+        with HTTP 200. Successful responses must contain both tokens and a
+        user ID. Reject incomplete responses rather than overwriting saved
+        credentials with None. Do not retry requests that may rotate tokens.
+        """
+        try:
+            req = requests.post(TOKEN_URL, params, timeout=30)
+            req.raise_for_status()
+            resp = req.json()
+        except (requests.RequestException, ValueError) as err:
+            raise WithingsException(f"Withings token request failed: {err}") from err
+
+        if not isinstance(resp, dict):
+            raise WithingsException("Withings token response must be a JSON object")
+
+        status = resp.get("status")
+        body = resp.get("body")
+        if status != 0:
+            error = resp.get("error")
+            if not isinstance(error, str) or not error:
+                error = body.get("error") if isinstance(body, dict) else None
+            if not isinstance(error, str) or not error:
+                error = "no error message provided"
+            raise WithingsException(
+                f"Withings token request rejected (status {status}): "
+                f"{error}. See "
+                "http://developer.withings.com/api-reference#section/Response-status "
+                "for what this status means. If the stored refresh token is the "
+                "cause (e.g. it was already used/rotated elsewhere), a fresh "
+                "interactive authorization is required -- delete the stored "
+                "user config and re-run interactively."
+            )
+
+        if not isinstance(body, dict):
+            raise WithingsException(
+                "Withings token response body must be a JSON object"
+            )
+        for field in ("access_token", "refresh_token"):
+            if not isinstance(body.get(field), str) or not body[field]:
+                raise WithingsException(
+                    f"Withings token response requires a non-empty {field} string"
+                )
+        if body.get("userid") is None:
+            raise WithingsException("Withings token response requires a userid")
+
+        return body
+
     def get_accesstoken(self):
         """get Withings access token"""
         log.info("Get Access Token")
@@ -216,28 +266,14 @@ class WithingsOAuth2:
             "redirect_uri": self.app_config["callback_url"],
         }
 
-        req = requests.post(TOKEN_URL, params)
-        resp = req.json()
+        body = self._request_token(params)
 
-        status = resp.get("status")
-        body = resp.get("body")
-
-        if status != 0:
-            log.error("Received error code: %d", status)
-            log.error(
-                "Check here for an interpretation of this error: "
-                "http://developer.withings.com/api-reference#section/Response-status"
-            )
-            log.error("")
-            log.error(
-                "If it's regarding an invalid code, try to start the"
-                " script again to obtain a new link."
-            )
-            raise
-
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config.update(
+            {
+                field: body[field]
+                for field in ("access_token", "refresh_token", "userid")
+            }
+        )
 
     def refresh_accesstoken(self):
         """refresh Withings access token"""
@@ -251,27 +287,14 @@ class WithingsOAuth2:
             "refresh_token": self.user_config["refresh_token"],
         }
 
-        req = requests.post(TOKEN_URL, params)
-        resp = req.json()
+        body = self._request_token(params)
 
-        status = resp.get("status")
-        body = resp.get("body")
-
-        if status != 0:
-            log.error("Received error code: %d", status)
-            log.error(
-                "Check here for an interpretation of this error: "
-                "http://developer.withings.com/api-reference#section/Response-status"
-            )
-            log.error("")
-            log.error(
-                "If it's regarding an invalid code, try to start the"
-                " script again to obtain a new link."
-            )
-
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config.update(
+            {
+                field: body[field]
+                for field in ("access_token", "refresh_token", "userid")
+            }
+        )
 
 
 class WithingsAccount:
