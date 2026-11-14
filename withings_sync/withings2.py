@@ -26,6 +26,63 @@ class WithingsException(Exception):
     """Pass WithingsExceptions"""
 
 
+RATE_LIMIT_STATUSES = (601,)
+
+
+def _api_request(url, params, max_retries=3):
+    """POST to the Withings API, retrying on rate limits and transient failures.
+
+    Returns the parsed JSON when the API reports status 0. Raises
+    WithingsException for any unrecoverable HTTP or API error.
+    """
+    if max_retries < 1:
+        raise ValueError("max_retries must be at least 1")
+
+    retry_delay = 1.0
+    for attempt in range(max_retries):
+        delay = retry_delay
+        cause = None
+        try:
+            req = requests.post(url, params, timeout=30)
+            req.raise_for_status()
+            resp = req.json()
+        except (requests.RequestException, ValueError) as err:
+            cause = err
+            error = f"Withings request failed: {err}"
+            if isinstance(err, requests.HTTPError):
+                http_status = (
+                    err.response.status_code if err.response is not None else None
+                )
+                if http_status not in (408, 429, 500, 502, 503, 504):
+                    raise WithingsException(error) from err
+        else:
+            status = resp.get("status")
+            if status == 0:
+                return resp
+
+            error = (
+                f"Withings API error (status {status}): "
+                f"{resp.get('error', 'unknown error')} "
+                "(see https://developer.withings.com/api-reference#section/Response-status)"
+            )
+            if status not in RATE_LIMIT_STATUSES:
+                raise WithingsException(error)
+
+            body = resp.get("body") or {}
+            wait = body.get("wait_seconds")
+            if isinstance(wait, (int, float)) and 0 <= wait < float("inf"):
+                delay = wait
+
+        if attempt == max_retries - 1:
+            raise WithingsException(
+                f"{error}; exhausted {max_retries} attempts"
+            ) from cause
+
+        log.warning("%s; retrying in %.1fs", error, delay)
+        time.sleep(delay)
+        retry_delay *= 2
+
+
 class WithingsConfig:
     """This class takes care of the Withings config file"""
 
@@ -146,6 +203,56 @@ class WithingsOAuth2:
 
         return authentification_code
 
+    def _request_token(self, params):
+        """Request and validate OAuth tokens before callers update saved state.
+
+        Withings reports API errors through a non-zero JSON status, even
+        with HTTP 200. Successful responses must contain both tokens and a
+        user ID. Reject incomplete responses rather than overwriting saved
+        credentials with None. Do not retry requests that may rotate tokens.
+        """
+        try:
+            req = requests.post(TOKEN_URL, params, timeout=30)
+            req.raise_for_status()
+            resp = req.json()
+        except (requests.RequestException, ValueError) as err:
+            raise WithingsException(f"Withings token request failed: {err}") from err
+
+        if not isinstance(resp, dict):
+            raise WithingsException("Withings token response must be a JSON object")
+
+        status = resp.get("status")
+        body = resp.get("body")
+        if status != 0:
+            error = resp.get("error")
+            if not isinstance(error, str) or not error:
+                error = body.get("error") if isinstance(body, dict) else None
+            if not isinstance(error, str) or not error:
+                error = "no error message provided"
+            raise WithingsException(
+                f"Withings token request rejected (status {status}): "
+                f"{error}. See "
+                "http://developer.withings.com/api-reference#section/Response-status "
+                "for what this status means. If the stored refresh token is the "
+                "cause (e.g. it was already used/rotated elsewhere), a fresh "
+                "interactive authorization is required -- delete the stored "
+                "user config and re-run interactively."
+            )
+
+        if not isinstance(body, dict):
+            raise WithingsException(
+                "Withings token response body must be a JSON object"
+            )
+        for field in ("access_token", "refresh_token"):
+            if not isinstance(body.get(field), str) or not body[field]:
+                raise WithingsException(
+                    f"Withings token response requires a non-empty {field} string"
+                )
+        if body.get("userid") is None:
+            raise WithingsException("Withings token response requires a userid")
+
+        return body
+
     def get_accesstoken(self):
         """get Withings access token"""
         log.info("Get Access Token")
@@ -159,28 +266,14 @@ class WithingsOAuth2:
             "redirect_uri": self.app_config["callback_url"],
         }
 
-        req = requests.post(TOKEN_URL, params)
-        resp = req.json()
+        body = self._request_token(params)
 
-        status = resp.get("status")
-        body = resp.get("body")
-
-        if status != 0:
-            log.error("Received error code: %d", status)
-            log.error(
-                "Check here for an interpretation of this error: "
-                "http://developer.withings.com/api-reference#section/Response-status"
-            )
-            log.error("")
-            log.error(
-                "If it's regarding an invalid code, try to start the"
-                " script again to obtain a new link."
-            )
-            raise
-
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config.update(
+            {
+                field: body[field]
+                for field in ("access_token", "refresh_token", "userid")
+            }
+        )
 
     def refresh_accesstoken(self):
         """refresh Withings access token"""
@@ -194,27 +287,14 @@ class WithingsOAuth2:
             "refresh_token": self.user_config["refresh_token"],
         }
 
-        req = requests.post(TOKEN_URL, params)
-        resp = req.json()
+        body = self._request_token(params)
 
-        status = resp.get("status")
-        body = resp.get("body")
-
-        if status != 0:
-            log.error("Received error code: %d", status)
-            log.error(
-                "Check here for an interpretation of this error: "
-                "http://developer.withings.com/api-reference#section/Response-status"
-            )
-            log.error("")
-            log.error(
-                "If it's regarding an invalid code, try to start the"
-                " script again to obtain a new link."
-            )
-
-        self.user_config["access_token"] = body.get("access_token")
-        self.user_config["refresh_token"] = body.get("refresh_token")
-        self.user_config["userid"] = body.get("userid")
+        self.user_config.update(
+            {
+                field: body[field]
+                for field in ("access_token", "refresh_token", "userid")
+            }
+        )
 
 
 class WithingsAccount:
@@ -259,18 +339,14 @@ class WithingsAccount:
             "enddate": enddate,
         }
 
-        req = requests.post(GETMEAS_URL, params)
+        measurements = _api_request(GETMEAS_URL, params)
+        self.last_measurements_json = measurements
 
-        measurements = req.json()
-
-        if measurements.get("status") == 0:
-            log.debug("Measurements received")
-            self.last_measurements_json = measurements
-            return [
-                WithingsMeasureGroup(g)
-                for g in measurements.get("body").get("measuregrps")
-            ]
-        return None
+        log.debug("Measurements received")
+        return [
+            WithingsMeasureGroup(g)
+            for g in measurements.get("body", {}).get("measuregrps", [])
+        ]
 
     def get_height(self):
         """get height from Withings"""
@@ -286,23 +362,24 @@ class WithingsAccount:
             "category": 1,
         }
 
-        req = requests.post(GETMEAS_URL, params)
+        try:
+            measurements = _api_request(GETMEAS_URL, params)
+        except WithingsException as err:
+            log.warning("Could not fetch height: %s", err)
+            return None
 
-        measurements = req.json()
+        log.debug("Height received")
 
-        if measurements.get("status") == 0:
-            log.debug("Height received")
-
-            # there could be multiple height records. use the latest one
-            for record in measurements.get("body").get("measuregrps"):
-                height_group = WithingsMeasureGroup(record)
-                if height is not None:
-                    if height_timestamp is not None:
-                        if height_group.get_datetime() > height_timestamp:
-                            height = height_group.get_height()
-                else:
-                    height = height_group.get_height()
-                    height_timestamp = height_group.get_datetime()
+        # there could be multiple height records. use the latest one
+        for record in measurements.get("body", {}).get("measuregrps", []):
+            height_group = WithingsMeasureGroup(record)
+            if height is not None:
+                if height_timestamp is not None:
+                    if height_group.get_datetime() > height_timestamp:
+                        height = height_group.get_height()
+            else:
+                height = height_group.get_height()
+                height_timestamp = height_group.get_datetime()
 
         return height
 

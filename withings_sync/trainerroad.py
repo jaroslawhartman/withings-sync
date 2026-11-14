@@ -11,7 +11,7 @@ class TrainerRoad:
     _units_metric = 'kmh'
     _units_imperial = 'mph'
     _numerical_verify = (_ftp, _weight)
-    _login_url = 'https://www.trainerroad.com/app/login'
+    _login_url = 'https://www.trainerroad.com/app/api/login/login'
     _logout_url = 'https://www.trainerroad.com/app/logout'
     _profile_api_url = 'https://www.trainerroad.com/app/api/profile/rider-information'
     _download_tcx_url = 'http://www.trainerroad.com/cycling/rides/download'
@@ -24,16 +24,27 @@ class TrainerRoad:
 
     def connect(self):
         self._session = requests.Session()
-        
-        data = {'Username': self._username,
-                'Password': self._password}
 
-        r = self._session.post(self._login_url, data=data,
-                               allow_redirects=False)
+        # TrainerRoad's web app is now a React SPA; the login page no longer
+        # submits Username/Password as a form POST to /app/login (that route
+        # is GET-only these days and 405s on POST). The SPA's own login form
+        # POSTs JSON to this API route instead and expects a JSON body with
+        # a Success flag rather than a 200/302 status to indicate the result.
+        payload = {'username': self._username,
+                   'password': self._password,
+                   'returnUrl': None}
 
-        if r.status_code not in [200, 302]:
+        r = self._session.post(self._login_url, json=payload)
+
+        if r.status_code != 200:
             raise RuntimeError("Error loging in to TrainerRoad (Code {})"
                                .format(r.status_code))
+
+        # Response keys have been observed capitalized (e.g. "Success");
+        # check case-insensitively to be safe.
+        body = r.json()
+        if not body.get('Success', body.get('success')):
+            raise RuntimeError('Error loging in to TrainerRoad (invalid credentials or login rejected)')
 
         logger.info('Logged into TrainerRoad as "{}"'.format(self._username))
 
@@ -59,13 +70,11 @@ class TrainerRoad:
         if self._session is None:
             raise RuntimeError('Not Connected')
 
-        # Add browser-like headers for API calls (camelCase JSON format)
-        headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'Referer': 'https://www.trainerroad.com/app/profile/rider-information',
-            'trainerroad-jsonformat': 'camel-case',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
-        }
+        # Not a browser-fingerprint header: this controls the casing of the
+        # JSON keys TrainerRoad returns. Without it the API responds with
+        # PascalCase keys (e.g. "WeightKg") instead of the camelCase keys
+        # (e.g. "weightKg") this module reads via _weight/_ftp.
+        headers = {'trainerroad-jsonformat': 'camel-case'}
 
         r = self._session.get(url, headers=headers)
 
@@ -120,15 +129,8 @@ class TrainerRoad:
         logger.info("Updating profile: Weight={}, FTP={}".format(
             data.get(self._weight), data.get(self._ftp)))
 
-        # Send PUT request with JSON data (exact browser headers)
-        headers = {
-            'Accept': 'application/json, text/plain, */*',
-            'Content-Type': 'application/json',
-            'Origin': 'https://www.trainerroad.com',
-            'Referer': 'https://www.trainerroad.com/app/profile/rider-information',
-            'trainerroad-jsonformat': 'camel-case',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0'
-        }
+        # See _get() re: trainerroad-jsonformat.
+        headers = {'trainerroad-jsonformat': 'camel-case'}
         r = self._session.put(self._profile_api_url, json=data, headers=headers)
 
         logger.debug("PUT request status: {}, response: {}".format(r.status_code, r.text[:200]))
