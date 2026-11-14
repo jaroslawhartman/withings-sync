@@ -14,6 +14,7 @@ from withings_sync.withings2 import WithingsAccount
 from withings_sync.garmin import GarminConnect
 from withings_sync.trainerroad import TrainerRoad
 from withings_sync.fit import FitEncoderWeight, FitEncoderBloodPressure
+from withings_sync.webhook import send_webhook
 
 # Load the environment variables from a .env (dotenv) file.
 # This is done prior to importing other modules such that all variables,
@@ -44,6 +45,8 @@ TRAINERROAD_USERNAME = load_variable(
 TRAINERROAD_PASSWORD = load_variable(
     "TRAINERROAD_PASSWORD", "/run/secrets/trainerroad_password"
 )
+WEBHOOK_URL = load_variable("WEBHOOK_URL", "/run/secrets/webhook_url")
+WEBHOOK_SECRET = load_variable("WEBHOOK_SECRET", "/run/secrets/webhook_secret")
 
 
 def get_args():
@@ -171,6 +174,25 @@ def get_args():
         type=str,
         metavar="CONFIG_FOLDER",
         help="Path to config folder for session files (if not specified, uses legacy paths in home directory)",
+    )
+
+    parser.add_argument(
+        "--webhook-url",
+        default=WEBHOOK_URL,
+        type=str,
+        metavar="WEBHOOK_URL",
+        help=(
+            "URL of a generic webhook endpoint to POST raw measurements to "
+            "(e.g. Google Apps Script, Home Assistant, Zapier, or custom server)."
+        ),
+    )
+
+    parser.add_argument(
+        "--webhook-secret",
+        default=WEBHOOK_SECRET,
+        type=str,
+        metavar="WEBHOOK_SECRET",
+        help="Secret token or password for webhook authentication.",
     )
 
     return parser.parse_args()
@@ -552,6 +574,28 @@ def sync():
             end_s = time.strftime("%Y%m%d", time.localtime(enddate))
             raw_filename = f"withings_raw_{start_s}_{end_s}.json"
         write_withings_raw_json(raw_filename, withings.last_measurements_json)
+
+    # post raw Withings JSON to webhook
+    if ARGS.webhook_url and hasattr(withings, "last_measurements_json"):
+        start_s = time.strftime("%Y%m%d", time.localtime(startdate))
+        end_s = time.strftime("%Y%m%d", time.localtime(enddate))
+        filename = (
+            f"withings_raw_{start_s}_{end_s}.json"
+            if start_s != end_s
+            else f"withings_raw_{end_s}.json"
+        )
+        webhook_payload = {
+            "source": "withings-sync",
+            "filename": filename,
+            "startdate": startdate,
+            "enddate": enddate,
+            "data": withings.last_measurements_json,
+        }
+        send_webhook(
+            url=ARGS.webhook_url,
+            payload=webhook_payload,
+            secret=ARGS.webhook_secret,
+        )
 
     fit_data_weight, fit_data_blood_pressure = generate_fitdata(syncdata)
     json_data = generate_jsondata(syncdata)
